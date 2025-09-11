@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Shark Bounty Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Loading screen -->
+    <div id="loadingScreen">
+        <video src="https://github.com/s42144/Shark-Bounty/raw/8b67f2028cd3d33d6545243ea43a57958c428edf/29f4182c-fb84-4f6e-830f-f560ae571afe.mp4" autoplay muted loop></video>
+        <span>Loading Shark Bounty...</span>
+    </div>
+
+    <!-- Main App -->
+    <div id="app" class="hidden">
+        <nav>
+            <ul>
+                <li title="Leaderboard"><img src="https://github.com/s42144/Shark-Bounty/raw/74b1e06fd560efe8e058569ffa7b4e363aa1c43d/13311710.png">Leaderboard</li>
+                <li title="Wallet"><img src="https://github.com/s42144/Shark-Bounty/raw/c06dc8d5e036525c17986aca385518c98926b633/6826311.png">Wallet</li>
+                <li title="Profile"><img src="https://github.com/s42144/Shark-Bounty/raw/11c6e035a7f8f6445526ea07f34893fd3ceec419/18827926.png">Profile</li>
+                <li title="Daily Tasks"><img src="https://github.com/s42144/Shark-Bounty/raw/2ba42299505308ea4ff2a68f5db8341f3ddc0e92/16104409.png">Daily Tasks</li>
+                <li title="Referral"><img src="https://github.com/s42144/Shark-Bounty/raw/7ed42cc4280dc574de84c66f7e2a5ab6d8d2f516/17675714.png">Referral</li>
+                <li title="Support" id="supportBtn"><img src="https://github.com/s42144/Shark-Bounty/raw/10f0eb22cfa927ad57ec3b152b563321396e4bd8/2268705.png">Support</li>
+            </ul>
+        </nav>
+        <header>
+            <img src="https://github.com/s42144/Shark-Bounty/raw/aeb441877b43b7401af99870ead870597d62f885/17510103.gif" alt="Shark" id="sharkGif">
+            <h1>Welcome to Shark Bounty</h1>
+        </header>
+        <main>
+            <div class="dashboard">
+                <!-- Daily Check-in Card -->
+                <div class="card" id="checkinCard">
+                    <img src="https://github.com/s42144/Shark-Bounty/raw/746c5202de3073cfdcaa50fabf6bbdba0d8f7421/1142792.png" alt="Daily Check-in">
+                    <h2>Daily Check-in</h2>
+                    <button id="checkinBtn">Check In</button>
+                    <span id="checkinStatus"></span>
+                </div>
+                <!-- Top Ranking Card -->
+                <div class="card">
+                    <img src="https://github.com/s42144/Shark-Bounty/raw/0bcaaea5195504abe1ecc2b322ba88302ecd5373/15584494.png" alt="Top Ranking">
+                    <h2>Top Ranking</h2>
+                </div>
+                <!-- Leaderboard Top -->
+                <div class="card">
+                    <img src="https://github.com/s42144/Shark-Bounty/raw/a1689933fb7cd9af2287b694de3afe81c85d0b32/19026492.png" alt="Leaderboard Top">
+                    <h2>Leaderboard Top</h2>
+                </div>
+                <!-- Rewards/Deposit card -->
+                <div class="card">
+                    <img src="https://github.com/s42144/Shark-Bounty/raw/044196befa203197dece4b74afe7d5bd49f0a67b/6008139.png" alt="Deposit">
+                    <h2>Deposit</h2>
+                    <button id="depositBtn">Deposit Now</button>
+                </div>
+                <!-- Redeem Gift card -->
+                <div class="card">
+                    <img src="https://github.com/s42144/Shark-Bounty/raw/87e28aa35db580efad4a8befa50df073a1c80e1f/3179668.png" alt="Redeem Gift">
+                    <h2>Redeem Gift</h2>
+                    <button id="redeemBtn">Redeem</button>
+                </div>
+                <!-- Wallet & Copy -->
+                <div class="card">
+                    <img src="https://github.com/s42144/Shark-Bounty/raw/40df0818b6c840279caf39cd066f9a04df5c1000/15208522.png" alt="Toncoin Balance">
+                    <h2>Toncoin Balance</h2>
+                    <div class="wallet">
+                        <span id="walletAddr">UQBx2...jK7b</span>
+                        <button id="copyBtn"><img src="https://github.com/s42144/Shark-Bounty/raw/177e7fb2815726b7d9710a58dccafff013e0a531/1622069.png" alt="Copy"></button>
+                    </div>
+                    <span id="copyStatus"></span>
+                </div>
+                <!-- Notification card -->
+                <div class="card">
+                    <img src="https://github.com/s42144/Shark-Bounty/raw/0b9b7d728a78c867c6862a6324b55510185b82c5/13146658.png" alt="Notification">
+                    <h2>Notifications</h2>
+                </div>
+                <!-- Energy card -->
+                <div class="card">
+                    <img src="https://github.com/s42144/Shark-Bounty/raw/87e28aa35db580efad4a8befa50df073a1c80e1f/934817.png" alt="Energy">
+                    <h2>Energy</h2>
+                </div>
+                <!-- History card -->
+                <div class="card">
+                    <img src="https://github.com/s42144/Shark-Bounty/raw/46fcd7413a110d3870cf2a9b2f8eb99c9cd25d88/17504646.png" alt="History">
+                    <h2>History</h2>
+                </div>
+                <!-- Secure card -->
+                <div class="card">
+                    <img src="https://github.com/s42144/Shark-Bounty/raw/f07926fed7a84d003a20d8c87a22b01c63cbacc8/2592317.png" alt="Secure">
+                    <h2>Secure</h2>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Dialogs -->
+    <div class="modal hidden" id="depositModal">
+        <div class="modal-content">
+            <span class="close" id="closeDeposit">&times;</span>
+            <h2>Deposit Toncoin</h2>
+            <p>Deposit Toncoin to your Shark Bounty wallet. (Demo only)</p>
+            <button id="modalDepositBtn">Deposit 100 TON</button>
+        </div>
+    </div>
+    <div class="modal hidden" id="redeemModal">
+        <div class="modal-content">
+            <span class="close" id="closeRedeem">&times;</span>
+            <h2>Redeem Gift</h2>
+            <p>Redeem your special bounty gift!</p>
+            <button id="modalRedeemBtn">Redeem</button>
+        </div>
+    </div>
+    <div class="modal hidden" id="supportModal">
+        <div class="modal-content">
+            <span class="close" id="closeSupport">&times;</span>
+            <h2>Support</h2>
+            <p>Contact support: sharkbounty@support.com</p>
+        </div>
+    </div>
+    <script src="main.js"></script>
+</body>
+</html>
