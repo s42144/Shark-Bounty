@@ -1,0 +1,309 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>Shark Bounty - Mobile Demo</title>
+<style>
+:root{--bg:#071023;--card:#0b2540;--accent:#00d1ff;--muted:#9fb0c8}
+*{box-sizing:border-box;margin:0;padding:0;font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial}
+body{background:linear-gradient(180deg,#041026 0%, #06243a 100%);color:#e6f7ff;min-height:100vh}
+.app{max-width:420px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+.loading-screen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#000;z-index:9999}
+.loading-screen video{width:90vw;max-width:360px;border-radius:18px}
+.header{display:flex;justify-content:space-between;align-items:center;padding:12px}
+.balance-row{display:flex;gap:8px;align-items:center}
+.balance-card{background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);padding:8px 10px;border-radius:12px;display:flex;align-items:center;gap:8px}
+.balance-card img{width:28px;height:28px;border-radius:6px}
+.main{padding:12px;flex:1;display:flex;flex-direction:column;align-items:center}
+.coin-wrap{margin-top:6px}
+.coin{width:170px;height:170px;border-radius:50%;background:linear-gradient(180deg,#ffd86b,#ffb84d);display:flex;align-items:center;justify-content:center;box-shadow:0 10px 30px rgba(0,0,0,0.6);position:relative}
+.coin img{width:120px;height:120px;pointer-events:none}
+.plus1{position:absolute;font-weight:700;font-size:22px;animation:pop 800ms ease-out;transform:translateY(-20px)}
+@keyframes pop{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-80px) scale(1.6)}}
+.energy{margin-top:12px;width:220px;background:rgba(255,255,255,0.05);height:12px;border-radius:999px;overflow:hidden}
+.energy .fill{height:100%;background:linear-gradient(90deg,#ff8a00,#ffd100);width:100%}
+.footer{display:flex;justify-content:space-around;padding:12px;background:linear-gradient(180deg,transparent,rgba(255,255,255,0.02));border-top:1px solid rgba(255,255,255,0.02)}
+.btn{display:flex;flex-direction:column;align-items:center;font-size:12px;color:var(--muted)}
+.btn img{width:34px;height:34px;margin-bottom:6px}
+.plans{padding:14px;display:grid;gap:12px}
+.plan{background:linear-gradient(135deg,#0f2a46 0%, #063b5c 100%);padding:12px;border-radius:14px;display:flex;justify-content:space-between;align-items:center}
+.plan .left{display:flex;flex-direction:column}
+.small{font-size:12px;color:var(--muted)}
+.buy{background:linear-gradient(90deg,#00e5a8,#00a6ff);padding:8px 12px;border-radius:10px;color:#032;cursor:pointer}
+.hidden{display:none}
+.center-note{font-size:12px;color:var(--muted);text-align:center;padding:8px}
+.modal{position:fixed;inset:10px;border-radius:12px;background:linear-gradient(180deg,#082032,#02121a);z-index:1000;padding:12px;overflow:auto}
+.row{display:flex;gap:8px;align-items:center}
+.input{background:#03232f;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);color:#e6f7ff}
+.tx-list{display:flex;flex-direction:column;gap:8px}
+.tx{background:rgba(255,255,255,0.02);padding:8px;border-radius:8px}
+.copy{cursor:pointer;padding:6px;border-radius:8px;background:rgba(255,255,255,0.02)}
+small.muted{color:var(--muted)}
+.profile{display:flex;flex-direction:column;gap:8px}
+.avatar{width:80px;height:80px;border-radius:12px}
+</style>
+</head>
+<body>
+<div class="app">
+  <div id="loading" class="loading-screen">
+    <video id="loadvid" autoplay muted playsinline>
+      <source src="https://raw.githubusercontent.com/s42144/Shark-Bounty/8b67f2028cd3d33d6545243ea43a57958c428edf/29f4182c-fb84-4f6e-830f-f560ae571afe.mp4" type="video/mp4">
+    </video>
+  </div>  <header class="header hidden" id="appHeader">
+    <div class="balance-row">
+      <div class="balance-card"><img src="https://raw.githubusercontent.com/s42144/Shark-Bounty/aeb441877b43b7401af99870ead870597d62f885/17510103.gif" alt="shark"><div style="display:flex;flex-direction:column"><strong id="shbBal">0</strong><small class="small">SHB</small></div></div>
+      <div class="balance-card"><img src="https://raw.githubusercontent.com/s42144/Shark-Bounty/177e7fb2815726b7d9710a58dccafff013e0a531/1622069.png" alt="usdt"><div style="display:flex;flex-direction:column"><strong id="usdtBal">0</strong><small class="small">USDT</small></div></div>
+    </div>
+    <div class="balance-row"><small class="muted">Shark Bounty</small></div>
+  </header>  <main class="main hidden" id="mainApp">
+    <div class="coin-wrap">
+      <div id="coin" class="coin" title="Tap to earn">
+        <img id="coinImg" src="https://raw.githubusercontent.com/s42144/Shark-Bounty/aeb441877b43b7401af99870ead870597d62f885/17510103.gif" alt="shark">
+      </div>
+      <div id="plusHolder"></div>
+      <div style="display:flex;justify-content:center;margin-top:10px"><div class="energy"><div id="energyFill" class="fill"></div></div></div>
+      <div style="text-align:center;margin-top:8px"><small class="muted">Energy: <span id="energyVal">1200</span>/1200</small></div>
+    </div><div class="center-note">Tap the coin to earn <strong>1 SHB</strong>. Energy decreases per tap and refills over time.</div>
+
+<section id="plansSection" class="plans hidden"></section>
+
+  </main>  <nav class="footer hidden" id="footerNav">
+    <div class="btn" id="btnHome"><img src="https://raw.githubusercontent.com/s42144/Shark-Bounty/dedf1f3379f4a52180a500e818e467dcd99f56c9/1057118.png" alt="home"><span>Home</span></div>
+    <div class="btn" id="btnTrade"><img src="https://raw.githubusercontent.com/s42144/Shark-Bounty/37f8291cb1c52e2baafb4624ec0bf49811b63a87/9084248.png" alt="trade"><span>Trade</span></div>
+    <div class="btn" id="btnTasks"><img src="https://raw.githubusercontent.com/s42144/Shark-Bounty/2ba42299505308ea4ff2a68f5db8341f3ddc0e92/16104409.png" alt="tasks"><span>Tasks</span></div>
+    <div class="btn" id="btnWallet"><img src="https://raw.githubusercontent.com/s42144/Shark-Bounty/c06dc8d5e036525c17986aca385518c98926b633/6826311.png" alt="wallet"><span>Wallet</span></div>
+    <div class="btn" id="btnProfile"><img src="https://raw.githubusercontent.com/s42144/Shark-Bounty/11c6e035a7f8f6445526ea07f34893fd3ceec419/18827926.png" alt="profile"><span>Profile</span></div>
+  </nav></div><!-- Modal containers --><div id="modal" class="hidden modal"></div><script>
+// Asset raw urls have been embedded from the repo
+const state = {
+  shb: Number(localStorage.getItem('shb')||0),
+  usdt: Number(localStorage.getItem('usdt')||0),
+  energy: Number(localStorage.getItem('energy')||1200),
+  maxEnergy:1200,
+  plans: JSON.parse(localStorage.getItem('plans')||'{}'),
+  history: JSON.parse(localStorage.getItem('history')||'[]')
+}
+
+const selectors = {
+  loading:document.getElementById('loading'),
+  mainApp:document.getElementById('mainApp'),
+  header:document.getElementById('appHeader'),
+  footer:document.getElementById('footerNav'),
+  shbBal:document.getElementById('shbBal'),
+  usdtBal:document.getElementById('usdtBal'),
+  energyVal:document.getElementById('energyVal'),
+  energyFill:document.getElementById('energyFill'),
+  coin:document.getElementById('coin'),
+  plusHolder:document.getElementById('plusHolder'),
+  plansSection:document.getElementById('plansSection'),
+  modal:document.getElementById('modal')
+}
+
+function save(){
+  localStorage.setItem('shb',state.shb);
+  localStorage.setItem('usdt',state.usdt);
+  localStorage.setItem('energy',state.energy);
+  localStorage.setItem('plans',JSON.stringify(state.plans));
+  localStorage.setItem('history',JSON.stringify(state.history));
+}
+
+function updateUI(){
+  selectors.shbBal.textContent = state.shb;
+  selectors.usdtBal.textContent = state.usdt.toFixed(2);
+  selectors.energyVal.textContent = Math.round(state.energy);
+  const pct = (state.energy/state.maxEnergy)*100;
+  selectors.energyFill.style.width = pct+'%';
+}
+
+// Loading behaviour
+const vid = document.getElementById('loadvid');
+vid.onended = () => enterApp();
+vid.onclick = () => { vid.pause(); enterApp(); }
+function enterApp(){
+  selectors.loading.classList.add('hidden');
+  selectors.header.classList.remove('hidden');
+  selectors.mainApp.classList.remove('hidden');
+  selectors.footer.classList.remove('hidden');
+  selectors.plansSection.classList.remove('hidden');
+  initPlans();
+  updateUI();
+}
+
+// Energy refill +1 per second
+setInterval(()=>{
+  if(state.energy < state.maxEnergy){ state.energy = Math.min(state.maxEnergy, state.energy + 1); save(); updateUI(); }
+},1000);
+
+// Tap to earn
+selectors.coin.addEventListener('click',()=>{
+  if(state.energy<=0){ flashNote('No energy'); return }
+  state.energy = Math.max(0, state.energy-1);
+  state.shb += 1;
+  save(); updateUI();
+  showPlus();
+});
+
+function showPlus(){
+  const el = document.createElement('div'); el.className='plus1'; el.textContent='+1';
+  selectors.plusHolder.appendChild(el);
+  setTimeout(()=>el.remove(),900);
+}
+
+// Plans setup
+const allPlans = [
+  {id:'p1',name:'TON/USDT',price:10,daily:1,valid:30},
+  {id:'p2',name:'NOT/USDT',price:30,daily:3,valid:30},
+  {id:'p3',name:'HMSTR/USDT',price:70,daily:7,valid:30},
+  {id:'p4',name:'ETH/USDT',price:100,daily:10,valid:30},
+  {id:'p5',name:'BNB/USDT',price:150,daily:15,valid:30},
+  {id:'p6',name:'BTC/USDT',price:200,daily:20,valid:30}
+];
+
+function initPlans(){
+  selectors.plansSection.innerHTML='';
+  allPlans.forEach(p=>{
+    const owned = state.plans[p.id];
+    const el = document.createElement('div'); el.className='plan';
+    el.innerHTML = `<div class="left"><strong>${p.name}</strong><small class="small">Price $${p.price} • ${p.valid} days • Daily $${p.daily}</small></div><div><button class="buy" data-id="${p.id}">${owned? (canClaim(p.id)?'Claim':'Purchased') : 'Buy'}</button></div>`;
+    selectors.plansSection.appendChild(el);
+  });
+  document.querySelectorAll('.buy').forEach(b=>b.addEventListener('click',onBuyOrClaim));
+}
+
+function canClaim(pid){
+  const rec = state.plans[pid];
+  if(!rec) return false;
+  const now = Date.now();
+  const oneDay = 24*60*60*1000;
+  if(rec.purchasedAt + rec.valid*24*60*60*1000 < now) return false; // expired
+  if(!rec.lastClaim) return true;
+  return (now - rec.lastClaim) >= oneDay;
+}
+
+function onBuyOrClaim(e){
+  const id = e.currentTarget.dataset.id;
+  const p = allPlans.find(x=>x.id===id);
+  const owned = state.plans[id];
+  if(!owned){
+    // buy
+    if(state.usdt >= p.price){
+      state.usdt -= p.price;
+      state.plans[id] = {purchasedAt: Date.now(), valid: p.valid*24*60*60*1000, lastClaim: null};
+      state.history.push({type:'buy',plan:p.name,amount:-p.price,date:Date.now()});
+      save(); initPlans(); updateUI(); alert('Plan purchased');
+    } else { alert('Not enough USDT'); }
+  } else {
+    // claim
+    if(!canClaim(id)){ alert('Cannot claim yet or plan expired'); return }
+    state.usdt += p.daily; state.plans[id].lastClaim = Date.now(); state.history.push({type:'claim',plan:p.name,amount:+p.daily,date:Date.now()}); save(); initPlans(); updateUI(); alert('Daily earning claimed');
+  }
+}
+
+// Footer buttons
+document.getElementById('btnHome').addEventListener('click',()=>{ closeModal(); /* show default */ });
+document.getElementById('btnTrade').addEventListener('click',()=>{ openModal(renderTrade()); });
+document.getElementById('btnTasks').addEventListener('click',()=>{ openModal(renderTasks()); });
+document.getElementById('btnWallet').addEventListener('click',()=>{ openModal(renderWallet()); });
+document.getElementById('btnProfile').addEventListener('click',()=>{ openModal(renderProfile()); });
+
+function openModal(content){ selectors.modal.classList.remove('hidden'); selectors.modal.innerHTML=''; selectors.modal.appendChild(content); }
+function closeModal(){ selectors.modal.classList.add('hidden'); selectors.modal.innerHTML=''; }
+
+// Trade view (plans already in main) - show same list
+function renderTrade(){ const box=document.createElement('div'); box.innerHTML='<h3>Trade / Plans</h3>'; const list=document.createElement('div'); allPlans.forEach(p=>{ const row=document.createElement('div'); row.className='plan'; row.innerHTML=`<div class="left"><strong>${p.name}</strong><small class="small">$${p.price} • daily $${p.daily}</small></div><div><button class="buy" data-id="${p.id}">${state.plans[p.id]? (canClaim(p.id)?'Claim':'Purchased') : 'Buy'}</button></div>`; list.appendChild(row); }); box.appendChild(list); setTimeout(()=>box.querySelectorAll('.buy').forEach(b=>b.addEventListener('click',onBuyOrClaim)),50); const c=document.createElement('div'); c.style.marginTop='8px'; const closeBtn=document.createElement('button'); closeBtn.textContent='Close'; closeBtn.className='buy'; closeBtn.addEventListener('click',closeModal); c.appendChild(closeBtn); box.appendChild(c); return box; }
+
+// Tasks placeholder (admin will populate later)
+function renderTasks(){ const box=document.createElement('div'); box.innerHTML='<h3>Tasks</h3><div class="center-note">No tasks yet. Admin will add tasks from control panel.</div>'; const close=document.createElement('button'); close.textContent='Close'; close.className='buy'; close.addEventListener('click',closeModal); box.appendChild(close); return box; }
+
+// Wallet: deposit / withdraw / history
+function renderWallet(){ const box=document.createElement('div'); box.innerHTML=`<h3>Wallet</h3>`;
+  const tabs=document.createElement('div'); tabs.className='row';
+  const dep=document.createElement('button'); dep.textContent='Deposit'; dep.className='buy';
+  const wit=document.createElement('button'); wit.textContent='Withdraw'; wit.className='buy';
+  const hist=document.createElement('button'); hist.textContent='History'; hist.className='buy';
+  tabs.appendChild(dep); tabs.appendChild(wit); tabs.appendChild(hist); box.appendChild(tabs);
+  const area=document.createElement('div'); area.style.marginTop='12px'; box.appendChild(area);
+  dep.addEventListener('click',()=>renderDeposit(area)); wit.addEventListener('click',()=>renderWithdraw(area)); hist.addEventListener('click',()=>renderHistory(area));
+  renderDeposit(area);
+  const close=document.createElement('button'); close.textContent='Close'; close.className='buy'; close.addEventListener('click',closeModal); box.appendChild(close);
+  return box;
+}
+
+function renderDeposit(area){ area.innerHTML=''; const sel=document.createElement('select'); sel.className='input'; sel.innerHTML='<option value="TON">TONCOIN</option><option value="USDT">USDT</option>';
+  const amt=document.createElement('input'); amt.className='input'; amt.placeholder='Amount'; amt.type='number'; amt.min='0'; amt.style.marginTop='8px';
+  const btn=document.createElement('button'); btn.className='buy'; btn.textContent='Confirm'; btn.style.marginTop='8px';
+  area.appendChild(sel); area.appendChild(amt); area.appendChild(btn);
+  btn.addEventListener('click',()=>{
+    const method = sel.value; const val = Number(amt.value);
+    if(method==='TON'){
+      if(isNaN(val) || val<3) return alert('Min TON deposit is 3');
+      // redirect to page with QR and details
+      openModal(renderTonPayment(val));
+    } else {
+      if(isNaN(val) || val<10) return alert('Min USDT deposit is 10');
+      openModal(renderUsdtPayment(val));
+    }
+  });
+}
+
+function renderTonPayment(tonAmount){ const box=document.createElement('div'); box.innerHTML=`<h3>TON Deposit</h3>`;
+  const qr=document.createElement('img'); qr.src='https://raw.githubusercontent.com/s42144/Shark-Bounty/a23720d6a315d2422e3943aa7bf779beac9acdad/Screenshot_2025-09-12-18-54-50-676_com.ton_keeper-edit.jpg'; qr.style.maxWidth='100%'; qr.style.borderRadius='10px';
+  box.appendChild(qr);
+  const addr = 'UQCOL7arveEVrKfKa9v3SbZnKjIBnOavmX3aXdDV-XD1cQ09';
+  const memo = 'D'+Math.floor(Math.random()*900000+100000);
+  const row=document.createElement('div'); row.className='tx'; row.innerHTML=`<div>Address: <span id='addr'>${addr}</span> <button class='copy'>Copy</button></div><div>Memo: <span id='memo'>${memo}</span> <button class='copy'>Copy</button></div><div>Amount: ${tonAmount} TON</div><div>Countdown: <span id='cd'>15:00</span></div><div style='margin-top:8px'><button id='paid' class='buy'>I've paid / Add to balance</button></div>`;
+  box.appendChild(row);
+  box.appendChild(document.createElement('hr'));
+  box.appendChild(createCloseButton());
+  // copy
+  row.querySelectorAll('.copy').forEach((c,i)=>c.addEventListener('click',()=>{ const txt = i===0?addr:memo; navigator.clipboard?.writeText(txt).then(()=>alert('Copied')); }));
+  // countdown
+  let seconds = 15*60; const cdEl = row.querySelector('#cd'); const timer = setInterval(()=>{ seconds--; const mm = String(Math.floor(seconds/60)).padStart(2,'0'); const ss = String(seconds%60).padStart(2,'0'); cdEl.textContent = mm+':'+ss; if(seconds<=0){ clearInterval(timer); cdEl.textContent='Expired'; } },1000);
+  // paid button
+  row.querySelector('#paid').addEventListener('click',()=>{
+    // convert to USDT at 3.20$/TON
+    const rate = 3.20; const usdt = tonAmount * rate; state.usdt += usdt; state.history.push({type:'deposit',method:'TON',amount:+usdt,date:Date.now()}); save(); updateUI(); alert('Added to USDT balance: $'+usdt.toFixed(2)); closeModal();
+  });
+  return box;
+}
+
+function renderUsdtPayment(amount){ const box=document.createElement('div'); box.innerHTML=`<h3>USDT Deposit</h3>`;
+  const qr=document.createElement('img'); qr.src='https://raw.githubusercontent.com/s42144/Shark-Bounty/a23720d6a315d2422e3943aa7bf779beac9acdad/Screenshot_2025-09-12-18-54-50-676_com.ton_keeper-edit.jpg'; qr.style.maxWidth='100%'; qr.style.borderRadius='10px';
+  box.appendChild(qr);
+  const addr = 'UQCOL7arveEVrKfKa9v3SbZnKjIBnOavmX3aXdDV-XD1cQ09';
+  const memo = 'USDT'+Math.floor(Math.random()*900000+100000);
+  const row=document.createElement('div'); row.className='tx'; row.innerHTML=`<div>Address: <span id='addr'>${addr}</span> <button class='copy'>Copy</button></div><div>Memo: <span id='memo'>${memo}</span> <button class='copy'>Copy</button></div><div>Amount: ${amount} USDT</div><div style='margin-top:8px'><button id='paid' class='buy'>I've paid / Add to balance</button></div>`;
+  box.appendChild(row); box.appendChild(createCloseButton());
+  row.querySelectorAll('.copy').forEach((c,i)=>c.addEventListener('click',()=>{ const txt = i===0?addr:memo; navigator.clipboard?.writeText(txt).then(()=>alert('Copied')); }));
+  row.querySelector('#paid').addEventListener('click',()=>{ state.usdt += amount; state.history.push({type:'deposit',method:'USDT',amount:+amount,date:Date.now()}); save(); updateUI(); alert('USDT added'); closeModal(); });
+  return box;
+}
+
+function renderWithdraw(area){ area.innerHTML=''; const amt=document.createElement('input'); amt.className='input'; amt.placeholder='Amount in USDT'; amt.type='number'; const adr=document.createElement('input'); adr.className='input'; adr.placeholder='TON chain address (mandatory)'; const memo=document.createElement('input'); memo.className='input'; memo.placeholder='Memo / comment (optional)'; const btn=document.createElement('button'); btn.className='buy'; btn.textContent='Confirm Withdraw'; btn.addEventListener('click',()=>{
+    const a=Number(amt.value);
+    if(isNaN(a) || a<3) return alert('Min withdraw is $3');
+    if(!adr.value) return alert('Address required');
+    if(a>state.usdt) return alert('Insufficient USDT');
+    state.usdt -= a; state.history.push({type:'withdraw',method:'USDT',amount:-a,address:adr.value,memo:memo.value,date:Date.now()}); save(); updateUI(); alert('Withdraw request processed');
+  }); area.appendChild(amt); area.appendChild(adr); area.appendChild(memo); area.appendChild(btn); }
+
+function renderHistory(area){ area.innerHTML=''; const list=document.createElement('div'); list.className='tx-list'; state.history.slice().reverse().forEach(t=>{ const it=document.createElement('div'); it.className='tx'; it.innerHTML=`<div><strong>${t.type.toUpperCase()}</strong> ${t.plan?t.plan:''}</div><div><small class='muted'>${new Date(t.date).toLocaleString()}</small></div><div>Amount: ${t.amount}</div>`; list.appendChild(it); }); area.appendChild(list); }
+
+function renderProfile(){ const box=document.createElement('div'); box.className='profile'; const ava=document.createElement('img'); ava.className='avatar'; ava.src='https://raw.githubusercontent.com/s42144/Shark-Bounty/044196befa203197dece4b74afe7d5bd49f0a67b/6008139.png';
+  const name = localStorage.getItem('username') || ('user'+Math.floor(Math.random()*9000+1000));
+  const created = localStorage.getItem('created') || new Date().toISOString(); localStorage.setItem('created',created);
+  const inp=document.createElement('input'); inp.className='input'; inp.value = name; inp.addEventListener('change',()=>{ localStorage.setItem('username',inp.value); alert('Saved'); });
+  const info=document.createElement('div'); info.innerHTML=`<div><small class='muted'>Created: ${new Date(created).toLocaleDateString()}</small></div><div><small class='muted'>Referral: https://shark.example/ref/${localStorage.getItem('username')||name}</small></div>`;
+  box.appendChild(ava); box.appendChild(inp); box.appendChild(info); box.appendChild(createCloseButton()); return box; }
+
+function createCloseButton(){ const b=document.createElement('button'); b.className='buy'; b.textContent='Close'; b.style.marginTop='8px'; b.addEventListener('click',closeModal); return b; }
+
+function flashNote(t){ alert(t); }
+
+// initialize
+updateUI();
+
+</script></body>
+</html>
