@@ -1,0 +1,1763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Shark Bounty</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <link rel="icon" type="image/png" href="17510103.gif">
+  <style>
+    :root {
+      --main-bg: linear-gradient(135deg, #0f2027 0%, #2c5364 100%);
+      --accent: #00ffe7;
+      --accent2: #ff61c9;
+      --energy: linear-gradient(90deg, #ffcc70 0%, #ff61c9 100%);
+      --card-bg: rgba(22, 31, 56, 0.95);
+      --card-shadow: 0 6px 24px rgba(0,0,0,0.25);
+      --btn-bg: linear-gradient(90deg, #00ffe7 0%, #ff61c9 100%);
+      --btn-txt: #fff;
+      --coin-circle: linear-gradient(135deg, #00ffe7 60%, #ff61c9 100%);
+      --border: #222b3a;
+      --danger: #ff556b;
+      --success: #15e58a;
+      --grey: #b0b7c3;
+      --white: #fff;
+      --usdt: #25ba7b;
+      --ton: #179fff;
+    }
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+      background: var(--main-bg);
+      color: var(--white);
+      min-height: 100vh;
+      max-width: 480px;
+      margin-left: auto;
+      margin-right: auto;
+      overflow-x: hidden;
+    }
+    body {
+      padding-bottom: 72px;
+      background: var(--main-bg);
+    }
+    #loading-screen {
+      position: fixed;
+      z-index: 100000;
+      left: 0; top: 0; right: 0; bottom: 0;
+      width: 100vw;
+      height: 100vh;
+      background: #050e16;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      transition: opacity .5s;
+    }
+    #loading-screen video {
+      width: 60vw;
+      max-width: 220px;
+      height: 40vw;
+      max-height: 160px;
+      border-radius: 32px;
+      box-shadow: 0 8px 32px #000c;
+      background: #050e16;
+      margin: 0;
+      padding: 0;
+      display: block;
+      object-fit: contain;
+    }
+    #app {
+      display: none;
+      flex-direction: column;
+      min-height: 100vh;
+      width: 100vw;
+      max-width: 480px;
+    }
+    .top-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 18px 6px 18px;
+      font-size: 1.15rem;
+      font-weight: 500;
+      letter-spacing: 1px;
+    }
+    .balance-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 1.05rem;
+      font-weight: 500;
+      margin-bottom: 4px;
+      margin-top: 2px;
+    }
+    .balance-coin {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: #143442;
+      color: var(--accent);
+      border-radius: 15px;
+      padding: 4px 10px 4px 7px;
+      font-size: 1.09rem;
+      font-weight: bold;
+      box-shadow: 0 3px 18px #00ffe72c;
+      margin-right: 11px;
+      min-width: 90px;
+    }
+    .balance-coin img {
+      width: 20px; height: 20px;
+    }
+    .balance-coin .coin-txt {
+      font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+      font-size: 1.04rem;
+    }
+    .balance-coin .coin-amt {
+      margin-left: 7px;
+      font-size: 1.08rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      color: var(--white);
+      text-shadow: 0 2px 8px #00ffe7b0;
+    }
+    .balance-usdt {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: #1d2832;
+      color: var(--usdt);
+      border-radius: 15px;
+      padding: 4px 10px 4px 7px;
+      font-size: 1.02rem;
+      font-weight: bold;
+      box-shadow: 0 3px 18px #25ba7b26;
+      min-width: 90px;
+    }
+    .balance-usdt img {
+      width: 18px; height: 18px;
+    }
+    .balance-usdt .usdt-txt {
+      font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+      font-weight: 600;
+    }
+    .balance-usdt .usdt-amt {
+      margin-left: 7px;
+      font-size: 1.08rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      color: var(--white);
+      text-shadow: 0 2px 8px #25ba7b7a;
+    }
+    /* Home UI */
+    #home-ui {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 400px;
+      animation: fadein 0.8s;
+      /* remove scrolling */
+      overflow: hidden;
+      height: calc(100vh - 146px);
+    }
+    @keyframes fadein { from { opacity: 0 } to { opacity: 1 } }
+    /* Coin tapper */
+    .coin-tapper-outer {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100vw;
+      max-width: 480px;
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 2;
+    }
+    .coin-tapper {
+      width: 230px;
+      height: 230px;
+      border-radius: 50%;
+      background: var(--coin-circle);
+      box-shadow: 0 7px 60px #00ffe7b0, 0 3px 24px #ff61c980;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      border: 8px solid #1b2d3f;
+      margin-bottom: 18px;
+      position: relative;
+      transition: box-shadow .15s;
+      overflow: hidden;
+      user-select: none;
+      animation: coin-bounce 0.9s infinite alternate cubic-bezier(.53,1.84,.5,1.08);
+    }
+    @keyframes coin-bounce {
+      from { transform: scale(1) }
+      to { transform: scale(1.06) }
+    }
+    .coin-tapper img {
+      width: 170px;
+      height: 170px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: #050e16;
+      box-shadow: 0 2px 24px #00ffe766;
+      border: 6px solid #fff7;
+      z-index: 2;
+      transition: transform .1s;
+    }
+    .coin-tapper:active img {
+      transform: scale(1.08);
+    }
+    .tap-plus-anim {
+      position: absolute;
+      left: 50%;
+      top: 43%;
+      transform: translate(-50%, -50%);
+      font-size: 2.45rem;
+      font-weight: bold;
+      color: var(--accent2);
+      text-shadow: 0 5px 16px #ff61c9cc, 0 1px 2px #111;
+      pointer-events: none;
+      opacity: 0;
+      animation: tapplus .7s forwards;
+      z-index: 9;
+      letter-spacing: 1.5px;
+    }
+    @keyframes tapplus {
+      0% { opacity: 1; transform: translate(-50%,-50%) scale(1.1);}
+      70% { opacity: 1; transform: translate(-50%,-70%) scale(1.25);}
+      100% { opacity: 0; transform: translate(-50%,-120%) scale(0.6);}
+    }
+    .energy-bar-outer {
+      width: 86vw;
+      max-width: 310px;
+      height: 22px;
+      background: #142030;
+      border-radius: 18px;
+      margin: 8px 0 0 0;
+      box-shadow: 0 2px 8px #ff61c94d;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      position: relative;
+      overflow: hidden;
+    }
+    .energy-bar-inner {
+      height: 100%;
+      background: var(--energy);
+      border-radius: 18px;
+      transition: width .3s cubic-bezier(.7,1.5,.7,.9);
+      will-change: width;
+      box-shadow: 0 2px 10px #fff5, 0 1px 4px #ffcc7066;
+    }
+    .energy-label {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%,-50%);
+      font-size: 1.11rem;
+      font-weight: bold;
+      color: #2a2;
+      text-shadow: 0 2px 12px #ffcc7073, 0 1px 2px #222;
+      user-select: none;
+    }
+    /* Bottom nav */
+    .bottom-nav {
+      position: fixed;
+      left: 0; right: 0; bottom: 0;
+      width: 100vw;
+      max-width: 480px;
+      background: #19222f;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      height: 64px;
+      box-shadow: 0 -6px 24px #000b;
+      z-index: 1000;
+      border-radius: 22px 22px 0 0;
+      padding-bottom: env(safe-area-inset-bottom);
+      border-top: 1.5px solid #1e293c;
+    }
+    .nav-btn {
+      flex: 1;
+      height: 64px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      cursor: pointer;
+      font-size: 0.94rem;
+      color: var(--grey);
+      font-weight: 400;
+      transition: color .18s;
+      user-select: none;
+      border: none;
+      background: none;
+      outline: none;
+    }
+    .nav-btn.active {
+      color: var(--accent);
+      font-weight: bold;
+    }
+    .nav-btn img {
+      height: 28px;
+      width: 28px;
+      margin-bottom: 4px;
+      display: block;
+      filter: drop-shadow(0 2px 8px #00ffe733);
+    }
+    /* Trade */
+    #trade-ui {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      margin: 0 10px;
+      animation: fadein 0.8s;
+      min-height: 400px;
+    }
+    .plans-list {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      margin-top: 16px;
+      margin-bottom: 14px;
+    }
+    .plan-card {
+      background: var(--card-bg);
+      border-radius: 18px;
+      box-shadow: var(--card-shadow);
+      padding: 18px 16px 16px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      border: 2px solid #252f43;
+      position: relative;
+      overflow: hidden;
+      min-width: 210px;
+    }
+    .plan-card .plan-title {
+      font-size: 1.14rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      color: var(--accent);
+      margin-bottom: 2px;
+    }
+    .plan-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      font-size: 1rem;
+      color: var(--white);
+      align-items: center;
+    }
+    .plan-price {
+      font-weight: 500;
+      color: var(--usdt);
+      font-size: 1.08rem;
+      background: #183c31;
+      border-radius: 7px;
+      padding: 2.5px 9px;
+    }
+    .plan-validity {
+      font-size: 0.97rem;
+      color: #bbb;
+      margin-right: 9px;
+    }
+    .plan-earning {
+      font-size: 1.03rem;
+      color: var(--success);
+      margin-left: 10px;
+      font-weight: 600;
+      background: #122e29;
+      border-radius: 7px;
+      padding: 2.2px 9px;
+    }
+    .buy-btn, .claim-btn {
+      margin-top: 7px;
+      padding: 8px 0;
+      border-radius: 12px;
+      background: var(--btn-bg);
+      color: var(--btn-txt);
+      font-size: 1.08rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      border: none;
+      box-shadow: 0 2px 12px #00ffe733;
+      cursor: pointer;
+      width: 100%;
+      transition: background .18s;
+    }
+    .buy-btn:active, .claim-btn:active {
+      background: linear-gradient(90deg, #ff61c9 0%, #00ffe7 100%);
+    }
+    .claim-btn[disabled] {
+      opacity: 0.6;
+      pointer-events: none;
+      background: #484b52;
+      color: #ccc;
+    }
+    /* Tasks UI */
+    #tasks-ui {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      min-height: 400px;
+      justify-content: center;
+      color: #888;
+      font-size: 1.09rem;
+      font-weight: 500;
+    }
+    /* Wallet UI */
+    #wallet-ui {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      min-height: 400px;
+      margin: 0 7px;
+      animation: fadein 0.8s;
+      width: 100vw;
+      max-width: 480px;
+    }
+    .wallet-tabs {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 100%;
+      margin: 14px 0 14px 0;
+      justify-content: center;
+      align-items: center;
+    }
+    .wallet-tab {
+      background: #202c3b;
+      color: var(--grey);
+      border: none;
+      border-radius: 12px;
+      padding: 11px 18px;
+      font-size: 1.10rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .13s, color .13s;
+      width: 95%;
+      max-width: 350px;
+      margin: 0 auto;
+      box-shadow: 0 2px 12px #00ffe70c, 0 2px 10px #ff61c90c;
+      margin-bottom: 0;
+      margin-top: 0;
+    }
+    .wallet-tab.active {
+      background: var(--accent);
+      color: #202c3b;
+      font-weight: bold;
+      box-shadow: 0 2px 12px #00ffe733;
+    }
+    .wallet-section {
+      margin: 0 auto;
+      width: 100%;
+      max-width: 360px;
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 22px 15px 16px 15px;
+      box-shadow: var(--card-shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      position: relative;
+      margin-bottom: 16px;
+      min-height: 185px;
+      border: 2.5px solid #1d2832;
+      display: none;
+      animation: fadein 0.4s;
+    }
+    .wallet-section.active {
+      display: flex;
+    }
+    .wallet-info-box {
+      background: #1d2832;
+      padding: 10px 12px;
+      border-radius: 12px;
+      color: #b0f2ff;
+      font-size: 1.08em;
+      margin-bottom: 12px;
+      border-left: 4px solid var(--accent);
+    }
+    /* ... keep deposit/withdraw/history styling as before ... */
+    .form-row {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin-bottom: 9px;
+    }
+    .form-row label {
+      font-size: 1.07rem;
+      color: #bbbbbb;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+    .form-row input, .form-row select {
+      border-radius: 9px;
+      border: 2px solid #28324d;
+      font-size: 1.11rem;
+      padding: 8px 10px;
+      margin-top: 2px;
+      background: #1a2133;
+      color: var(--white);
+      outline: none;
+      transition: border .13s;
+    }
+    .form-row input:focus {
+      border: 2px solid var(--accent);
+    }
+    .copy-btn {
+      background: none;
+      border: none;
+      outline: none;
+      cursor: pointer;
+      margin-left: 7px;
+      margin-top: -2px;
+    }
+    .copy-btn img {
+      width: 25px;
+      height: 25px;
+      filter: drop-shadow(0 1.5px 8px #fff6);
+    }
+    .deposit-info-box {
+      background: #172438;
+      border-radius: 13px;
+      padding: 10px 9px 13px 9px;
+      margin-top: 6px;
+      font-size: 1.10rem;
+      color: #e1f3fc;
+      box-shadow: 0 2px 10px #00ffe72b;
+      position: relative;
+      font-weight: 500;
+      border: 1.5px solid #27e3e3;
+    }
+    .qr-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 9px;
+      margin-top: 10px;
+      margin-bottom: 10px;
+    }
+    .qr-section img {
+      width: 165px;
+      height: 165px;
+      border: 5px solid #fff7;
+      border-radius: 24px;
+      box-shadow: 0 2px 24px #00ffe7a1, 0 3px 18px #222a;
+      background: #fff;
+    }
+    .deposit-address, .deposit-memo {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 3px;
+      font-size: 1.06rem;
+      font-family: monospace;
+      word-break: break-all;
+    }
+    .memo-label {
+      background: #2f3c56;
+      color: #fff;
+      font-size: 1.06rem;
+      border-radius: 7px;
+      padding: 2px 8px;
+      margin-left: 7px;
+    }
+    .deposit-countdown {
+      text-align: center;
+      font-size: 1.16rem;
+      color: var(--danger);
+      font-weight: 700;
+      margin-bottom: 6px;
+      margin-top: 7px;
+      letter-spacing: 1px;
+    }
+    .live-rate {
+      color: var(--ton);
+      font-size: 1.10rem;
+      font-weight: bold;
+      margin: 2px 0 5px 0;
+      text-align: center;
+    }
+    /* History */
+    .history-list {
+      width: 100%;
+      max-width: 340px;
+      margin: 0 auto;
+      background: var(--card-bg);
+      border-radius: 15px;
+      box-shadow: var(--card-shadow);
+      padding: 10px 7px 8px 7px;
+      min-height: 80px;
+      margin-bottom: 15px;
+      font-size: 1.07rem;
+      font-style: italic;
+      border: 2px solid #232f3b;
+      display: none;
+    }
+    .history-list.active {
+      display: block;
+    }
+    .history-item {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 3px;
+      border-bottom: 1.2px solid #23303b;
+      padding: 8px 0 11px 0;
+      color: #c7f9f5;
+      background: #222d41;
+      border-radius: 8px;
+      margin-bottom: 5px;
+      box-shadow: 0 2px 8px #27e3e341;
+      font-style: italic;
+    }
+    .history-item:last-child {
+      border-bottom: none;
+    }
+    .history-txt {
+      font-size: 1.08em;
+      font-style: italic;
+      margin-bottom: 2px;
+    }
+    .history-quote {
+      font-style: italic;
+      color: #b2e7fc;
+      background: #1e2b3c;
+      border-left: 4px solid #27e3e3;
+      border-radius: 5px;
+      padding: 2px 12px;
+      margin: 2px 0 5px 0;
+      font-size: 0.97em;
+    }
+    .history-date {
+      color: #bbb;
+      font-size: 0.99em;
+      font-style: italic;
+      margin-left: 2px;
+      font-family: monospace;
+    }
+    /* Profile UI */
+    #profile-ui {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      min-height: 400px;
+      animation: fadein 0.8s;
+      width: 100%;
+    }
+    .profile-card {
+      margin: 18px 0 10px 0;
+      padding: 20px 18px;
+      border-radius: 18px;
+      background: var(--card-bg);
+      box-shadow: var(--card-shadow);
+      min-width: 210px;
+      max-width: 340px;
+      width: 90vw;
+      position: relative;
+    }
+    .profile-avatar {
+      width: 84px;
+      height: 84px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 4px solid var(--accent2);
+      margin: 0 auto 10px auto;
+      display: block;
+      background: #fff;
+      box-shadow: 0 2px 18px #ff61c985;
+    }
+    .profile-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 7px;
+      font-size: 1.09rem;
+      font-weight: 500;
+    }
+    .profile-label {
+      font-size: 1.05rem;
+      color: #17f3a9;
+      min-width: 85px;
+    }
+    .profile-val {
+      font-weight: 600;
+      color: #fff;
+      font-size: 1.09rem;
+    }
+    .profile-id-row {
+      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .profile-id-label {
+      font-size: 1.05rem;
+      color: #ff61c9;
+      font-weight: 600;
+    }
+    .profile-id-value {
+      font-family: monospace;
+      color: #fff;
+      font-size: 1.08rem;
+      background: #183c31;
+      border-radius: 8px;
+      padding: 2px 10px;
+    }
+    .profile-actions {
+      margin: 18px 0 4px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      width: 100%;
+    }
+    .profile-action-btn {
+      padding: 9px 0;
+      border-radius: 12px;
+      background: var(--btn-bg);
+      color: var(--btn-txt);
+      font-size: 1.04rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      border: none;
+      box-shadow: 0 2px 12px #00ffe733;
+      cursor: pointer;
+      width: 100%;
+      transition: background .18s;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      justify-content: center;
+    }
+    .profile-action-btn img {
+      width: 22px;
+      height: 22px;
+    }
+    /* Leaderboard Modal */
+    .modal-bg {
+      position: fixed;
+      left:0;top:0;right:0;bottom:0;
+      background: #0e2039cc;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: fadein 0.2s;
+    }
+    .modal-box {
+      background: #162643;
+      padding: 21px 13px 15px 13px;
+      border-radius: 15px;
+      min-width: 90vw;
+      max-width: 420px;
+      box-shadow: 0 10px 40px #00ffe733;
+      color: #fff;
+      position: relative;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .leaderboard-title {
+      font-size: 1.3em;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: var(--accent);
+      text-align: center;
+      margin-bottom: 12px;
+      border-bottom: 2px solid #00ffe7;
+      padding-bottom: 6px;
+      background: linear-gradient(90deg, #00ffe7 0%, #ff61c9 100%);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      -webkit-text-fill-color: transparent;
+      text-fill-color: transparent;
+    }
+    .leaderboard-row {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 1.04em; margin-bottom: 7px;
+      background: #1c2b49;
+      border-radius: 8px;
+      padding: 7px 6px 7px 7px;
+      box-shadow: 0 1.5px 8px #00ffe71a;
+      font-weight: 500;
+      border-left: 5px solid #00ffe7;
+      transition: border .2s;
+    }
+    .lb-rank {
+      font-size: 1.12em;
+      font-weight: bold;
+      width: 32px;
+      display: flex; align-items: center; justify-content: center;
+      color: #ffcc70;
+    }
+    .lb-top {
+      background: #ffcc70;
+      color: #333;
+      border-radius: 5px;
+      font-weight: bold;
+      margin-left: 2px;
+      padding: 1px 5px;
+      font-size: 1.01em;
+      box-shadow: 0 2px 8px #ffcc70aa;
+    }
+    .lb-country {
+      font-size: 1.07em;
+      color: #25ba7b;
+      margin: 0 7px 0 0;
+    }
+    .lb-name {
+      font-weight: bold;
+      font-size: 1.12em;
+      color: #fff;
+      margin-right: 5px;
+      letter-spacing: .5px;
+      text-shadow: 0 2px 8px #fff3;
+    }
+    .lb-shb, .lb-usdt {
+      display: flex; align-items: center; gap: 2px;
+      margin-left: 9px;
+      font-size: 1.09em;
+    }
+    .lb-shb img, .lb-usdt img {
+      width: 20px; height: 20px;
+    }
+    .modal-close {
+      position: absolute;
+      right: 17px;
+      top: 13px;
+      font-size: 1.3em;
+      background: none;
+      border: none;
+      color: #ff61c9;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 10;
+    }
+    /* Daily Check In Modal Pro */
+    .dci-modal {
+      min-width: 90vw; max-width: 410px;
+      background: #1b3552;
+      border-radius: 18px;
+      box-shadow: 0 10px 40px #00ffe733;
+      padding: 26px 14px 24px 14px;
+      color: #fff;
+      position: relative;
+      text-align: center;
+      font-size: 1.09em;
+      border-top: 6px solid var(--accent);
+    }
+    .dci-arrow {
+      display: flex; gap: 10px; justify-content: center; align-items: flex-end; margin-bottom: 16px;
+      margin-top: 9px;
+    }
+    .dci-day {
+      background: #262f45;
+      color: #fff;
+      border-radius: 12px;
+      padding: 10px 9px 15px 9px;
+      margin: 0 2.5px;
+      font-size: 1.09em;
+      font-weight: 500;
+      position: relative;
+      min-width: 61px;
+      box-shadow: 0 2px 8px #00ffe72c;
+      border: 2px solid #27e3e3;
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: flex-end;
+      transition: all .18s;
+      min-height: 82px;
+    }
+    .dci-day.active {
+      background: var(--accent2);
+      color: #fff;
+      font-weight: bold;
+      border: 3px solid #00ffe7;
+      box-shadow: 0 2px 14px #ff61c9b5;
+      transform: scale(1.08) translateY(-7px);
+    }
+    .dci-day .dci-day-title {
+      font-size: 1.01em;
+      font-weight: bold;
+      margin-bottom: 3px;
+    }
+    .dci-day .dci-reward {
+      margin-top: 3px;
+      font-size: 0.97em;
+      color: #b0f2ff;
+    }
+    .dci-btn {
+      margin-top: 15px;
+      padding: 10px 0;
+      border-radius: 11px;
+      background: var(--btn-bg);
+      color: var(--btn-txt);
+      font-size: 1.11rem;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      width: 80%;
+      max-width: 220px;
+      box-shadow: 0 2px 12px #00ffe733;
+      letter-spacing: 1.2px;
+    }
+    .dci-btn:active { background: linear-gradient(90deg, #ff61c9 0%, #00ffe7 100%);}
+    .dci-progress {
+      margin-top: 12px;
+      color: #17f3a9;
+      font-size: 1.11em;
+      font-weight: 600;
+    }
+    /* Notification Modal Pro */
+    .noti-modal {
+      min-width: 90vw; max-width: 400px;
+      background: #1b3552;
+      border-radius: 18px;
+      box-shadow: 0 10px 40px #00ffe733;
+      padding: 30px 16px 20px 16px;
+      color: #fff;
+      position: relative;
+      text-align: left;
+      font-size: 1.12em;
+      border-top: 6px solid var(--accent);
+      max-height: 88vh;
+      overflow-y: auto;
+    }
+    .noti-modal .modal-close {
+      top: 13px;
+      right: 18px;
+    }
+    .noti-title {
+      font-size: 1.25em;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: var(--accent);
+      text-align: center;
+      margin-bottom: 8px;
+      border-bottom: 2px solid #00ffe7;
+      padding-bottom: 5px;
+    }
+    .noti-list {
+      display: flex; flex-direction: column; gap: 13px;
+      margin-top: 12px;
+      max-height: 61vh;
+      overflow-y: auto;
+    }
+    .noti-item {
+      background: #222b49;
+      border-radius: 10px;
+      padding: 10px 13px;
+      font-size: 1.10em;
+      color: #fff;
+      box-shadow: 0 2px 8px #00ffe72c;
+      border-left: 4px solid #00ffe7;
+      font-weight: 600;
+      margin-bottom: 3px;
+    }
+    .noti-date {
+      font-size: 0.97em;
+      color: #bbb;
+      margin-top: 2px;
+      font-family: monospace;
+      text-align: right;
+      display: block;
+    }
+    /* Redeem Page */
+    #redeem-page {
+      display: none;
+      position: fixed;
+      left: 0;top: 0;right: 0;bottom: 0;
+      z-index: 10000;
+      background: #112333;
+      color: #fff;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      animation: fadein 0.3s;
+    }
+    .redeem-box {
+      background: #1c2b3f;
+      border-radius: 18px;
+      box-shadow: 0 8px 44px #00ffe72c;
+      padding: 28px 14px 19px 14px;
+      min-width: 78vw;
+      max-width: 400px;
+      text-align: center;
+      margin: 0 auto;
+      margin-top: 11vh;
+    }
+    .redeem-form-row {
+      display: flex; flex-direction: column; gap: 6px; margin: 13px 0;
+      align-items: flex-start;
+    }
+    .redeem-form-row label {
+      color: #bbb;
+      font-size: 1.08em;
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+    .redeem-form-row input {
+      border-radius: 10px;
+      border: 2px solid #28324d;
+      font-size: 1.07em;
+      padding: 7px 10px;
+      background: #1a2133;
+      color: var(--white);
+      outline: none;
+      transition: border .13s;
+      width: 100%;
+    }
+    .redeem-form-row input:focus {
+      border: 2px solid var(--accent2);
+    }
+    .redeem-btn {
+      margin-top: 9px;
+      padding: 9px 0;
+      border-radius: 13px;
+      background: var(--btn-bg);
+      color: var(--btn-txt);
+      font-size: 1.09rem;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      width: 95%;
+      box-shadow: 0 2px 12px #00ffe733;
+      letter-spacing: 1px;
+    }
+    .redeem-success {
+      color: var(--success);
+      margin-top: 13px;
+      font-size: 1.08em;
+      font-weight: bold;
+    }
+    /* Misc */
+    .hidden { display: none !important; }
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 0; }
+  </style>
+</head>
+<body>
+  <!-- LOADING SCREEN -->
+  <div id="loading-screen">
+    <video src="29f4182c-fb84-4f6e-830f-f560ae571afe.mp4" autoplay muted playsinline loop></video>
+  </div>
+  <div id="app">
+    <!-- Top Bar -->
+    <div class="top-bar" id="top-bar">
+      <span id="main-title">Shark Bounty</span>
+    </div>
+    <!-- BALANCE -->
+    <div style="margin: 0 17px 10px 17px;">
+      <div class="balance-row">
+        <div class="balance-coin"><img src="17510103.gif"/><span class="coin-txt">SHB</span> <span id="shb-balance" class="coin-amt">0</span></div>
+        <div class="balance-usdt"><img src="15207964.png"/><span class="usdt-txt">USDT</span> <span id="usdt-balance" class="usdt-amt">0.00</span></div>
+      </div>
+    </div>
+    <!-- HOME UI -->
+    <div id="home-ui" style="position:relative;">
+      <div class="coin-tapper-outer">
+        <div class="coin-tapper" id="coin-tapper">
+          <img src="17510103.gif" alt="Shark Coin"/>
+          <span class="tap-plus-anim" id="tap-plus-anim"></span>
+        </div>
+        <div class="energy-bar-outer">
+          <div class="energy-bar-inner" id="energy-bar-inner"></div>
+          <div class="energy-label" id="energy-label">Energy: 1200</div>
+        </div>
+      </div>
+    </div>
+    <!-- TRADE UI -->
+    <div id="trade-ui">
+      <div class="plans-list" id="plans-list"></div>
+    </div>
+    <!-- TASKS UI -->
+    <div id="tasks-ui">
+      <div style="margin-top: 44px;">
+        <img src="16104409.png" style="width:65px;opacity:0.7;">
+        <div style="margin-top: 14px; font-size:1.1rem;">No tasks available right now.</div>
+        <div style="color:#789; font-size:0.98rem;">(Admin panel will provide tasks soon.)</div>
+      </div>
+    </div>
+    <!-- WALLET UI -->
+    <div id="wallet-ui">
+      <div class="wallet-tabs">
+        <button class="wallet-tab" id="deposit-tab">Deposit</button>
+        <button class="wallet-tab" id="withdraw-tab">Withdraw</button>
+        <button class="wallet-tab" id="history-tab">History</button>
+      </div>
+      <div class="wallet-section" id="deposit-section"></div>
+      <div class="wallet-section" id="withdraw-section"></div>
+      <div class="history-list" id="history-section"></div>
+    </div>
+    <!-- PROFILE UI -->
+    <div id="profile-ui">
+      <div class="profile-card">
+        <img src="18827926.png" class="profile-avatar"/>
+        <div class="profile-row"><span class="profile-label">Username:</span><span class="profile-val" id="profile-username">SharkUser</span></div>
+        <div class="profile-row"><span class="profile-label">Referral:</span><span class="profile-val" id="profile-referral">None</span></div>
+        <div class="profile-row"><span class="profile-label">Joined:</span><span class="profile-val" id="profile-joined">2025-09-16</span></div>
+        <div class="profile-id-row"><span class="profile-id-label">User ID:</span><span class="profile-id-value" id="profile-userid"></span>
+          <button class="copy-btn" onclick="copy(document.getElementById('profile-userid').textContent)" title="Copy User ID"><img src="1622069.png"></button>
+        </div>
+        <div class="profile-actions">
+          <button class="profile-action-btn" onclick="showProfileModal('referral')"><img src="17675714.png">Referrals</button>
+          <button class="profile-action-btn" onclick="showProfileModal('leaderboard')"><img src="19026492.png">Leaderboard</button>
+          <button class="profile-action-btn" onclick="showProfileModal('dci')"><img src="1142792.png">Daily Check In</button>
+          <button class="profile-action-btn" onclick="showProfileModal('notification')"><img src="13146658.png">Notification</button>
+          <button class="profile-action-btn" onclick="showProfileModal('redeem')"><img src="3179668.png">Redeem</button>
+        </div>
+      </div>
+    </div>
+    <!-- BOTTOM NAV -->
+    <div class="bottom-nav" id="bottom-nav">
+      <button class="nav-btn active" data-nav="home"><img src="1057118.png"/><span>Home</span></button>
+      <button class="nav-btn" data-nav="trade"><img src="9084248.png"/><span>Trade</span></button>
+      <button class="nav-btn" data-nav="tasks"><img src="16104409.png"/><span>Tasks</span></button>
+      <button class="nav-btn" data-nav="wallet"><img src="6826311.png"/><span>Wallet</span></button>
+      <button class="nav-btn" data-nav="profile"><img src="18827926.png"/><span>Profile</span></button>
+    </div>
+    <!-- MODALS / REDEEM PAGE -->
+    <div id="profile-modal-anchor"></div>
+    <div id="redeem-page"></div>
+  </div>
+  <script>
+    // --- Constants ---
+    const ENERGY_MAX = 1200, ENERGY_PER_TAP = 1, ENERGY_REFILL_PER_SEC = 1;
+    const PLANS = [
+      { id:'ton', name:'TON/USDT', price:10, validity:30, daily:1, img:'1142792.png' },
+      { id:'not', name:'NOT/USDT', price:30, validity:30, daily:3, img:'1142792.png' },
+      { id:'hmstr', name:'HMSTR/USDT', price:70, validity:30, daily:7, img:'1142792.png' },
+      { id:'eth', name:'ETH/USDT', price:100, validity:30, daily:10, img:'1142792.png' },
+      { id:'bnb', name:'BNB/USDT', price:150, validity:30, daily:15, img:'1142792.png' },
+      { id:'btc', name:'BTC/USDT', price:200, validity:30, daily:20, img:'1142792.png' }
+    ];
+    const DEPOSIT_TON_ADDR = "UQCOL7arveEVrKfKa9v3SbZnKjIBnOavmX3aXdDV-XD1cQ09";
+    const DEPOSIT_USDT_ADDR = "UQCOL7arveEVrKfKa9v3SbZnKjIBnOavmX3aXdDV-XD1cQ09";
+    const TON_QR = "1890e18b5008f67e6d057aa7a47149bfc84740fc/Screenshot_2025-09-12-18-54-13-944_com.ton_keeper-edit.jpg";
+    const USDT_QR = "a23720d6a315d2422e3943aa7bf779beac9acdad/Screenshot_2025-09-12-18-54-50-676_com.ton_keeper-edit.jpg";
+    const TON_RATE = 3.20; // 1 TON = 3.20 USD
+
+    // --- Storage ---
+    function getState() {
+      try {
+        return JSON.parse(localStorage.getItem('sb-state')) || {};
+      } catch {return {};}
+    }
+    function saveState(st) {
+      localStorage.setItem('sb-state', JSON.stringify(st));
+    }
+    let state = getState();
+    if (!state.shb) state.shb = 0;
+    if (!state.usdt) state.usdt = 0;
+    if (!state.energy) state.energy = ENERGY_MAX;
+    if (!state.lastEnergyTs) state.lastEnergyTs = Date.now();
+    if (!state.plans) state.plans = {};
+    if (!state.history) state.history = [];
+    if (!state.notifications) state.notifications = [];
+    if (!state.dci) state.dci = { last: null, streak: 0, progress: [false,false,false,false,false,false,false] };
+    if (!state.userid) state.userid = (Math.floor(Math.random()*1e11)).toString().padStart(11,'0');
+    saveState(state);
+
+    // --- Loading screen ---
+    setTimeout(()=>{
+      document.getElementById('loading-screen').style.opacity=0;
+      setTimeout(()=>{
+        document.getElementById('loading-screen').style.display='none';
+        document.getElementById('app').style.display='flex';
+        navTo('home');
+        updateBalances();
+        updateEnergyBar();
+        renderPlans();
+        renderHistory();
+        document.getElementById('profile-userid').textContent = state.userid;
+      },500);
+    },1800);
+
+    // --- Navigation ---
+    let navBtns = document.querySelectorAll('.nav-btn');
+    navBtns.forEach(btn=>{
+      btn.onclick = ()=> {
+        navBtns.forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        navTo(btn.dataset.nav);
+      }
+    });
+    function navTo(nav) {
+      document.getElementById('main-title').textContent =
+        nav==='home' ? "Shark Bounty" :
+        nav==='trade' ? "Trade Plans" :
+        nav==='tasks' ? "Daily Tasks" :
+        nav==='wallet' ? "Wallet" :
+        nav==='profile' ? "Profile" : "";
+      document.getElementById('home-ui').style.display = nav==='home' ? 'flex' : 'none';
+      document.getElementById('trade-ui').style.display = nav==='trade' ? 'flex' : 'none';
+      document.getElementById('tasks-ui').style.display = nav==='tasks' ? 'flex' : 'none';
+      document.getElementById('wallet-ui').style.display = nav==='wallet' ? 'flex' : 'none';
+      document.getElementById('profile-ui').style.display = nav==='profile' ? 'flex' : 'none';
+      if (nav==='profile') document.getElementById('profile-userid').textContent = state.userid;
+      if (nav==='wallet') showWalletTab('none');
+    }
+
+    // --- Balances ---
+    function updateBalances() {
+      document.getElementById('shb-balance').innerHTML = state.shb;
+      document.getElementById('usdt-balance').innerHTML = parseFloat(state.usdt).toFixed(2);
+    }
+
+    // --- Coin Tapper ---
+    let energy = state.energy, lastEnergyTs = state.lastEnergyTs;
+    let tapAnimTimeout = null;
+    function updateEnergyBar() {
+      let now = Date.now();
+      let diff = Math.floor((now - lastEnergyTs)/1000);
+      if (energy<ENERGY_MAX && diff>0) {
+        energy += diff*ENERGY_REFILL_PER_SEC;
+        if (energy>ENERGY_MAX) energy=ENERGY_MAX;
+        lastEnergyTs = now;
+        state.energy=energy; state.lastEnergyTs=lastEnergyTs; saveState(state);
+      }
+      let perc = Math.floor(energy/ENERGY_MAX*100);
+      document.getElementById('energy-bar-inner').style.width = perc+"%";
+      document.getElementById('energy-label').textContent = "Energy: "+energy;
+    }
+    setInterval(()=>{
+      updateEnergyBar();
+    },1000);
+
+    document.getElementById('coin-tapper').onclick = ()=>{
+      if (energy < ENERGY_PER_TAP) {
+        let anim = document.getElementById('tap-plus-anim');
+        anim.innerHTML = `<span style="color:#ff556b;">No Energy!</span>`;
+        anim.style.opacity=1;
+        clearTimeout(tapAnimTimeout);
+        tapAnimTimeout = setTimeout(()=>{anim.style.opacity=0},700);
+        return;
+      }
+      state.shb = (state.shb||0) + 1;
+      energy -= ENERGY_PER_TAP;
+      if (energy<0) energy=0;
+      state.energy=energy; state.lastEnergyTs=Date.now();
+      saveState(state);
+      updateBalances();
+      updateEnergyBar();
+      // Animation
+      let anim = document.getElementById('tap-plus-anim');
+      anim.textContent = "+1";
+      anim.style.opacity=1;
+      anim.style.animation = 'none'; anim.offsetHeight; anim.style.animation = null;
+      clearTimeout(tapAnimTimeout);
+      tapAnimTimeout = setTimeout(()=>{anim.style.opacity=0},700);
+      addNotification("You earned 1 SHB by tapping the shark coin!");
+    };
+
+    // --- Plans (Trade) ---
+    function renderPlans() {
+      let plansEl = document.getElementById('plans-list');
+      plansEl.innerHTML = '';
+      PLANS.forEach(plan=>{
+        let userPlan = state.plans[plan.id]||{};
+        let active = !!userPlan.purchased;
+        let canClaim = active && Date.now() - (userPlan.lastClaim||0) > 24*3600*1000;
+        let expired = active && Date.now() > userPlan.purchased + plan.validity*24*3600*1000;
+        let btnTxt = !active ? 'Buy' : (canClaim ? 'Claim' : 'Claimed');
+        let disabled = active && !canClaim;
+        let row = document.createElement('div');
+        row.className = 'plan-card';
+        row.innerHTML = `
+          <div class="plan-title">${plan.name}</div>
+          <div class="plan-row">
+            <span class="plan-price"><img src="15207964.png" style="width:18px;vertical-align:middle;margin-right:2px;">$${plan.price}</span>
+            <span class="plan-validity">Validity: ${plan.validity} days</span>
+            <span class="plan-earning">Daily: $${plan.daily}</span>
+          </div>
+          <button class="${!active?'buy-btn':'claim-btn'}" ${disabled?'disabled':''} data-plan="${plan.id}">${btnTxt}</button>
+        `;
+        row.querySelector('button').onclick = ()=>{
+          if (!active) buyPlan(plan);
+          else if (canClaim) claimPlan(plan);
+        };
+        plansEl.appendChild(row);
+      });
+    }
+    function buyPlan(plan) {
+      if (state.usdt < plan.price) {
+        alert("Insufficient USDT balance.");
+        return;
+      }
+      if (state.plans[plan.id] && state.plans[plan.id].purchased) {
+        alert("Plan already active.");
+        return;
+      }
+      if (!confirm(`Buy ${plan.name} plan for $${plan.price}?`)) return;
+      state.usdt -= plan.price;
+      state.plans[plan.id]={purchased:Date.now(), lastClaim:0};
+      state.history.push({type:'buy',plan:plan.name,amt:plan.price,date:new Date().toLocaleString()});
+      saveState(state);
+      updateBalances();
+      renderPlans();
+      renderHistory();
+      addNotification(`Bought ${plan.name} plan for $${plan.price}`);
+      alert("Plan purchased successfully!");
+    }
+    function claimPlan(plan) {
+      let userPlan = state.plans[plan.id];
+      if (!userPlan) return;
+      let now = Date.now();
+      if (now - (userPlan.lastClaim||0) < 24*3600*1000) {
+        alert("Already claimed today.");
+        return;
+      }
+      state.usdt += plan.daily;
+      userPlan.lastClaim = now;
+      state.plans[plan.id]=userPlan;
+      state.history.push({type:'claim',plan:plan.name,amt:plan.daily,date:new Date().toLocaleString()});
+      saveState(state);
+      updateBalances();
+      renderPlans();
+      renderHistory();
+      addNotification(`Claimed $${plan.daily} daily earning from ${plan.name} plan!`);
+      alert(`Claimed $${plan.daily} for ${plan.name}!`);
+    }
+
+    // --- WALLET TAB ---
+    // Tabs
+    document.getElementById('deposit-tab').onclick = ()=>showWalletTab('deposit');
+    document.getElementById('withdraw-tab').onclick = ()=>showWalletTab('withdraw');
+    document.getElementById('history-tab').onclick = ()=>showWalletTab('history');
+    function showWalletTab(tab) {
+      document.getElementById('deposit-section').classList.remove('active');
+      document.getElementById('withdraw-section').classList.remove('active');
+      document.getElementById('history-section').classList.remove('active');
+      document.getElementById('deposit-tab').classList.remove('active');
+      document.getElementById('withdraw-tab').classList.remove('active');
+      document.getElementById('history-tab').classList.remove('active');
+      if (tab==='deposit') {
+        document.getElementById('deposit-section').classList.add('active');
+        document.getElementById('deposit-tab').classList.add('active');
+        renderDeposit();
+      }
+      else if (tab==='withdraw') {
+        document.getElementById('withdraw-section').classList.add('active');
+        document.getElementById('withdraw-tab').classList.add('active');
+        renderWithdraw();
+      }
+      else if (tab==='history') {
+        document.getElementById('history-section').classList.add('active');
+        document.getElementById('history-tab').classList.add('active');
+        renderHistory();
+      }
+    }
+    showWalletTab('none'); // hide all by default
+
+    // Deposit Section
+    function renderDeposit() {
+      let el = document.getElementById('deposit-section');
+      el.innerHTML = `
+        <div class="wallet-info-box">
+          <b>Deposit USDT or TON into your wallet:</b><br>
+          - Minimum TON amount is <b>3</b><br>
+          - Minimum USDT amount is <b>10</b><br>
+          - Use the correct wallet address and memo.<br>
+          - Deposits are credited after confirmation.
+        </div>
+        <div class="form-row">
+          <label>Deposit Method</label>
+          <select id="deposit-method">
+            <option value="ton">TONCOIN</option>
+            <option value="usdt">USDT TON</option>
+          </select>
+        </div>
+        <div class="form-row" id="deposit-amount-row">
+          <label id="deposit-amt-label">TON Amount (min 3)</label>
+          <input type="number" id="deposit-amount" min="3" placeholder="Enter TON amount"/>
+        </div>
+        <button class="buy-btn" id="deposit-confirm-btn" style="margin-top:3px;">Proceed</button>
+      `;
+      let methodSel = el.querySelector('#deposit-method');
+      let amtInput = el.querySelector('#deposit-amount');
+      let amtLabel = el.querySelector('#deposit-amt-label');
+      let confirmBtn = el.querySelector('#deposit-confirm-btn');
+      function updateLabel() {
+        let m = methodSel.value;
+        amtLabel.textContent = m==='ton' ? "TON Amount (min 3)" : "USDT Amount (min 10)";
+        amtInput.placeholder = m==='ton' ? "Enter TON amount" : "Enter USDT amount";
+        amtInput.min = m==='ton' ? 3 : 10;
+      }
+      methodSel.onchange = updateLabel;
+      updateLabel();
+      confirmBtn.onclick = ()=>{
+        let m = methodSel.value;
+        let amt = parseFloat(amtInput.value);
+        if (isNaN(amt) || amt < (m==='ton'?3:10)) {
+          alert(`Minimum ${m==='ton'?'3 TON':'10 USDT'} required.`);
+          return;
+        }
+        showDepositQR(m, amt);
+      };
+    }
+    // Deposit QR Page
+    function showDepositQR(method, amt) {
+      let el = document.getElementById('deposit-section');
+      let addr = method==='ton'?DEPOSIT_TON_ADDR:DEPOSIT_USDT_ADDR;
+      let qr = method==='ton'?TON_QR:USDT_QR;
+      let memo = randomMemo();
+      let usdtVal = method==='ton'?amt*TON_RATE:amt;
+      let expire = Date.now()+15*60*1000;
+      let timerId;
+      function countdown() {
+        let left = Math.max(0, Math.floor((expire-Date.now())/1000));
+        let m = Math.floor(left/60), s = left%60;
+        el.querySelector('.deposit-countdown').textContent = `Expires in: ${m}m ${s}s`;
+        if (left <= 0) {
+          clearInterval(timerId);
+          el.innerHTML = `<div style="color:#ff556b; font-size:1.07rem;">Deposit session expired.<br><button class="buy-btn" onclick="showWalletTab('deposit')">Back</button></div>`;
+        }
+      }
+      el.innerHTML = `
+        <div class="deposit-countdown"></div>
+        <div class="qr-section">
+          <img src="${method==='ton'?TON_QR:USDT_QR}" alt="Deposit QR"/>
+        </div>
+        <div class="deposit-info-box">
+          <div class="deposit-address">Address: <span>${addr}</span>
+            <button class="copy-btn" onclick="copy('${addr}')" title="Copy Address"><img src="1622069.png"></button>
+          </div>
+          <div class="deposit-memo">Memo/Comment: <span class="memo-label">${memo}</span>
+            <button class="copy-btn" onclick="copy('${memo}')" title="Copy Memo"><img src="1622069.png"></button>
+          </div>
+          <div class="live-rate">
+            You will get: <b>${usdtVal.toFixed(2)} USDT</b>
+            <span style="color:#bbb; font-size:0.94rem;display:block;margin-top:3px;">(1 TON = $${TON_RATE.toFixed(2)})</span>
+          </div>
+        </div>
+        <div style="text-align:center;margin-top:9px;">
+          <button class="buy-btn" onclick="confirmDeposit('${method}',${amt},'${memo}',${usdtVal})">I have paid</button>
+        </div>
+      `;
+      countdown();
+      timerId = setInterval(countdown,1000);
+    }
+    window.showDepositQR = showDepositQR; // allow onclick
+    function confirmDeposit(method, amt, memo, usdtVal) {
+      if (!confirm("Payment will be verified and USDT added on success. Add in 5-10s for test!")) return;
+      state.usdt += usdtVal;
+      state.history.push({type:'deposit',method,amt:usdtVal,date:new Date().toLocaleString(),addr:method==='ton'?DEPOSIT_TON_ADDR:DEPOSIT_USDT_ADDR,memo});
+      saveState(state);
+      updateBalances();
+      renderHistory();
+      addNotification(`Deposit success! +${usdtVal.toFixed(2)} USDT`);
+      alert("Deposit successful. USDT balance updated!");
+      showWalletTab('history');
+    }
+    window.confirmDeposit = confirmDeposit;
+
+    // Withdraw Section
+    function renderWithdraw() {
+      let el = document.getElementById('withdraw-section');
+      el.innerHTML = `
+        <div class="wallet-info-box">
+          <b>Withdraw USDT/TON:</b><br>
+          - Minimum withdraw amount is <b>$3</b><br>
+          - Enter your TON chain address<br>
+          - Withdrawals are processed after review.
+        </div>
+        <div class="form-row">
+          <label>Withdraw Method</label>
+          <select id="withdraw-method">
+            <option value="usdt">USDT TON</option>
+            <option value="ton">TONCOIN</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>Amount (min $3)</label>
+          <input type="number" id="withdraw-amount" min="3" placeholder="Enter amount"/>
+        </div>
+        <div class="form-row">
+          <label>Address (TON chain)</label>
+          <input type="text" id="withdraw-address" placeholder="Enter TON chain address"/>
+        </div>
+        <div class="form-row">
+          <label>Memo/Comment (optional)</label>
+          <input type="text" id="withdraw-memo" placeholder="Memo/Comment (optional)"/>
+        </div>
+        <button class="buy-btn" id="withdraw-confirm-btn" style="margin-top:3px;">Withdraw</button>
+      `;
+      el.querySelector('#withdraw-confirm-btn').onclick = ()=>{
+        let method = el.querySelector('#withdraw-method').value;
+        let amt = parseFloat(el.querySelector('#withdraw-amount').value);
+        let addr = el.querySelector('#withdraw-address').value.trim();
+        let memo = el.querySelector('#withdraw-memo').value.trim();
+        if (isNaN(amt) || amt < 3) {
+          alert("Minimum withdraw $3.");
+          return;
+        }
+        if (!addr) {
+          alert("Enter TON chain address.");
+          return;
+        }
+        if (amt > state.usdt) {
+          alert("Insufficient USDT balance.");
+          return;
+        }
+        if (!confirm("Confirm withdraw?")) return;
+        state.usdt -= amt;
+        state.history.push({type:'withdraw',method,amt,date:new Date().toLocaleString(),addr,memo});
+        saveState(state);
+        updateBalances();
+        renderHistory();
+        addNotification(`Withdraw request: -$${amt} via ${method}`);
+        alert("Withdraw request submitted!");
+        showWalletTab('history');
+      };
+    }
+
+    // History
+    function renderHistory() {
+      let el = document.getElementById('history-section');
+      if (!state.history || !state.history.length) {
+        el.innerHTML = `<div style="color:#bbb;text-align:center;">No history found.</div>`;
+        return;
+      }
+      el.innerHTML = '';
+      state.history.slice().reverse().forEach(h=>{
+        let txt = '';
+        if (h.type==='deposit') txt = `<b>Deposit</b> (${h.method}) <span style="color:#17f3a9;">+$${h.amt}</span>`;
+        else if (h.type==='withdraw') txt = `<b>Withdraw</b> (${h.method}) <span style="color:#ff556b;">-$${h.amt}</span>`;
+        else if (h.type==='buy') txt = `<b>Bought Plan:</b> ${h.plan} <span style="color:#ff61c9;">-$${h.amt}</span>`;
+        else if (h.type==='claim') txt = `<b>Claimed:</b> ${h.plan} <span style="color:#17f3a9;">+$${h.amt}</span>`;
+        el.innerHTML += `<div class="history-item">
+          <div class="history-txt">${txt}</div>
+          <div class="history-quote">
+            Date: <i>${h.date}</i><br>
+            ${h.addr?`Wallet: <i>${h.addr}</i><br>`:""}
+            ${h.memo?`Memo: <i>${h.memo}</i><br>`:""}
+            ${h.type==='deposit'?"":" "}
+          </div>
+        </div>`;
+      });
+    }
+
+    // Copy util
+    function copy(txt) {
+      navigator.clipboard.writeText(txt);
+      alert("Copied!");
+    }
+    window.copy = copy;
+
+    // Memo generator
+    function randomMemo() {
+      let s = '';
+      let chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ123456789';
+      for (let i=0;i<7;i++) s+=chars[Math.floor(Math.random()*chars.length)];
+      return s;
+    }
+
+    // --- Profile Dummy data ---
+    document.getElementById('profile-username').textContent = "SharkUser";
+    document.getElementById('profile-referral').textContent = "None";
+    document.getElementById('profile-joined').textContent = (new Date()).toISOString().slice(0,10);
+    document.getElementById('profile-userid').textContent = state.userid;
+
+    // --- Profile Modal ---
+    function showProfileModal(type) {
+      let anchor = document.getElementById('profile-modal-anchor');
+      anchor.innerHTML = "";
+      if (type==='referral') {
+        anchor.innerHTML = `<div class="modal-bg" onclick="closeProfileModal(event)">
+          <div class="modal-box" onclick="event.stopPropagation()">
+            <button class="modal-close" onclick="closeProfileModal(event)">&times;</button>
+            <div style="font-size:1.2em;font-weight:600;margin-bottom:11px;">Referrals</div>
+            <div style="padding:17px 4px;text-align:center;">Referral features <span style="color:#17f3a9;">Coming soon!</span></div>
+          </div>
+        </div>`;
+      }
+      if (type==='leaderboard') {
+        let names = ["Alex", "Sam", "Liam", "Noah", "Mia", "Lucas", "Sophia", "Emma", "Ava", "Ethan", "Olivia", "Mason", "Logan", "James", "Ella", "Jack", "Jacob", "Isabella", "Benjamin", "Elijah"];
+        let countries = ["🇺🇸USA", "🇬🇧UK", "🇯🇵Japan", "🇮🇳India", "🇨🇦Canada", "🇦🇺Australia", "🇫🇷France", "🇩🇪Germany", "🇧🇷Brazil", "🇮🇹Italy"];
+        function makeUser(rank) {
+          let name = names[Math.floor(Math.random()*names.length)];
+          let country = countries[Math.floor(Math.random()*countries.length)];
+          let shb = Math.floor(Math.random()*80000)+1000*rank+5000;
+          let usdt = (shb/100000*250).toFixed(2);
+          return {rank, name, country, shb, usdt};
+        }
+        let rows = [];
+        for (let i=0;i<100;i++) rows.push(makeUser(i+1));
+        let lbRows = rows.map((u, i)=>`
+          <div class="leaderboard-row" style="border-left: 5px solid ${i<3?'#ffcc70':'#00ffe7'};">
+            <span class="lb-rank">${u.rank}${i<3?'<img src="19026492.png" class="lb-top" style="width:21px;vertical-align:middle;">':''}</span>
+            <span class="lb-country">${u.country}</span>
+            <span class="lb-name">${u.name}</span>
+            <span class="lb-shb"><img src="17510103.gif">${u.shb} SHB</span>
+            <span class="lb-usdt"><img src="15207964.png">${u.usdt} USDT</span>
+          </div>
+        `).join("");
+        anchor.innerHTML = `<div class="modal-bg" onclick="closeProfileModal(event)">
+          <div class="modal-box" id="lb-modal" onclick="event.stopPropagation()">
+            <button class="modal-close" onclick="closeProfileModal(event)">&times;</button>
+            <div class="leaderboard-title">Leaderboard</div>
+            <div style="max-height:64vh;overflow:auto;">
+              ${lbRows}
+            </div>
+          </div>
+        </div>`;
+        let lbModal = document.getElementById('lb-modal');
+        let lbInterval = setInterval(()=>{
+          let rows = [];
+          for (let i=0;i<100;i++) rows.push(makeUser(i+1));
+          lbModal.querySelector('div[max-height]').innerHTML = rows.map((u, i)=>`
+            <div class="leaderboard-row" style="border-left: 5px solid ${i<3?'#ffcc70':'#00ffe7'};">
+              <span class="lb-rank">${u.rank}${i<3?'<img src="19026492.png" class="lb-top" style="width:21px;vertical-align:middle;">':''}</span>
+              <span class="lb-country">${u.country}</span>
+              <span class="lb-name">${u.name}</span>
+              <span class="lb-shb"><img src="17510103.gif">${u.shb} SHB</span>
+              <span class="lb-usdt"><img src="15207964.png">${u.usdt} USDT</span>
+            </div>
+          `).join("");
+        },30000);
+        anchor.lbInterval = lbInterval;
+      }
+      if (type==='dci') {
+        let dci = state.dci;
+        let today = (new Date()).toDateString();
+        let nextIdx = dci.progress.findIndex(v=>!v);
+        let eligible = (dci.last!==today && nextIdx!==-1);
+        let reward = [
+          {shb:1000,usdt:0.10},
+          {shb:2000,usdt:0.20},
+          {shb:3000,usdt:0.30},
+          {shb:4000,usdt:0.40},
+          {shb:5000,usdt:0.50},
+          {shb:6000,usdt:0.60},
+          {shb:7000,usdt:0.70}
+        ];
+        let days = "";
+        for (let i=0;i<7;i++) days+=`
+          <div class="dci-day${dci.progress[i]?' active':''}">
+            <span class="dci-day-title">Day ${i+1}</span>
+            <span class="dci-reward">${reward[i].shb} SHB<br>${reward[i].usdt} USDT</span>
+          </div>`;
+        let btn = eligible?`<button class="dci-btn" onclick="checkInDci()">Check In</button>`:`<div style="color:#bbb;margin-top:13px;">Checked in today or completed all days.</div>`;
+        anchor.innerHTML = `<div class="modal-bg" onclick="closeProfileModal(event)">
+          <div class="dci-modal" onclick="event.stopPropagation()">
+            <button class="modal-close" onclick="closeProfileModal(event)">&times;</button>
+            <div style="font-size:1.25em;font-weight:700;letter-spacing:1px;color:var(--accent);margin-bottom:9px;">Daily Check In</div>
+            <div class="dci-arrow">${days}</div>
+            ${btn}
+            <div class="dci-progress">Current streak: ${dci.progress.filter(v=>v).length}/7</div>
+          </div>
+        </div>`;
+      }
+      if (type==='notification') {
+        let noti = state.notifications||[];
+        let list = noti.length?noti.slice().reverse().map(n=>`
+          <div class="noti-item">
+            ${n.text}
+            <span class="noti-date">${n.date}</span>
+          </div>
+        `).join(""):`<div style="color:#bbb;text-align:center;">No notifications yet.</div>`;
+        anchor.innerHTML = `<div class="modal-bg" onclick="closeProfileModal(event)">
+          <div class="noti-modal" onclick="event.stopPropagation()">
+            <button class="modal-close" onclick="closeProfileModal(event)">&times;</button>
+            <div class="noti-title">Notifications</div>
+            <div class="noti-list">${list}</div>
+          </div>
+        </div>`;
+      }
+      if (type==='redeem') {
+        showRedeemPage();
+        return;
+      }
+    }
+    window.showProfileModal = showProfileModal;
+    function closeProfileModal(e) {
+      if(e) e.stopPropagation();
+      let anchor = document.getElementById('profile-modal-anchor');
+      if (anchor.lbInterval) clearInterval(anchor.lbInterval);
+      anchor.innerHTML = "";
+      document.getElementById('redeem-page').style.display = "none";
+    }
+    window.closeProfileModal = closeProfileModal;
+
+    // Daily Check In logic
+    function checkInDci() {
+      let dci = state.dci;
+      let today = (new Date()).toDateString();
+      let nextIdx = dci.progress.findIndex(v=>!v);
+      let reward = [
+        {shb:1000,usdt:0.10},
+        {shb:2000,usdt:0.20},
+        {shb:3000,usdt:0.30},
+        {shb:4000,usdt:0.40},
+        {shb:5000,usdt:0.50},
+        {shb:6000,usdt:0.60},
+        {shb:7000,usdt:0.70}
+      ];
+      if (nextIdx!==-1 && dci.last!==today) {
+        dci.progress[nextIdx]=true;
+        dci.last=today;
+        state.dci=dci;
+        state.shb+=reward[nextIdx].shb;
+        state.usdt+=reward[nextIdx].usdt;
+        state.notifications = state.notifications||[];
+        state.notifications.push({text:`Checked in - ${reward[nextIdx].shb} SHB & ${reward[nextIdx].usdt} USDT added!`,date:new Date().toLocaleString()});
+        saveState(state);
+        updateBalances();
+        renderHistory();
+        showProfileModal('dci');
+      }
+    }
+    window.checkInDci = checkInDci;
+
+    // --- Notifications ---
+    function addNotification(txt) {
+      state.notifications = state.notifications||[];
+      state.notifications.push({text:txt,date:new Date().toLocaleString()});
+      if (state.notifications.length>100) state.notifications.shift();
+      saveState(state);
+    }
+
+    // --- Redeem Page ---
+    function showRedeemPage() {
+      const el = document.getElementById('redeem-page');
+      el.style.display = "flex";
+      el.innerHTML = `
+        <div class="redeem-box">
+          <button class="modal-close" style="position:absolute;top:12px;right:13px;" onclick="closeProfileModal(event)">&times;</button>
+          <div style="font-size:1.2em;font-weight:600;margin-bottom:11px;">Redeem Gift</div>
+          <form id="redeem-form">
+            <div class="redeem-form-row">
+              <label>Redemption Code</label>
+              <input type="text" id="redeem-code" required placeholder="Enter redemption code"/>
+            </div>
+            <button class="redeem-btn" type="submit">Redeem</button>
+          </form>
+          <div id="redeem-success" class="redeem-success"></div>
+        </div>
+      `;
+      el.querySelector('#redeem-form').onsubmit = function(e){
+        e.preventDefault();
+        let code = el.querySelector('#redeem-code').value.trim();
+        if(!code){
+          el.querySelector('#redeem-success').innerHTML = `<span style="color:#ff556b;">Please enter a code!</span>`;
+          return;
+        }
+        el.querySelector('#redeem-success').innerHTML = `Your redeem code <b>${code}</b> has been submitted!`;
+        addNotification(`Redeem code used: ${code}`);
+      }
+    }
+    window.showRedeemPage = showRedeemPage;
+
+    // --- First tab triggers ---
+    showWalletTab('none');
+  </script>
+</body>
+</html>
