@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Shark Bounty</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    /* Reset and base styles */
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #2b5876 0%, #4e4376 100%);
+      font-family: 'Poppins', Arial, sans-serif;
+      color: #fff;
+      min-height: 100vh;
+      overflow-x: hidden;
+      box-sizing: border-box;
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      justify-content: flex-end;
+    }
+    .hidden {display:none;}
+    .centered {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      width: 100vw;
+    }
+    .navbar {
+      width: 100vw;
+      display: flex;
+      justify-content: space-around;
+      background: rgba(30,40,80,0.95);
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      z-index: 100;
+      border-radius: 30px 30px 0 0;
+      padding: 0.5em 0;
+      box-shadow: 0 -2px 12px rgba(0,0,0,0.15);
+    }
+    .nav-btn {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0.3em 0;
+      cursor: pointer;
+      transition: background 0.2s;
+      border-radius: 16px;
+      margin: 0 2px;
+    }
+    .nav-btn.active {
+      background: linear-gradient(90deg, #5f9ea0 0%, #66cdaa 100%);
+      color: #fff;
+    }
+    .nav-btn img {
+      width: 28px;
+      height: 28px;
+      margin-bottom: 3px;
+    }
+
+    /* Home UI */
+    .balance-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.1em;
+      margin: 12px 0 0 18px;
+      position: relative;
+    }
+    .balance-row img {
+      width: 23px; height: 23px; margin-right:4px;
+      vertical-align: middle;
+    }
+    .balance-label {font-weight: bold;}
+    .balance-value {font-size: 1.3em;}
+    .coin-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 30px;
+      margin-bottom: 20px;
+    }
+    .coin-circle {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: linear-gradient(135deg,#7f53ac 0%,#647dee 100%);
+      box-shadow: 0 6px 22px rgba(80,80,160,0.18);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      cursor: pointer;
+      overflow: hidden;
+      border: 3px solid #fff;
+      transition: box-shadow 0.2s;
+    }
+    .coin-circle:active {box-shadow: 0 8px 28px #47e6c1;}
+    .coin-circle img {
+      width: 92px;
+      height: 92px;
+      border-radius: 50%;
+    }
+    .tap-anim {
+      position: absolute;
+      left:50%;top:50%;transform:translate(-50%,-90%);
+      font-size:1.7em;
+      font-weight:700;
+      color:#5fffab;
+      opacity:0.9;
+      pointer-events:none;
+      animation: tapPop 0.9s cubic-bezier(.68,-0.55,.27,1.55) forwards;
+    }
+    @keyframes tapPop {
+      0% {opacity:1; transform:translate(-50%,-70%) scale(1);}
+      65% {opacity:1; transform:translate(-50%,-120%) scale(1.3);}
+      100% {opacity:0; transform:translate(-50%,-190%) scale(0.8);}
+    }
+    .energy-bar {
+      width: 160px; height: 18px;
+      border-radius: 10px;
+      background: #222;
+      margin: 12px auto 0;
+      position: relative;
+      box-shadow: 0 2px 8px #5fffab44;
+    }
+    .energy-fill {
+      height: 100%;
+      border-radius: 10px;
+      background: linear-gradient(90deg,#ffdb01,#47e6c1,#ff3e6c);
+      transition: width 0.25s;
+    }
+    .energy-label {
+      position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
+      font-size: 0.97em; font-weight: 500; color: #222;
+    }
+
+    /* Trade UI */
+    .plans-container {
+      padding: 20px 8px 86px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .plan-card {
+      background: linear-gradient(130deg,#57c2ff 0%,#9453e5 100%);
+      border-radius: 16px;
+      box-shadow: 0 3px 24px #8e53e590;
+      padding: 14px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      position: relative;
+    }
+    .plan-header {
+      font-size: 1.1em; font-weight: 700; letter-spacing: 1px;
+      margin-bottom: 2px;
+    }
+    .plan-details {
+      font-size: 0.95em;
+      line-height: 1.4;
+      margin-bottom: 3px;
+    }
+    .plan-footer {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .buy-btn, .claim-btn {
+      padding: 7px 24px;
+      border-radius: 11px;
+      font-weight: 600;
+      border: none;
+      font-size: 0.99em;
+      background: linear-gradient(90deg,#ffdb01 0%,#47e6c1 100%);
+      color: #222;
+      cursor: pointer;
+      transition: background 0.2s;
+      box-shadow: 0 2px 8px #47e6c166;
+    }
+    .buy-btn:disabled {
+      background: #888;
+      color: #eee;
+      cursor: not-allowed;
+    }
+    .usdt-row {
+      margin: 10px 0 0 20px;
+      font-size: 1.05em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .usdt-row img {
+      width: 20px; height: 20px; vertical-align: middle;
+    }
+
+    /* Wallet UI */
+    .wallet-container {
+      padding: 20px 8px 86px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .wallet-tabs {
+      display: flex; gap:18px; margin-bottom:14px;
+    }
+    .wallet-tab {
+      flex: 1;
+      text-align: center;
+      background: #fff2;
+      color: #fff;
+      border-radius: 10px;
+      padding: 8px 0;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 1em;
+      border: 2px solid transparent;
+      transition: background 0.2s, border 0.2s;
+    }
+    .wallet-tab.active {
+      background: linear-gradient(90deg,#47e6c1,#9453e5);
+      color: #222;
+      border: 2px solid #fff;
+    }
+    .wallet-options {padding:10px;}
+    .deposit-form, .withdraw-form {
+      background: #fff2;
+      border-radius: 13px;
+      padding: 14px 12px;
+      margin-bottom: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: 0 1px 8px #47e6c122;
+    }
+    .form-row {
+      display: flex; flex-direction: column; gap: 3px;
+    }
+    .form-row label {font-size: 1em; font-weight: 500;}
+    .form-row input, .form-row select {
+      border-radius: 7px; border: none;
+      padding: 8px; font-size:1em;
+      margin-top: 4px;
+      background: #fff7;
+      color: #222;
+      font-weight: 500;
+    }
+    .form-row input:focus, .form-row select:focus {outline: 2px solid #47e6c1;}
+    .form-actions {display:flex;justify-content:center;}
+    .form-actions button {
+      padding:10px 24px; border-radius:10px;
+      background:linear-gradient(90deg,#ffdb01,#47e6c1); border:none;
+      font-weight:600;color:#222; cursor:pointer;
+      font-size:1em; margin-top:8px;
+      box-shadow:0 1px 8px #47e6c144;
+    }
+    .qr-page {
+      background: #222e;
+      border-radius: 16px;
+      padding: 18px 8px;
+      margin: 10px 0 0 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      position: relative;
+      box-shadow: 0 2px 12px #47e6c144;
+    }
+    .qr-img {width: 180px; border-radius: 16px;}
+    .qr-info {
+      background: #fff2;
+      padding: 7px 11px;
+      border-radius: 7px;
+      font-size: 0.98em;
+      color: #fff;
+      margin-bottom: 4px;
+      word-break: break-all;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .copy-btn {
+      background: #47e6c1;
+      border-radius: 7px;
+      padding: 4px 10px;
+      color: #222;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.95em;
+      border: none;
+      margin-left: 4px;
+    }
+    .countdown-timer {
+      position: absolute; top: 9px; right: 13px;
+      font-size: 1em; font-weight: 700; color: #ffdb01;
+      background: #222c; padding: 3px 10px; border-radius: 12px;
+      box-shadow: 0 1px 6px #47e6c144;
+    }
+    .exchange-row {
+      font-size: 1em;
+      color: #fff;
+      background: #47e6c1;
+      border-radius: 8px;
+      padding: 5px 10px;
+      font-weight: 600;
+      margin-bottom: 9px;
+      margin-top: 8px;
+      text-align: center;
+      box-shadow: 0 1px 8px #47e6c144;
+    }
+    .history-list {
+      margin-top: 8px;
+      background: #fff2;
+      border-radius: 10px;
+      padding: 12px 8px;
+      box-shadow: 0 1px 8px #47e6c144;
+      color: #fff;
+      font-size: 0.97em;
+    }
+    .history-item {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 8px 0; border-bottom: 1px solid #fff4;
+    }
+    .history-item:last-child {border-bottom:none;}
+    .history-type {font-weight:600;}
+    .history-amount {color:#ffdb01;}
+    .history-date {font-size:0.95em; color:#aaa; margin-left:8px;}
+    /* Profile UI */
+    .profile-container {
+      padding: 20px 8px 86px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      align-items: center;
+    }
+    .profile-avatar {
+      width: 90px; height: 90px; border-radius: 50%;
+      background: linear-gradient(90deg,#47e6c1,#9453e5);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 3px 18px #47e6c144;
+      margin-bottom: 10px;
+    }
+    .profile-avatar img {
+      width: 78px; height: 78px; border-radius: 50%;
+    }
+    .profile-name {
+      font-size: 1.2em; font-weight: 700; margin-bottom: 6px;
+      color: #fff;
+    }
+    .profile-info {
+      background: #fff2;
+      border-radius: 12px;
+      padding: 13px 18px;
+      font-size: 1em;
+      color: #fff;
+      box-shadow: 0 1px 8px #47e6c122;
+      margin-bottom: 12px;
+      width: 90vw;
+      max-width: 350px;
+      text-align: left;
+      word-break: break-all;
+    }
+    .profile-btn-row {
+      display: flex; gap: 13px; margin-top: 9px;
+    }
+    .profile-btn {
+      padding: 8px 18px;
+      background: linear-gradient(90deg,#ffdb01 0%,#47e6c1 100%);
+      color: #222;
+      font-weight: 600;
+      border-radius: 11px;
+      border: none;
+      cursor: pointer;
+      font-size: 1em;
+      box-shadow: 0 1px 8px #47e6c144;
+    }
+    /* Loading Screen */
+    #loading-screen {
+      position:fixed;top:0;left:0;width:100vw;height:100vh;
+      background:linear-gradient(135deg,#47e6c1 0%,#9453e5 100%);
+      display:flex;align-items:center;justify-content:center;z-index:99999;
+      flex-direction:column;
+    }
+    #loading-screen video {
+      width: 230px; border-radius: 24px;
+      box-shadow: 0 6px 28px #47e6c188;
+      margin-bottom:8px;
+    }
+    #loading-screen span {font-size:1.1em;color:#fff8;}
+    /* Responsive */
+    @media(max-width: 480px) {
+      .coin-circle {width:92px;height:92px;}
+      .coin-circle img {width:70px;height:70px;}
+      .energy-bar {width:120px;}
+      .navbar img {width:24px;height:24px;}
+    }
+  </style>
+</head>
+<body>
+  <!-- Loading Screen -->
+  <div id="loading-screen" class="centered">
+    <video src="https://github.com/s42144/Shark-Bounty/raw/8b67f2028cd3d33d6545243ea43a57958c428edf/29f4182c-fb84-4f6e-830f-f560ae571afe.mp4" autoplay loop muted></video>
+    <span>Loading...</span>
+  </div>
+
+  <!-- Home UI -->
+  <div id="home-ui" class="centered hidden">
+    <div class="balance-row" style="margin-top:12px;">
+      <img src="https://github.com/s42144/Shark-Bounty/raw/17510103.gif" alt="SHB">
+      <span class="balance-label">SHB</span>
+      <span class="balance-value" id="shb-balance">0</span>
+    </div>
+    <div class="usdt-row">
+      <img src="https://github.com/s42144/Shark-Bounty/raw/15207964.png" alt="USDT">
+      <span class="balance-label">USDT</span>
+      <span class="balance-value" id="usdt-balance">0</span>
+    </div>
+    <div class="coin-container">
+      <div class="coin-circle" id="shark-coin">
+        <img src="https://github.com/s42144/Shark-Bounty/raw/17510103.gif" alt="Shark Coin">
+      </div>
+      <div id="coin-tap-anim"></div>
+      <div class="energy-bar">
+        <div class="energy-fill" id="energy-fill" style="width: 100%;"></div>
+        <span class="energy-label" id="energy-label">1200 / 1200</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Trade UI -->
+  <div id="trade-ui" class="centered hidden">
+    <div class="balance-row">
+      <img src="https://github.com/s42144/Shark-Bounty/raw/17510103.gif" alt="SHB">
+      <span class="balance-label">SHB</span>
+      <span class="balance-value" id="trade-shb-balance">0</span>
+    </div>
+    <div class="usdt-row">
+      <img src="https://github.com/s42144/Shark-Bounty/raw/15207964.png" alt="USDT">
+      <span class="balance-label">USDT</span>
+      <span class="balance-value" id="trade-usdt-balance">0</span>
+    </div>
+    <div class="plans-container" id="plans-container"></div>
+  </div>
+
+  <!-- Tasks UI -->
+  <div id="tasks-ui" class="centered hidden">
+    <div style="margin-top:32px;font-size:1.2em;font-weight:700;">Tasks</div>
+    <div style="margin-top:16px;color:#fff8;font-size:1em;">(No tasks yet. Admin panel will add tasks soon)</div>
+  </div>
+
+  <!-- Wallet UI -->
+  <div id="wallet-ui" class="centered hidden">
+    <div class="wallet-container">
+      <div class="wallet-tabs">
+        <div class="wallet-tab active" id="wallet-deposit-tab"><img src="https://github.com/s42144/Shark-Bounty/raw/6008139.png" style="width:22px;"> Deposit</div>
+        <div class="wallet-tab" id="wallet-withdraw-tab"><img src="https://github.com/s42144/Shark-Bounty/raw/17504646.png" style="width:22px;"> Withdraw</div>
+        <div class="wallet-tab" id="wallet-history-tab"><img src="https://github.com/s42144/Shark-Bounty/raw/17504646.png" style="width:22px;"> History</div>
+      </div>
+      <div class="wallet-options" id="wallet-options"></div>
+    </div>
+  </div>
+
+  <!-- Profile UI -->
+  <div id="profile-ui" class="centered hidden">
+    <div class="profile-container">
+      <div class="profile-avatar">
+        <img src="https://github.com/s42144/Shark-Bounty/raw/18827926.png" alt="Profile">
+      </div>
+      <div class="profile-name" id="profile-name">Guest User</div>
+      <div class="profile-info" id="profile-info">
+        Welcome to Shark Bounty! Earn SHB by tapping the shark, trade with USDT, and explore tasks, wallet, and more.<br>
+        <br>
+        <b>Level:</b> 1<br>
+        <b>Referral:</b> <span id="profile-referral">No referral yet</span><br>
+        <b>Support:</b> <a href="#" style="color:#ffdb01;text-decoration:underline;">Contact Support</a>
+      </div>
+      <div class="profile-btn-row">
+        <button class="profile-btn" id="profile-redeem-btn"><img src="https://github.com/s42144/Shark-Bounty/raw/3179668.png" style="width:20px;margin-right:7px;">Redeem Gift</button>
+        <button class="profile-btn" id="profile-energy-btn"><img src="https://github.com/s42144/Shark-Bounty/raw/934817.png" style="width:20px;margin-right:7px;">Energy +</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navbar -->
+  <div class="navbar">
+    <div class="nav-btn active" id="nav-home"><img src="https://github.com/s42144/Shark-Bounty/raw/1057118.png" alt="Home"><span>Home</span></div>
+    <div class="nav-btn" id="nav-trade"><img src="https://github.com/s42144/Shark-Bounty/raw/9084248.png" alt="Trade"><span>Trade</span></div>
+    <div class="nav-btn" id="nav-tasks"><img src="https://github.com/s42144/Shark-Bounty/raw/16104409.png" alt="Tasks"><span>Tasks</span></div>
+    <div class="nav-btn" id="nav-wallet"><img src="https://github.com/s42144/Shark-Bounty/raw/6826311.png" alt="Wallet"><span>Wallet</span></div>
+    <div class="nav-btn" id="nav-profile"><img src="https://github.com/s42144/Shark-Bounty/raw/18827926.png" alt="Profile"><span>Profile</span></div>
+  </div>
+
+  <script>
+    // Initial States
+    let shbBalance = 0;
+    let usdtBalance = 0;
+    let energy = 1200;
+    let maxEnergy = 1200;
+    let energyRefillRate = 2; // refill per second
+    let coinTapAnimTimeout = null;
+
+    // Trade Plans
+    let tradePlans = [
+      {name:"TON/USDT", price:10, daily:1, validity:30, bought:false, daysLeft:30, lastClaim:0},
+      {name:"NOT/USDT", price:30, daily:3, validity:30, bought:false, daysLeft:30, lastClaim:0},
+      {name:"HMSTR/USDT", price:70, daily:7, validity:30, bought:false, daysLeft:30, lastClaim:0},
+      {name:"ETH/USDT", price:100, daily:10, validity:30, bought:false, daysLeft:30, lastClaim:0},
+      {name:"BNB/USDT", price:150, daily:15, validity:30, bought:false, daysLeft:30, lastClaim:0},
+      {name:"BTC/USDT", price:200, daily:20, validity:30, bought:false, daysLeft:30, lastClaim:0},
+    ];
+
+    // Wallet Histories
+    let walletHistory = [];
+
+    // Profile
+    let userProfile = {
+      name: "Guest User",
+      referral: "No referral yet",
+      level: 1,
+    };
+
+    // Utility Functions
+    function showSection(sectionId) {
+      ["home-ui","trade-ui","tasks-ui","wallet-ui","profile-ui"].forEach(id=>{
+        document.getElementById(id).classList.add("hidden");
+      });
+      document.getElementById(sectionId).classList.remove("hidden");
+    }
+    function setActiveNav(navId) {
+      document.querySelectorAll('.nav-btn').forEach(btn=>btn.classList.remove('active'));
+      document.getElementById(navId).classList.add('active');
+    }
+
+    // Loading screen timer
+    setTimeout(()=>{
+      document.getElementById('loading-screen').classList.add('hidden');
+      showSection('home-ui');
+    }, 2200);
+
+    // Navbar handlers
+    document.getElementById('nav-home').onclick = ()=>{setActiveNav('nav-home');showSection('home-ui');};
+    document.getElementById('nav-trade').onclick = ()=>{setActiveNav('nav-trade');showSection('trade-ui');updateTradeBalances();renderTradePlans();};
+    document.getElementById('nav-tasks').onclick = ()=>{setActiveNav('nav-tasks');showSection('tasks-ui');};
+    document.getElementById('nav-wallet').onclick = ()=>{setActiveNav('nav-wallet');showSection('wallet-ui');setWalletTab('deposit');};
+    document.getElementById('nav-profile').onclick = ()=>{setActiveNav('nav-profile');showSection('profile-ui');updateProfileUI();};
+
+    // Home UI: Coin Tap
+    document.getElementById('shark-coin').onclick = function() {
+      if (energy < 1) return;
+      shbBalance += 1;
+      energy -= 1;
+      updateHomeBalances();
+      showTapAnim("+1");
+      updateEnergyBar();
+    };
+    function showTapAnim(txt) {
+      let animDiv = document.getElementById('coin-tap-anim');
+      animDiv.innerHTML = `<span class="tap-anim">${txt}</span>`;
+      clearTimeout(coinTapAnimTimeout);
+      coinTapAnimTimeout = setTimeout(()=>{animDiv.innerHTML="";},850);
+    }
+    function updateHomeBalances() {
+      document.getElementById('shb-balance').innerText = shbBalance;
+      document.getElementById('usdt-balance').innerText = usdtBalance.toFixed(2);
+    }
+    function updateEnergyBar() {
+      let percent = Math.max(0,Math.min(100,energy/maxEnergy*100));
+      document.getElementById('energy-fill').style.width = percent+"%";
+      document.getElementById('energy-label').innerText = `${energy} / ${maxEnergy}`;
+    }
+    // Energy refill
+    setInterval(()=>{
+      if (energy < maxEnergy) {
+        energy = Math.min(maxEnergy, energy + energyRefillRate);
+        updateEnergyBar();
+      }
+    }, 1000);
+
+    // Trade UI
+    function updateTradeBalances() {
+      document.getElementById('trade-shb-balance').innerText = shbBalance;
+      document.getElementById('trade-usdt-balance').innerText = usdtBalance.toFixed(2);
+    }
+    function renderTradePlans() {
+      let plansDiv = document.getElementById('plans-container');
+      plansDiv.innerHTML = '';
+      tradePlans.forEach((plan, idx)=>{
+        let bought = plan.bought;
+        let canBuy = usdtBalance >= plan.price && !bought;
+        let canClaim = bought && plan.daysLeft > 0 && (Date.now()-plan.lastClaim>23*3600*1000);
+        let btnText = !bought ? "Buy" : (plan.daysLeft>0?"Claim":"Expired");
+        let btnClass = !bought?"buy-btn":"claim-btn";
+        let disabled = (!canBuy && !canClaim) || (bought && plan.daysLeft<=0);
+        plansDiv.innerHTML += `
+          <div class="plan-card">
+            <div class="plan-header">${plan.name}</div>
+            <div class="plan-details">
+              <b>Price:</b> $${plan.price} &nbsp; <b>Validity:</b> ${plan.validity} days<br>
+              <b>Daily Earning:</b> $${plan.daily}
+            </div>
+            <div class="plan-footer">
+              <span>${bought ? `Days left: ${plan.daysLeft}` : ''}</span>
+              <button class="${btnClass}" ${disabled?'disabled':''} onclick="handlePlanBtn(${idx})">${btnText}</button>
+            </div>
+          </div>
+        `;
+      });
+    }
+    window.handlePlanBtn = function(idx) {
+      let plan = tradePlans[idx];
+      if (!plan.bought) {
+        if (usdtBalance >= plan.price) {
+          usdtBalance -= plan.price;
+          plan.bought = true;
+          plan.daysLeft = plan.validity;
+          plan.lastClaim = Date.now()-24*3600*1000;
+          walletHistory.push({type:"Plan Purchase",amount:`-$${plan.price}`,date:new Date().toLocaleString()});
+          renderTradePlans();
+          updateTradeBalances();
+          alert("Plan purchased successfully!");
+        } else alert('Insufficient USDT balance.');
+      } else if (plan.daysLeft>0 && Date.now()-plan.lastClaim>23*3600*1000) {
+        usdtBalance += plan.daily;
+        plan.daysLeft -= 1;
+        plan.lastClaim = Date.now();
+        walletHistory.push({type:"Plan Claim",amount:`+$${plan.daily}`,date:new Date().toLocaleString()});
+        renderTradePlans();
+        updateTradeBalances();
+        alert("Daily earning claimed!");
+      }
+    }
+
+    // Wallet UI
+    let walletTab = "deposit";
+    function setWalletTab(tab) {
+      walletTab = tab;
+      document.getElementById('wallet-deposit-tab').classList.remove('active');
+      document.getElementById('wallet-withdraw-tab').classList.remove('active');
+      document.getElementById('wallet-history-tab').classList.remove('active');
+      if (tab==='deposit') document.getElementById('wallet-deposit-tab').classList.add('active');
+      if (tab==='withdraw') document.getElementById('wallet-withdraw-tab').classList.add('active');
+      if (tab==='history') document.getElementById('wallet-history-tab').classList.add('active');
+      renderWalletTab();
+    }
+    document.getElementById('wallet-deposit-tab').onclick = ()=>setWalletTab('deposit');
+    document.getElementById('wallet-withdraw-tab').onclick = ()=>setWalletTab('withdraw');
+    document.getElementById('wallet-history-tab').onclick = ()=>setWalletTab('history');
+
+    function renderWalletTab() {
+      let container = document.getElementById('wallet-options');
+      container.innerHTML = "";
+      if (walletTab==="deposit") {
+        container.innerHTML = `
+          <div class="deposit-form">
+            <div class="form-row">
+              <label>Select deposit method:</label>
+              <select id="deposit-method">
+                <option value="TONCOIN">TONCOIN</option>
+                <option value="USDT">USDT TON</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label id="deposit-amount-label">Amount (TON, min 3):</label>
+              <input type="number" id="deposit-amount" min="3" placeholder="Enter amount">
+            </div>
+            <div class="exchange-row" id="deposit-exchange-row"></div>
+            <div class="form-actions">
+              <button onclick="handleDepositConfirm()">Confirm</button>
+            </div>
+          </div>
+          <div id="deposit-qr-container"></div>
+        `;
+        document.getElementById('deposit-method').onchange = updateDepositMethodUI;
+        document.getElementById('deposit-amount').oninput = updateDepositExchange;
+      }
+      if (walletTab==="withdraw") {
+        container.innerHTML = `
+          <div class="withdraw-form">
+            <div class="form-row">
+              <label>Select withdraw method:</label>
+              <select id="withdraw-method">
+                <option value="USDT">USDT TON</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label>Withdraw Amount (min $3):</label>
+              <input type="number" id="withdraw-amount" min="3" placeholder="Enter amount">
+            </div>
+            <div class="form-row">
+              <label>USDT TON chain address:</label>
+              <input type="text" id="withdraw-address" placeholder="Enter address">
+            </div>
+            <div class="form-row">
+              <label>TON memo / comment (optional):</label>
+              <input type="text" id="withdraw-memo" placeholder="Enter memo">
+            </div>
+            <div class="form-actions">
+              <button onclick="handleWithdrawConfirm()">Confirm</button>
+            </div>
+          </div>
+        `;
+      }
+      if (walletTab==="history") {
+        if(walletHistory.length===0) {
+          container.innerHTML = `<div class="history-list">No history yet</div>`;
+        } else {
+          let html = '<div class="history-list">';
+          walletHistory.slice().reverse().forEach(h=>{
+            html += `<div class="history-item">
+              <span class="history-type">${h.type}</span>
+              <span class="history-amount">${h.amount}</span>
+              <span class="history-date">${h.date}</span>
+            </div>`;
+          });
+          html += "</div>";
+          container.innerHTML = html;
+        }
+      }
+    }
+    window.handleDepositConfirm = function() {
+      let method = document.getElementById('deposit-method').value;
+      let amount = parseFloat(document.getElementById('deposit-amount').value);
+      let qrDiv = document.getElementById('deposit-qr-container');
+      let minAmount = method==="TONCOIN"?3:10;
+      if(isNaN(amount)||amount<minAmount) {alert(`Minimum deposit is ${minAmount} ${method==="TONCOIN"?"TON":"USDT"}`);return;}
+      let qrSrc = method==="TONCOIN"?"https://github.com/s42144/Shark-Bounty/raw/1890e18b5008f67e6d057aa7a47149bfc84740fc/Screenshot_2025-09-12-18-54-13-944_com.ton_keeper-edit.jpg":
+        "https://github.com/s42144/Shark-Bounty/raw/a23720d6a315d2422e3943aa7bf779beac9acdad/Screenshot_2025-09-12-18-54-50-676_com.ton_keeper-edit.jpg";
+      let address = "UQCOL7arveEVrKfKa9v3SbZnKjIBnOavmX3aXdDV-XD1cQ09";
+      let memo = "D"+Math.floor(Math.random()*1000000);
+      let rate = 3.2, usdtValue = method==="TONCOIN"?amount*rate:amount;
+      let timer = 900; // 15min
+      qrDiv.innerHTML = `
+        <div class="qr-page" id="qr-page">
+          <div class="countdown-timer" id="deposit-countdown
