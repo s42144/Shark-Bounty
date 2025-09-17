@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Shark Bounty</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --secondary-color: #6c757d;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #17a2b8;
+            --dark-color: #343a40;
+            --light-color: #f8f9fa;
+            --background-color: #f0f2f5;
+            --card-background: #ffffff;
+            --text-color: #333;
+            --card-border-radius: 12px;
+            --button-border-radius: 8px;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--background-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: var(--text-color);
+            overflow: hidden;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 450px;
+            height: 100vh;
+            background-color: var(--background-color);
+            position: relative;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- Loading Screen --- */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--dark-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .loading-screen video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* --- Main Content --- */
+        .main-content {
+            display: none;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        .content-section {
+            display: none;
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        /* --- Top Bar --- */
+        .top-bar {
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--card-background);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            z-index: 10;
+        }
+        .balance-container {
+            display: flex;
+            align-items: center;
+            font-weight: 600;
+            font-size: 16px;
+        }
+        .balance-container img {
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+        }
+
+        /* --- Navigation --- */
+        .navbar {
+            display: flex;
+            justify-content: space-around;
+            background-color: var(--card-background);
+            padding: 10px 0;
+            border-top: 1px solid #e9ecef;
+            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.05);
+            z-index: 10;
+        }
+        .nav-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px 10px;
+            color: var(--secondary-color);
+            transition: color 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .nav-button img {
+            width: 24px;
+            height: 24px;
+            margin-bottom: 4px;
+        }
+        .nav-button.active {
+            color: var(--primary-color);
+        }
+
+        /* --- Home Section --- */
+        .home-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .coin-container {
+            width: 250px;
+            height: 250px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #e6e6e6, #ffffff);
+            box-shadow: 10px 10px 20px #d1d1d1, -10px -10px 20px #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 40px 0;
+            cursor: pointer;
+            position: relative;
+        }
+        .coin-container img {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            animation: pulse 2s infinite ease-in-out;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .plus-one {
+            position: absolute;
+            font-size: 2em;
+            font-weight: bold;
+            color: var(--primary-color);
+            pointer-events: none;
+            animation: floatUp 1s ease-out forwards;
+        }
+        @keyframes floatUp {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-50px); opacity: 0; }
+        }
+        .energy-bar-container {
+            width: 80%;
+            margin-top: 20px;
+            text-align: center;
+        }
+        .energy-bar-container span {
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .energy-bar-wrapper {
+            background-color: #ddd;
+            border-radius: 15px;
+            height: 15px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+        .energy-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #ffc107, #28a745);
+            transition: width 0.3s ease;
+        }
+        .daily-checkin-btn {
+            background-color: var(--success-color);
+            color: white;
+            padding: 12px 20px;
+            border-radius: var(--button-border-radius);
+            margin-top: 20px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            width: 80%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .daily-checkin-btn:disabled {
+            background-color: var(--secondary-color);
+            cursor: not-allowed;
+        }
+        .daily-checkin-btn img {
+            width: 24px;
+            height: 24px;
+            margin-right: 8px;
+        }
+        .checkin-message {
+            margin-top: 10px;
+            font-size: 14px;
+            color: var(--success-color);
+        }
+        
+        /* --- Trade Section --- */
+        .trade-section h2 {
+            margin-bottom: 20px;
+            font-weight: 600;
+            text-align: center;
+        }
+        .plan-card {
+            background-color: var(--card-background);
+            border-radius: var(--card-border-radius);
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #e0e0e0;
+        }
+        .plan-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .plan-header h3 {
+            margin: 0;
+            font-size: 1.2em;
+            font-weight: 700;
+        }
+        .plan-header .price {
+            font-size: 1.2em;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+        .plan-details {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 15px;
+        }
+        .plan-details span {
+            display: block;
+        }
+        .plan-button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: var(--button-border-radius);
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .plan-button:hover {
+            background-color: #0056b3;
+        }
+        .plan-button.claim {
+            background-color: var(--success-color);
+        }
+
+        /* --- Wallet Section --- */
+        .wallet-section h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .wallet-options {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+        .wallet-option-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 0.9em;
+            font-weight: 600;
+            color: var(--secondary-color);
+            transition: color 0.3s ease;
+        }
+        .wallet-option-btn img {
+            width: 40px;
+            height: 40px;
+        }
+        .wallet-option-btn.active {
+            color: var(--primary-color);
+        }
+
+        .wallet-content > div {
+            display: none;
+        }
+        .wallet-content > div.active {
+            display: block;
+        }
+
+        .wallet-form {
+            background-color: var(--card-background);
+            padding: 20px;
+            border-radius: var(--card-border-radius);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        .wallet-form label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        .wallet-form input, .wallet-form select {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: var(--button-border-radius);
+            box-sizing: border-box;
+            font-size: 1em;
+        }
+        .wallet-form .confirm-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 12px;
+            border-radius: var(--button-border-radius);
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .deposit-qr-container {
+            text-align: center;
+            padding: 20px;
+        }
+        .deposit-qr-container img {
+            width: 150px;
+            height: 150px;
+            margin-bottom: 15px;
+        }
+        .deposit-details {
+            background-color: #f8f8f8;
+            padding: 15px;
+            border-radius: var(--card-border-radius);
+            text-align: left;
+            margin-top: 15px;
+        }
+        .deposit-details p {
+            margin: 5px 0;
+            display: flex;
+            align-items: center;
+        }
+        .deposit-details strong {
+            display: inline-block;
+            min-width: 80px;
+        }
+        .copy-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            margin-left: 10px;
+            padding: 0;
+        }
+        .copy-button img {
+            width: 20px;
+            height: 20px;
+        }
+        .timer {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: var(--danger-color);
+            margin-bottom: 10px;
+        }
+
+        .history-list {
+            list-style: none;
+            padding: 0;
+        }
+        .history-item {
+            background-color: var(--card-background);
+            padding: 15px;
+            border-radius: var(--card-border-radius);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .history-item.deposit {
+            border-left: 5px solid var(--success-color);
+        }
+        .history-item.withdraw {
+            border-left: 5px solid var(--danger-color);
+        }
+        .history-info {
+            flex-grow: 1;
+        }
+        .history-info .amount {
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+        .history-info .date {
+            font-size: 0.8em;
+            color: #999;
+        }
+
+        /* --- Other Sections --- */
+        .tasks-section, .profile-section {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            height: 100%;
+        }
+        .empty-state {
+            color: #999;
+            font-size: 1.2em;
+            font-weight: 500;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="loading-screen" id="loadingScreen">
+            <video src="https://github.com/s42144/Shark-Bounty/raw/8b67f2028cd3d33d6545243ea43a57958c428edf/29f4182c-fb84-4f6e-830f-f560ae571afe.mp4" autoplay muted playsinline></video>
+        </div>
+
+        <div class="main-content" id="mainContent">
+            <div class="top-bar">
+                <div class="balance-container">
+                    <img src="https://github.com/s42144/Shark-Bounty/raw/aeb441877b43b7401af99870ead870597d62f885/17510103.gif" alt="SHB Coin">
+                    <span id="shbBalance">0 SHB</span>
+                </div>
+                <div class="balance-container">
+                    <img src="https://github.com/s42144/Shark-Bounty/raw/1d18d021f596343b63d2ce30ad010396db5f1382/15207964.png" alt="USDT">
+                    <span id="usdtBalance">0.00 USDT</span>
+                </div>
+            </div>
+
+            <div class="content-section active" id="homeSection">
+                <div class="home-section">
+                    <div class="coin-container" id="tapCoin">
+                        <img src="https://github.com/s42144/Shark-Bounty/raw/aeb441877b43b7401af99870ead870597d62f885/17510103.gif" alt="Shark GIF">
+                    </div>
+                    <div class="energy-bar-container">
+                        <span id="energyText">1200 / 1200</span>
+                        <div class="energy-bar-wrapper">
+                            <div class="energy-bar" id="energyBar" style="width: 100%;"></div>
+                        </div>
+                    </div>
+                    <button class="daily-checkin-btn" id="dailyCheckinBtn">
+                        <img src="https://github.com/s42144/Shark-Bounty/raw/746c5202de3073cfdcaa50fabf6bbdba0d8f7421/1142792.png" alt="Checkin">
+                        Daily Check-in +100 SHB
+                    </button>
+                    <p id="checkinMessage" class="checkin-message"></p>
+                </div>
+            </div>
+
+            <div class="content-section" id="tradeSection">
+                <h2>Trade</h2>
+                <div id="plansContainer">
+                    <div class="plan-card" data-plan="ton">
+                        <div class="plan-header">
+                            <h3>TON/USDT Plan</h3>
+                            <span class="price">$10</span>
+                        </div>
+                        <div class="plan-details">
+                            <span>Daily Earning: $1</span>
+                            <span>Validity: 30 days</span>
+                        </div>
+                        <button class="plan-button buy-button">Buy</button>
+                    </div>
+                    <div class="plan-card" data-plan="not">
+                        <div class="plan-header">
+                            <h3>NOT/USDT Plan</h3>
+                            <span class="price">$30</span>
+                        </div>
+                        <div class="plan-details">
+                            <span>Daily Earning: $3</span>
+                            <span>Validity: 30 days</span>
+                        </div>
+                        <button class="plan-button buy-button">Buy</button>
+                    </div>
+                    <div class="plan-card" data-plan="hmstr">
+                        <div class="plan-header">
+                            <h3>HMSTR/USDT Plan</h3>
+                            <span class="price">$70</span>
+                        </div>
+                        <div class="plan-details">
+                            <span>Daily Earning: $7</span>
+                            <span>Validity: 30 days</span>
+                        </div>
+                        <button class="plan-button buy-button">Buy</button>
+                    </div>
+                    <div class="plan-card" data-plan="eth">
+                        <div class="plan-header">
+                            <h3>ETH/USDT Plan</h3>
+                            <span class="price">$100</span>
+                        </div>
+                        <div class="plan-details">
+                            <span>Daily Earning: $10</span>
+                            <span>Validity: 30 days</span>
+                        </div>
+                        <button class="plan-button buy-button">Buy</button>
+                    </div>
+                    <div class="plan-card" data-plan="bnb">
+                        <div class="plan-header">
+                            <h3>BNB/USDT Plan</h3>
+                            <span class="price">$150</span>
+                        </div>
+                        <div class="plan-details">
+                            <span>Daily Earning: $15</span>
+                            <span>Validity: 30 days</span>
+                        </div>
+                        <button class="plan-button buy-button">Buy</button>
+                    </div>
+                    <div class="plan-card" data-plan="btc">
+                        <div class="plan-header">
+                            <h3>BTC/USDT Plan</h3>
+                            <span class="price">$200</span>
+                        </div>
+                        <div class="plan-details">
+                            <span>Daily Earning: $20</span>
+                            <span>Validity: 30 days</span>
+                        </div>
+                        <button class="plan-button buy-button">Buy</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-section" id="tasksSection">
+                <div class="tasks-section">
+                    <p class="empty-state">No tasks available right now. Check back later!</p>
+                </div>
+            </div>
+
+            <div class="content-section" id="walletSection">
+                <div class="wallet-options">
+                    <button class="wallet-option-btn active" data-tab="deposit">
+                        <img src="https://github.com/s42144/Shark-Bounty/raw/044196befa203197dece4b74afe7d5bd49f0a67b/6008139.png" alt="Deposit">
+                        Deposit
+                    </button>
+                    <button class="wallet-option-btn" data-tab="withdraw">
+                        <img src="https://github.com/s42144/Shark-Bounty/raw/f07926fed7a84d003a20d8c87a22b01c63cbacc8/2592317.png" alt="Withdraw">
+                        Withdraw
+                    </button>
+                    <button class="wallet-option-btn" data-tab="history">
+                        <img src="https://github.com/s42144/Shark-Bounty/raw/46fcd7413a110d3870cf2a9b2f8eb99c9cd25d88/17504646.png" alt="History">
+                        History
+                    </button>
+                </div>
+
+                <div class="wallet-content">
+                    <div id="deposit-content" class="active">
+                        <div class="wallet-form">
+                            <h3>Select Deposit Method</h3>
+                            <select id="depositMethod">
+                                <option value="toncoin">TONCOIN</option>
+                                <option value="usdt">USDT TON</option>
+                            </select>
+
+                            <div id="toncoinDeposit" class="deposit-form active">
+                                <label for="tonAmount">TONCOIN Amount (Min. 3 TON)</label>
+                                <input type="number" id="tonAmount" min="3" placeholder="Enter amount">
+                                <p class="conversion-rate">1 TON ≈ $3.20</p>
+                                <p>You will receive: <span id="tonUsdtValue">0.00</span> USDT</p>
+                                <button class="confirm-btn" onclick="showTonDepositQR()">Confirm</button>
+                            </div>
+
+                            <div id="usdtDeposit" class="deposit-form" style="display: none;">
+                                <label for="usdtAmount">USDT Amount (Min. 10 USDT)</label>
+                                <input type="number" id="usdtAmount" min="10" placeholder="Enter amount">
+                                <button class="confirm-btn" onclick="showUsdtDepositQR()">Confirm</button>
+                            </div>
+                        </div>
+
+                        <div id="depositQR" style="display: none;">
+                            <div class="deposit-qr-container">
+                                <span class="timer" id="depositTimer">15:00</span>
+                                <h4>Scan to Deposit</h4>
+                                <img id="qrCodeImage" src="" alt="Deposit QR Code">
+                                <div class="deposit-details">
+                                    <p><strong>Address:</strong> <span id="depositAddress">UQCOL7arveEVrKfKa9v3SbZnKjIBnOavmX3aXdDV-XD1cQ09</span><button class="copy-button" onclick="copyToClipboard('depositAddress')"><img src="https://github.com/s42144/Shark-Bounty/raw/177e7fb2815726b7d9710a58dccafff013e0a531/1622069.png"></button></p>
+                                    <p id="memo-row"><strong>Memo:</strong> <span id="depositMemo"></span><button class="copy-button" onclick="copyToClipboard('depositMemo')"><img src="https://github.com/s42144/Shark-Bounty/raw/177e7fb2815726b7d9710a58dccafff013e0a531/1622069.png"></button></p>
+                                    <p><strong>Amount:</strong> <span id="depositAmount"></span></p>
+                                    <p id="deposit-network"><strong>Network:</strong> TON</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="withdraw-content">
+                        <div class="wallet-form">
+                            <h3>Withdraw USDT</h3>
+                            <p>Available Balance: <span id="availableWithdrawBalance">0.00 USDT</span></p>
+                            <label for="withdrawAmount">Amount (Min. $3 USDT)</label>
+                            <input type="number" id="withdrawAmount" min="3" placeholder="Enter amount">
+                            <label for="withdrawAddress">USDT TON Chain Address</label>
+                            <input type="text" id="withdrawAddress" placeholder="Enter wallet address">
+                            <label for="withdrawMemo">Toncoin Memo/Comment (Optional)</label>
+                            <input type="text" id="withdrawMemo" placeholder="Enter memo">
+                            <button class="confirm-btn" onclick="processWithdrawal()">Confirm</button>
+                        </div>
+                    </div>
+                    
+                    <div id="history-content">
+                        <ul class="history-list" id="transactionHistory">
+                            <li class="history-item deposit">
+                                <div class="history-info">
+                                    <span class="type">Deposit</span>
+                                    <span class="amount">$10.00</span>
+                                    <span class="date">Sep 17, 2025</span>
+                                </div>
+                            </li>
+                            <li class="history-item withdraw">
+                                <div class="history-info">
+                                    <span class="type">Withdraw</span>
+                                    <span class="amount">$5.00</span>
+                                    <span class="date">Sep 16, 2025</span>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="content-section" id="profileSection">
+                <div class="profile-section">
+                    <p class="empty-state">Profile settings coming soon.</p>
+                </div>
+            </div>
+
+            <div class="navbar">
+                <button class="nav-button active" onclick="showSection('homeSection', this)">
+                    <img src="https://github.com/s42144/Shark-Bounty/raw/dedf1f3379f4a52180a500e818e467dcd99f56c9/1057118.png" alt="Home">
+                    Home
+                </button>
+                <button class="nav-button" onclick="showSection('tradeSection', this)">
+                    <img src="https://github.com/s42144/Shark-Bounty/raw/37f8291cb1c52e2baafb4624ec0bf49811b63a87/9084248.png" alt="Trade">
+                    Trade
+                </button>
+                <button class="nav-button" onclick="showSection('tasksSection', this)">
+                    <img src="https://github.com/s42144/Shark-Bounty/raw/2ba42299505308ea4ff2a68f5db8341f3ddc0e92/16104409.png" alt="Tasks">
+                    Tasks
+                </button>
+                <button class="nav-button" onclick="showSection('walletSection', this)">
+                    <img src="https://github.com/s42144/Shark-Bounty/raw/c06dc8d5e036525c17986aca385518c98926b633/6826311.png" alt="Wallet">
+                    Wallet
+                </button>
+                <button class="nav-button" onclick="showSection('profileSection', this)">
+                    <img src="https://github.com/s42144/Shark-Bounty/raw/11c6e035a7f8f6445526ea0bf34893fd3ceec419/18827926.png" alt="Profile">
+                    Profile
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const loadingScreen = document.getElementById('loadingScreen');
+            const mainContent = document.getElementById('mainContent');
+            const video = loadingScreen.querySelector('video');
+
+            video.onended = () => {
+                loadingScreen.style.display = 'none';
+                mainContent.style.display = 'flex';
+                updateDailyCheckinButton();
+            };
+
+            // Fallback for browsers that don't fire 'onended'
+            setTimeout(() => {
+                if (mainContent.style.display === 'none') {
+                    loadingScreen.style.display = 'none';
+                    mainContent.style.display = 'flex';
+                    updateDailyCheckinButton();
+                }
+            }, 3000); // 3 seconds fallback
+        });
+
+        // --- Core App Variables ---
+        let shbBalance = 0;
+        let usdtBalance = 0.00;
+        const shbBalanceEl = document.getElementById('shbBalance');
+        const usdtBalanceEl = document.getElementById('usdtBalance');
+
+        // --- Home Section Variables & Functions ---
+        const tapCoinEl = document.getElementById('tapCoin');
+        let currentEnergy = 1200;
+        const maxEnergy = 1200;
+        const energyTextEl = document.getElementById('energyText');
+        const energyBarEl = document.getElementById('energyBar');
+        const dailyCheckinBtn = document.getElementById('dailyCheckinBtn');
+        const checkinMessageEl = document.getElementById('checkinMessage');
+        const dailyCheckinKey = 'lastCheckinDate';
+
+        function updateEnergy() {
+            energyTextEl.textContent = `${currentEnergy} / ${maxEnergy}`;
+            const percentage = (currentEnergy / maxEnergy) * 100;
+            energyBarEl.style.width = `${percentage}%`;
+        }
+
+        function checkDailyCheckinStatus() {
+            const lastCheckinDate = localStorage.getItem(dailyCheckinKey);
+            const today = new Date().toDateString();
+            
+            if (lastCheckinDate === today) {
+                dailyCheckinBtn.disabled = true;
+                dailyCheckinBtn.textContent = 'Claimed Today';
+                checkinMessageEl.textContent = `Come back tomorrow to claim again!`;
+            } else {
+                dailyCheckinBtn.disabled = false;
+                dailyCheckinBtn.innerHTML = '<img src="https://github.com/s42144/Shark-Bounty/raw/746c5202de3073cfdcaa50fabf6bbdba0d8f7421/1142792.png" alt="Checkin"> Daily Check-in +100 SHB';
+                checkinMessageEl.textContent = '';
+            }
+        }
+        
+        function updateDailyCheckinButton() {
+            checkDailyCheckinStatus();
+            setTimeout(updateDailyCheckinButton, 60000); // Check every minute
+        }
+
+        dailyCheckinBtn.addEventListener('click', () => {
+            const today = new Date().toDateString();
+            const lastCheckinDate = localStorage.getItem(dailyCheckinKey);
+
+            if (lastCheckinDate !== today) {
+                shbBalance += 100;
+                shbBalanceEl.textContent = `${shbBalance} SHB`;
+                localStorage.setItem(dailyCheckinKey, today);
+                alert('Daily Check-in successful! +100 SHB added to your balance.');
+                checkDailyCheckinStatus();
+            } else {
+                alert('You have already claimed your daily reward today.');
+            }
+        });
+
+        tapCoinEl.addEventListener('click', (event) => {
+            if (currentEnergy > 0) {
+                shbBalance += 1;
+                currentEnergy -= 1;
+                shbBalanceEl.textContent = `${shbBalance} SHB`;
+                updateEnergy();
+                
+                // Floating +1 animation
+                const plusOne = document.createElement('div');
+                plusOne.textContent = '+1';
+                plusOne.className = 'plus-one';
+                plusOne.style.left = `${event.clientX - tapCoinEl.getBoundingClientRect().left}px`;
+                plusOne.style.top = `${event.clientY - tapCoinEl.getBoundingClientRect().top}px`;
+                tapCoinEl.appendChild(plusOne);
+
+                plusOne.addEventListener('animationend', () => {
+                    plusOne.remove();
+                });
+            }
+        });
+        
+        // Energy refill
+        setInterval(() => {
+            if (currentEnergy < maxEnergy) {
+                currentEnergy += 1;
+                updateEnergy();
+            }
+        }, 1000);
+
+        // --- Navigation Functions ---
+        function showSection(sectionId, button) {
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(sectionId).classList.add('active');
+
+            document.querySelectorAll('.nav-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            if (button) {
+                button.classList.add('active');
+            }
+        }
+
+        // --- Trade Section Functions ---
+        const plans = {
+            ton: { price: 10, daily: 1, lastClaimed: null },
+            not: { price: 30, daily: 3, lastClaimed: null },
+            hmstr: { price: 70, daily: 7, lastClaimed: null },
+            eth: { price: 100, daily: 10, lastClaimed: null },
+            bnb: { price: 150, daily: 15, lastClaimed: null },
+            btc: { price: 200, daily: 20, lastClaimed: null }
+        };
+
+        document.getElementById('plansContainer').addEventListener('click', (event) => {
+            const buyButton = event.target.closest('.buy-button');
+            if (buyButton) {
+                const planCard = buyButton.closest('.plan-card');
+                const planId = planCard.dataset.plan;
+                
+                if (plans[planId].lastClaimed === null) {
+                    // Purchase logic
+                    const price = plans[planId].price;
+                    if (usdtBalance >= price) {
+                        usdtBalance -= price;
+                        usdtBalanceEl.textContent = `${usdtBalance.toFixed(2)} USDT`;
+                        plans[planId].lastClaimed = Date.now();
+                        buyButton.textContent = 'Claim';
+                        buyButton.classList.add('claim');
+                        alert(`Successfully purchased ${planId.toUpperCase()} Plan!`);
+                    } else {
+                        alert('Insufficient USDT balance.');
+                    }
+                } else {
+                    // Claim logic
+                    const dailyEarnings = plans[planId].daily;
+                    const twentyFourHours = 24 * 60 * 60 * 1000;
+                    if (Date.now() - plans[planId].lastClaimed >= twentyFourHours) {
+                        usdtBalance += dailyEarnings;
+                        usdtBalanceEl.textContent = `${usdtBalance.toFixed(2)} USDT`;
+                        plans[planId].lastClaimed = Date.now();
+                        alert(`Claimed ${dailyEarnings} USDT!`);
+                    } else {
+                        alert('You can only claim once every 24 hours.');
+                    }
+                }
+            }
+        });
+        
+        // --- Wallet Section Functions ---
+        const walletTabs = document.querySelectorAll('.wallet-option-btn');
+        const walletContents = document.querySelectorAll('.wallet-content > div');
+        const depositMethodEl = document.getElementById('depositMethod');
+        const toncoinDepositEl = document.getElementById('toncoinDeposit');
+        const usdtDepositEl = document.getElementById('usdtDeposit');
+        const tonAmountEl = document.getElementById('tonAmount');
+        const usdtAmountEl = document.getElementById('usdtAmount');
+        const tonUsdtValueEl = document.getElementById('tonUsdtValue');
+        const depositQREl = document.getElementById('depositQR');
+        const qrCodeImageEl = document.getElementById('qrCodeImage');
+        const depositAddressEl = document.getElementById('depositAddress');
+        const depositMemoEl = document.getElementById('depositMemo');
+        const depositAmountEl = document.getElementById('depositAmount');
+        const depositTimerEl = document.getElementById('depositTimer');
+        let depositTimerInterval;
+        const tonExchangeRate = 3.20;
+
+        tonAmountEl.addEventListener('input', () => {
+            const ton = parseFloat(tonAmountEl.value);
+            if (!isNaN(ton) && ton >= 0) {
+                const usdtValue = (ton * tonExchangeRate).toFixed(2);
+                tonUsdtValueEl.textContent = usdtValue;
+            } else {
+                tonUsdtValueEl.textContent = '0.00';
+            }
+        });
+
+        walletTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                walletTabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+
+                walletContents.forEach(content => content.classList.remove('active'));
+                document.getElementById(`${tab.dataset.tab}-content`).classList.add('active');
+            });
+        });
+
+        depositMethodEl.addEventListener('change', (e) => {
+            if (e.target.value === 'toncoin') {
+                toncoinDepositEl.style.display = 'block';
+                usdtDepositEl.style.display = 'none';
+            } else {
+                toncoinDepositEl.style.display = 'none';
+                usdtDepositEl.style.display = 'block';
+            }
+        });
+        
+        function startTimer(duration, display) {
+            let timer = duration, minutes, seconds;
+            clearInterval(depositTimerInterval);
+            depositTimerInterval = setInterval(() => {
+                minutes = parseInt(timer / 60, 10);
+                seconds = parseInt(timer % 60, 10);
+                minutes = minutes < 10 ? "0" + minutes : minutes;
+                seconds = seconds < 10 ? "0" + seconds : seconds;
+                display.textContent = minutes + ":" + seconds;
+                if (--timer < 0) {
+                    clearInterval(depositTimerInterval);
+                    alert("Deposit request expired. Please create a new one.");
+                    depositQREl.style.display = 'none';
+                    toncoinDepositEl.closest('.wallet-form').style.display = 'block'; // Show form again
+                }
+            }, 1000);
+        }
+
+        function showTonDepositQR() {
+            const amount = parseFloat(tonAmountEl.value);
+            if (isNaN(amount) || amount < 3) {
+                alert('Minimum deposit amount is 3 TON.');
+                return;
+            }
+            depositQREl.style.display = 'block';
+            toncoinDepositEl.closest('.wallet-form').style.display = 'none';
+
+            qrCodeImageEl.src = 'https://github.com/s42144/Shark-Bounty/raw/1890e18b5008f67e6d057aa7a47149bfc84740fc/Screenshot_2025-09-12-18-54-13-944_com.ton_keeper-edit.jpg';
+            depositAddressEl.textContent = 'UQCOL7arveEVrKfKa9v3SbZnKjIBnOavmX3aXdDV-XD1cQ09';
+            depositMemoEl.textContent = 'D' + Math.floor(1000000 + Math.random() * 9000000); // Random 7-digit memo
+            depositAmountEl.textContent = `${amount} TON`;
+            document.getElementById('memo-row').style.display = 'flex';
+            document.getElementById('deposit-network').textContent = 'Network: TON';
+
+            startTimer(15 * 60, depositTimerEl);
+        }
+
+        function showUsdtDepositQR() {
+            const amount = parseFloat(usdtAmountEl.value);
+            if (isNaN(amount) || amount < 10) {
+                alert('Minimum deposit amount is 10 USDT.');
+                return;
+            }
+            depositQREl.style.display = 'block';
+            usdtDepositEl.closest('.wallet-form').style.display = 'none';
+            
+            qrCodeImageEl.src = 'https://github.com/s42144/Shark-Bounty/raw/a23720d6a315d2422e3943aa7bf779beac9acdad/Screenshot_2025-09-12-18-54-50-676_com.ton_keeper-edit.jpg';
+            depositAddressEl.textContent = 'UQCOL7arveEVrKfKa9v3SbZnKjIBnOavmX3aXdDV-XD1cQ09';
+            depositAmountEl.textContent = `${amount} USDT`;
+            document.getElementById('memo-row').style.display = 'none';
+            document.getElementById('deposit-network').textContent = 'Network: USDT TON';
+
+            startTimer(15 * 60, depositTimerEl);
+        }
+
+        function processWithdrawal() {
+            const amount = parseFloat(document.getElementById('withdrawAmount').value);
+            const address = document.getElementById('withdrawAddress').value;
+
+            if (isNaN(amount) || amount < 3) {
+                alert('Minimum withdraw amount is $3 USDT.');
+                return;
+            }
+            if (amount > usdtBalance) {
+                alert('Insufficient USDT balance.');
+                return;
+            }
+            if (address.length === 0) {
+                alert('Wallet address is mandatory.');
+                return;
+            }
+
+            usdtBalance -= amount;
+            usdtBalanceEl.textContent = `${usdtBalance.toFixed(2)} USDT`;
+            document.getElementById('availableWithdrawBalance').textContent = `${usdtBalance.toFixed(2)} USDT`;
+            
+            const historyList = document.getElementById('transactionHistory');
+            const newWithdrawal = document.createElement('li');
+            newWithdrawal.className = 'history-item withdraw';
+            const now = new Date();
+            const dateString = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            newWithdrawal.innerHTML = `
+                <div class="history-info">
+                    <span class="type">Withdrawal</span>
+                    <span class="amount">-$${amount.toFixed(2)} USDT</span>
+                    <span class="date">${dateString}</span>
+                </div>
+            `;
+            historyList.insertBefore(newWithdrawal, historyList.firstChild);
+
+            alert('Withdrawal request submitted successfully!');
+            // Reset form
+            document.getElementById('withdrawAmount').value = '';
+            document.getElementById('withdrawAddress').value = '';
+            document.getElementById('withdrawMemo').value = '';
+        }
+
+        // --- Utility Functions ---
+        function copyToClipboard(elementId) {
+            const textToCopy = document.getElementById(elementId).textContent;
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                alert('Copied to clipboard!');
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+            });
+        }
+
+        // Initial state update
+        updateEnergy();
+        usdtBalanceEl.textContent = `${usdtBalance.toFixed(2)} USDT`;
+        document.getElementById('availableWithdrawBalance').textContent = `${usdtBalance.toFixed(2)} USDT`;
+    </script>
+
+</body>
+</html>
