@@ -1,0 +1,43 @@
+
+Now on this script keep everything untouched just update thoes firebase resources on the index.html and make an admin.html script fromthat script i can control users shb balance and usdt balance by user id can increase balance and disincrease balance shb and usdt by userid and when users will did deposit i will recive that on the admin pannel i will recive user id device info date time and the user memo comment ammount and others thing and when user will did deposit it will go on history section and will show status pending and from admin pannel if i did approve the ammount will be added on users main balance and Status will show approved and if i did rejected from admin pannel status will show rejected and when users will did withdraw i will recive it on admin pannel withdraw section with users all details ammount time and randomly generated ton memo etc all details and after users withdraw successful the balance will be disincrease from users main balance and if from admin pannel i did approved the status of users history section will show approved and if i do rejected the balance will got refund to users balance and Their status will be changed that rejected. And keep a section from their i can search users by user id and it will show users all data like history all balances all datas and withdraw deposit history everything and make another section from there i can send Notification to all users and also to specific users by user id and Notification will goes to users profile Notification section and make another section name tasks from there i can add tasks photo tasks name how much ammount of SHB and usdt users will recived and tasks url and of one balance is empty it will show that balance i will set from admin pannel and on users side tasks section keep and button inside the tasks name start and once users will click on start they will redirect to the link and they will recive the ammount I've setted from admin pannel and it will be added on main balance and do the tasks section ui design on users side by your owen and make another section on admin pannel name Redemption from their i can generate and redeeme code can set how much usdt users will recive and how many users can recive and users can enter the code on users sidte redemption section and they can claim the gift and will show an Notification and make others things by your owen below thoes are the firebase resources 
+
+var admin = require("firebase-admin");
+
+var serviceAccount = require("path/to/serviceAccountKey.json");
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  databaseURL: "https://shark-bounty-default-rtdb.firebaseio.com"
+});
+
+FileInputStream serviceAccount =
+new FileInputStream("path/to/serviceAccountKey.json");
+
+FirebaseOptions options = new FirebaseOptions.Builder()
+  .setCredentials(GoogleCredentials.fromStream(serviceAccount))
+  .setDatabaseUrl("https://shark-bounty-default-rtdb.firebaseio.com")
+  .build();
+
+FirebaseApp.initializeApp(options);
+
+import firebase_admin
+from firebase_admin import credentials
+
+cred = credentials.Certificate("path/to/serviceAccountKey.json")
+firebase_admin.initialize_app(cred)
+
+import (
+  "fmt"
+  "context"
+
+  firebase "firebase.google.com/go"
+  "firebase.google.com/go/auth"
+
+  "google.golang.org/api/option"
+)
+
+opt := option.WithCredentialsFile("path/to/serviceAccountKey.json")
+app, err := firebase.NewApp(context.Background(), nil, opt)
+if err != nil {
+  return nil, fmt.Errorf("error initializing app: %v", err)
+}
