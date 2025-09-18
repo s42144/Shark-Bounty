@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Admin Panel</title>
+  <link href="https://fonts.googleapis.com/css?family=Inter:400,500,600,700&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; font-family: 'Inter', Arial, sans-serif; background: #f2f6fa; color: #222; }
+    .sidebar { width: 210px; background: #2b8cff; color: #fff; position: fixed; top: 0; left: 0; bottom: 0; display: flex; flex-direction: column; z-index: 100; }
+    .side-btn { padding: 19px 24px; border: none; background: none; color: #fff; font-size: 17px; text-align: left; width: 100%; cursor: pointer; transition: background .13s; border-bottom: 1px solid #358fff; font-weight: 600; }
+    .side-btn.active, .side-btn:focus { background: #2073f2; color: #fff; }
+    .main { margin-left: 210px; padding: 25px 15px 15px 15px; }
+    .section { display: none; }
+    .section.active { display: block; }
+    .admin-table { width: 100%; border-collapse: collapse; margin-top: 18px; background: #fff; }
+    .admin-table th, .admin-table td { padding: 9px 8px; border: 1px solid #e8f0ff; }
+    .admin-table th { background: #eaf2ff; }
+    .input-row { margin-bottom: 12px; display:flex; align-items:center; gap:8px; }
+    .input-row input, .input-row select { padding: 8px 10px; border-radius: 7px; border: 1px solid #c1d6f7; font-size: 15px; }
+    .input-row button { padding: 9px 20px; border-radius: 7px; border: none; background: #2b8cff; color: #fff; font-size: 16px; font-weight: 600; cursor: pointer; }
+    .status-approved { color: #32b77a; font-weight: 700; }
+    .status-pending { color: #ff9800; font-weight: 700; }
+    .status-rejected { color: #e91e63; font-weight: 700; }
+    .task-link { color: #2b8cff; text-decoration: underline; }
+    .admin-card { background: #fff; border-radius: 15px; box-shadow: 0 3px 11px #e8f0ff55; padding: 25px; margin-bottom: 18px; }
+    .admin-title { font-weight: 700; font-size: 21px; margin-bottom: 12px; color: #2b8cff; }
+    .task-photo-thumb { width: 46px; height: 46px; object-fit: cover; border-radius: 8px; background: #f2f2f2;}
+    @media (max-width: 700px) {
+      .sidebar { width: 100vw; height: auto; flex-direction: row; position: relative; }
+      .side-btn { font-size: 15px; padding: 11px 14px; }
+      .main { margin-left: 0; padding: 13px 4px; }
+    }
+    @media (max-width: 420px) {
+      .admin-title { font-size: 15px; }
+      .admin-card { padding:10px;}
+    }
+  </style>
+  <!-- Firebase 9+ Modular SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+</head>
+<body>
+  <div class="sidebar">
+    <button class="side-btn active" onclick="showSection('dashboard')">Dashboard</button>
+    <button class="side-btn" onclick="showSection('depositReq')">Deposit Requests</button>
+    <button class="side-btn" onclick="showSection('withdrawReq')">Withdraw Requests</button>
+    <button class="side-btn" onclick="showSection('users')">Users</button>
+    <button class="side-btn" onclick="showSection('tasks')">Tasks</button>
+    <button class="side-btn" onclick="showSection('notification')">Send Notification</button>
+    <button class="side-btn" onclick="showSection('balance')">Balance Control</button>
+  </div>
+  <div class="main">
+    <!-- Dashboard -->
+    <div class="section active" id="dashboard">
+      <div class="admin-card">
+        <div class="admin-title">Dashboard</div>
+        <div id="db-stats"></div>
+      </div>
+    </div>
+    <!-- Deposit Requests -->
+    <div class="section" id="depositReq">
+      <div class="admin-card">
+        <div class="admin-title">Deposit Requests</div>
+        <div id="depReqList"></div>
+      </div>
+    </div>
+    <!-- Withdrawal Requests -->
+    <div class="section" id="withdrawReq">
+      <div class="admin-card">
+        <div class="admin-title">Withdraw Requests</div>
+        <div id="wdReqList"></div>
+      </div>
+    </div>
+    <!-- Users -->
+    <div class="section" id="users">
+      <div class="admin-card">
+        <div class="admin-title">Users</div>
+        <div class="input-row">
+          <input type="text" id="searchUid" placeholder="Enter User ID">
+          <button onclick="searchUser()">Search</button>
+        </div>
+        <div id="userDetail"></div>
+      </div>
+    </div>
+    <!-- Tasks -->
+    <div class="section" id="tasks">
+      <div class="admin-card">
+        <div class="admin-title">Manage Tasks</div>
+        <form id="taskForm" onsubmit="event.preventDefault();addTask();">
+        <div class="input-row">
+          <input type="text" id="taskName" placeholder="Task Name">
+          <input type="text" id="taskReward" placeholder="Reward (TON)">
+          <input type="url" id="taskLink" placeholder="Task Link (https://...)">
+          <input type="file" id="taskPhoto" accept="image/*" style="width:140px;">
+          <button type="submit">Add Task</button>
+        </div>
+        </form>
+        <div id="tasks-list"></div>
+      </div>
+    </div>
+    <!-- Notification -->
+    <div class="section" id="notification">
+      <div class="admin-card">
+        <div class="admin-title">Send Notification</div>
+        <form id="notifForm" onsubmit="event.preventDefault();sendNotification();">
+        <div class="input-row">
+          <input type="text" id="notifUid" placeholder="User ID (or 'all')">
+          <input type="text" id="notifTitle" placeholder="Title">
+          <input type="text" id="notifBody" placeholder="Message">
+          <button type="submit">Send</button>
+        </div>
+        </form>
+        <div id="notifResult"></div>
+      </div>
+    </div>
+    <!-- Balance Control -->
+    <div class="section" id="balance">
+      <div class="admin-card">
+        <div class="admin-title">Balance Control</div>
+        <div class="input-row">
+          <input type="text" id="balUid" placeholder="User ID">
+          <input type="number" id="balAmt" placeholder="Amount">
+          <button onclick="addBalance()">Add Balance</button>
+          <button onclick="decBalance()">Disincrease Balance</button>
+        </div>
+        <div id="balResult"></div>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyAHofuS76xf2oGPaJqEtopmcxdoJzjkDL4",
+      authDomain: "zmex-investments.firebaseapp.com",
+      databaseURL: "https://zmex-investments-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "zmex-investments",
+      storageBucket: "zmex-investments.appspot.com",
+      messagingSenderId: "971623941364",
+      appId: "1:971623941364:web:6c65604fc45c3f64e74aa1",
+      measurementId: "G-KQ1LYP77JF"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    function showSection(id){
+      document.querySelectorAll('.section').forEach(e=>e.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      document.querySelectorAll('.side-btn').forEach(e=>e.classList.remove('active'));
+      Array.from(document.querySelectorAll('.side-btn')).find(btn=>btn.innerText.toLowerCase().includes(id.toLowerCase().replace('req',''))).classList.add('active');
+      if(id==='dashboard') loadDashboard();
+      if(id==='depositReq') loadDepositReq();
+      if(id==='withdrawReq') loadWithdrawReq();
+      if(id==='tasks') loadTasks();
+    }
+    function loadDashboard(){
+      db.ref("users").once("value",snap=>{
+        let users=snap.val()||{};
+        let html = `<b>Total Users:</b> ${Object.keys(users).length}<br>`;
+        db.ref("balances").once("value",balsnap=>{
+          let bals=balsnap.val()||{};
+          let totalBal=Object.values(bals).reduce((s,b)=>s+(b.main||0),0);
+          html+=`<b>Total Balance:</b> ${totalBal.toFixed(2)}<br>`;
+          document.getElementById('db-stats').innerHTML = html;
+        });
+      });
+    }
+    function loadDepositReq(){
+      db.ref("depositRequests").once("value",snap=>{
+        let html = `<table class="admin-table"><tr><th>UserID</th><th>Amount</th><th>Method</th><th>Memo</th><th>TX Hash</th><th>Status</th><th>Action</th></tr>`;
+        snap.forEach(x=>{
+          let d=x.val();
+          html+=`<tr>
+            <td>${d.userId}</td>
+            <td>${d.amount}</td>
+            <td>${d.method}</td>
+            <td>${d.memo}</td>
+            <td>${d.txhash}</td>
+            <td class="status-${d.status}">${d.status}</td>
+            <td>
+              ${d.status==='pending'?`
+                <button onclick="approveDeposit('${x.key}','${d.userId}',${d.amount})">Approve</button>
+                <button onclick="rejectDeposit('${x.key}','${d.userId}')">Reject</button>
+              `:``}
+            </td>
+          </tr>`;
+        });
+        html+=`</table>`;
+        document.getElementById('depReqList').innerHTML = html;
+      });
+    }
+    function approveDeposit(key,uid,amt){
+      db.ref("depositRequests/"+key).update({status:"approved"});
+      db.ref("balances/"+uid).once("value",s=>{
+        let bal=s.val()?s.val().main:0;
+        db.ref("balances/"+uid).set({main:bal+Number(amt)});
+        db.ref("notifications/"+uid).push({title:"Deposit Approved",body:"Deposit approved and balance credited.",date:new Date().toLocaleString()});
+        loadDepositReq();
+      });
+    }
+    function rejectDeposit(key,uid){
+      db.ref("depositRequests/"+key).update({status:"rejected"});
+      db.ref("notifications/"+uid).push({title:"Deposit Rejected",body:"Deposit request rejected.",date:new Date().toLocaleString()});
+      loadDepositReq();
+    }
+    function loadWithdrawReq(){
+      db.ref("withdrawRequests").once("value",snap=>{
+        let html = `<table class="admin-table"><tr><th>UserID</th><th>Amount</th><th>To</th><th>Memo</th><th>Status</th><th>Action</th></tr>`;
+        snap.forEach(x=>{
+          let d=x.val();
+          html+=`<tr>
+            <td>${d.userId}</td>
+            <td>${d.amount}</td>
+            <td>${d.to||''}</td>
+            <td>${d.memo||''}</td>
+            <td class="status-${d.status}">${d.status}</td>
+            <td>
+              ${d.status==='pending'?`
+                <button onclick="approveWithdraw('${x.key}','${d.userId}')">Approve</button>
+                <button onclick="rejectWithdraw('${x.key}','${d.userId}',${d.amount})">Reject</button>
+              `:``}
+            </td>
+          </tr>`;
+        });
+        html+=`</table>`;
+        document.getElementById('wdReqList').innerHTML = html;
+      });
+    }
+    function approveWithdraw(key,uid){
+      db.ref("withdrawRequests/"+key).update({status:"approved"});
+      db.ref("notifications/"+uid).push({title:"Withdraw Approved",body:"Withdrawal approved.",date:new Date().toLocaleString()});
+      loadWithdrawReq();
+    }
+    function rejectWithdraw(key,uid,amt){
+      db.ref("withdrawRequests/"+key).update({status:"rejected"});
+      db.ref("balances/"+uid).once("value",s=>{
+        let bal=s.val()?s.val().main:0;
+        db.ref("balances/"+uid).set({main:bal+Number(amt)});
+        db.ref("notifications/"+uid).push({title:"Withdraw Rejected",body:"Withdrawal rejected and refunded.",date:new Date().toLocaleString()});
+        loadWithdrawReq();
+      });
+    }
+    function loadTasks(){
+      db.ref("tasks").once("value",snap=>{
+        let html = `<table class="admin-table"><tr><th>Photo</th><th>Name</th><th>Reward</th><th>Link</th><th>Action</th></tr>`;
+        snap.forEach(x=>{
+          let t=x.val();
+          html+=`<tr>
+            <td>${t.photo?`<img class="task-photo-thumb" src="${t.photo}">`:''}</td>
+            <td>${t.name}</td>
+            <td>${t.reward}</td>
+            <td><a class="task-link" href="${t.link}" target="_blank">${t.link}</a></td>
+            <td><button onclick="delTask('${x.key}')">Delete</button></td>
+          </tr>`;
+        });
+        html+=`</table>`;
+        document.getElementById('tasks-list').innerHTML = html;
+      });
+    }
+    function addTask(){
+      let name=document.getElementById('taskName').value.trim();
+      let reward=parseFloat(document.getElementById('taskReward').value.trim());
+      let link=document.getElementById('taskLink').value.trim();
+      let photoInput=document.getElementById('taskPhoto');
+      if(!name||!reward||!link)return;
+      if(photoInput.files && photoInput.files[0]){
+        let reader = new FileReader();
+        reader.onload = function(e){
+          db.ref("tasks").push({name,reward,link,photo:e.target.result});
+          loadTasks();
+        };
+        reader.readAsDataURL(photoInput.files[0]);
+      }else{
+        db.ref("tasks").push({name,reward,link});
+        loadTasks();
+      }
+      document.getElementById('taskName').value='';
+      document.getElementById('taskReward').value='';
+      document.getElementById('taskLink').value='';
+      document.getElementById('taskPhoto').value='';
+    }
+    function delTask(key){
+      db.ref("tasks/"+key).remove();
+      loadTasks();
+    }
+    function sendNotification(){
+      let uid=document.getElementById('notifUid').value.trim();
+      let title=document.getElementById('notifTitle').value.trim();
+      let body=document.getElementById('notifBody').value.trim();
+      let notif={title,body,date:new Date().toLocaleString()};
+      if(uid==='all'){
+        db.ref('users').once('value',snap=>{
+          snap.forEach(u=>db.ref("notifications/"+u.key).push(notif));
+          document.getElementById('notifResult').innerText="Notification sent to all!";
+        });
+      }else{
+        db.ref("notifications/"+uid).push(notif);
+        document.getElementById('notifResult').innerText="Notification sent!";
+      }
+    }
+    function addBalance(){
+      let uid=document.getElementById('balUid').value.trim();
+      let amt=parseFloat(document.getElementById('balAmt').value);
+      db.ref("balances/"+uid).once("value",s=>{
+        let bal=s.val()?s.val().main:0;
+        db.ref("balances/"+uid).set({main:bal+amt});
+        db.ref("notifications/"+uid).push({title:"Balance Added",body:`${amt} TON added by admin.`,date:new Date().toLocaleString()});
+        document.getElementById('balResult').innerText="Balance updated!";
+      });
+    }
+    function decBalance(){
+      let uid=document.getElementById('balUid').value.trim();
+      let amt=parseFloat(document.getElementById('balAmt').value);
+      db.ref("balances/"+uid).once("value",s=>{
+        let bal=s.val()?s.val().main:0;
+        db.ref("balances/"+uid).set({main:bal-amt});
+        db.ref("notifications/"+uid).push({title:"Balance Disincreased",body:`${amt} TON removed by admin.`,date:new Date().toLocaleString()});
+        document.getElementById('balResult').innerText="Balance updated!";
+      });
+    }
+    function searchUser(){
+      let uid=document.getElementById('searchUid').value.trim();
+      db.ref("users/"+uid).once("value",s=>{
+        let u=s.val();
+        let html = '';
+        if(!u){ html='Not found.'; }
+        else{
+          html=`<b>Name:</b> ${u.fullname||''}<br><b>Email:</b> ${u.email||''}<br><b>TON Address:</b> ${u.tonaddress||''}<br>`;
+          db.ref("balances/"+uid).once("value",b=>{
+            html+=`<b>Balance:</b> ${(b.val()?b.val().main:0)}<br>`;
+            document.getElementById('userDetail').innerHTML=html;
+          });
+        }
+      });
+    }
+    loadDashboard();
+  </script>
+</body>
+</html>
