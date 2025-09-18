@@ -1,0 +1,1377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Shark Bounty</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:400,700&display=swap">
+  <style>
+    :root {
+      --primary: #00a7e1;
+      --background: #10151a;
+      --card: #18222b;
+      --accent: #ffb400;
+      --danger: #ff4b4b;
+      --success: #27c96e;
+      --gray: #c2c2c2;
+      --radius: 18px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Montserrat', Arial, sans-serif;
+      background: var(--background);
+      color: #fff;
+      height: 100vh;
+      overflow: hidden;
+    }
+    #video-loading {
+      position: fixed;
+      inset: 0;
+      background: #000;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #video-loading video {
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+    }
+    #app {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    /* TopBar */
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px 8px 18px;
+      background: linear-gradient(90deg, var(--primary) 0%, #4bb1d7 100%);
+      border-bottom-left-radius: var(--radius);
+      border-bottom-right-radius: var(--radius);
+      position: relative;
+      z-index: 1;
+    }
+    .balance-btn {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--card);
+      border-radius: 18px;
+      padding: 7px 15px;
+      font-size: 0.96em;
+      font-weight: bold;
+      box-shadow: 0 2px 8px #0002;
+      margin-bottom: 2px;
+    }
+    .balance-btn img {
+      height: 24px;
+      width: 24px;
+      border-radius: 50%;
+      background: #fff2;
+    }
+    .balance-group {
+      display: flex;
+      gap: 10px;
+    }
+    .energy-bar-wrapper {
+      margin-top: 12px;
+      width: 94vw;
+      max-width: 430px;
+      margin-left: auto;
+      margin-right: auto;
+      position: relative;
+    }
+    .energy-bar {
+      background: #26313f;
+      border-radius: 18px;
+      width: 100%;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .energy-bar-inner {
+      background: linear-gradient(90deg, #ffe100 0%, #ffb400 100%);
+      height: 100%;
+      transition: width 0.2s;
+      display: flex;
+      align-items: center;
+      padding-left: 8px;
+      color: #111;
+      font-weight: 700;
+      font-size: 1.1em;
+    }
+    .energy-logo {
+      height: 22px;
+      width: 22px;
+      margin: 0 7px 0 11px;
+      vertical-align: middle;
+      display: inline-block;
+    }
+    /* Main Home */
+    .home-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 1 1 auto;
+      padding: 0 10px;
+      overflow-y: auto;
+      padding-bottom: 110px;
+    }
+    .coin-tap-area {
+      margin: 26px 0 10px 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .coin-circle {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: linear-gradient(160deg, #ffde59 0%, #ffb400 80%);
+      box-shadow: 0 4px 30px #ffb40044;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      margin-bottom: 10px;
+      cursor: pointer;
+      overflow: hidden;
+      animation: coin-pop 1.8s infinite alternate linear;
+    }
+    .coin-circle img {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      pointer-events: none;
+      user-select: none;
+    }
+    @keyframes coin-pop {
+      0% { transform: scale(1);}
+      80% { transform: scale(1.06);}
+      100% { transform: scale(1);}
+    }
+    .tap-anim {
+      position: absolute;
+      left: 50%; top: 50%;
+      transform: translate(-50%,-50%);
+      color: #fff;
+      font-weight: bold;
+      font-size: 1.1em;
+      opacity: 0.9;
+      pointer-events: none;
+      animation: tap-pop 0.8s cubic-bezier(0.32,1.56,0.57,0.97);
+      z-index: 2;
+      text-shadow: 0 2px 8px #0007;
+    }
+    @keyframes tap-pop {
+      0% { opacity: 1; transform: translate(-50%,-50%) scale(1);}
+      80% { opacity: 1; transform: translate(-50%,-90%) scale(1.3);}
+      100% { opacity: 0; transform: translate(-50%,-180%) scale(0.8);}
+    }
+    /* Home side buttons */
+    .home-side-btns {
+      position: absolute;
+      right: 0;
+      top: 40%;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+      z-index: 2;
+    }
+    .side-btn {
+      background: var(--card);
+      color: #fff;
+      border-radius: 13px 0 0 13px;
+      padding: 8px 22px 8px 12px;
+      font-weight: 600;
+      font-size: 1em;
+      display: flex;
+      align-items: center;
+      box-shadow: 0 1px 6px #0002;
+      cursor: pointer;
+      margin-left: 0;
+      transition: background 0.18s;
+      gap: 8px;
+    }
+    .side-btn img {
+      height: 28px;
+      width: 28px;
+    }
+    /* Check-in modal */
+    .modal-bg {
+      position: fixed;
+      inset: 0;
+      background: #000a;
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: fadein 0.17s;
+    }
+    @keyframes fadein { 0% { opacity: 0;} 100% { opacity: 1;} }
+    .modal-box {
+      background: var(--card);
+      border-radius: 20px;
+      width: 96vw;
+      max-width: 400px;
+      padding: 20px 10px 18px 10px;
+      box-shadow: 0 4px 30px #0005;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+    .checkin-arrow {
+      display: flex;
+      overflow-x: auto;
+      width: 100%;
+      gap: 12px;
+      margin: 18px 0 7px 0;
+      padding-bottom: 12px;
+    }
+    .checkin-day {
+      min-width: 86px;
+      background: #222f38;
+      border-radius: 15px;
+      padding: 12px 7px 12px 7px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      border: 2px solid var(--primary);
+      position: relative;
+      font-size: 0.97em;
+    }
+    .checkin-day.claimed {
+      opacity: 0.6;
+      border-color: #aaa;
+      background: #232323;
+    }
+    .checkin-day .claimed-badge {
+      position: absolute;
+      top: 8px;
+      right: 7px;
+      background: var(--success);
+      color: #111;
+      font-size: 0.82em;
+      padding: 1px 7px;
+      border-radius: 7px;
+      font-weight: 700;
+      z-index: 3;
+    }
+    .modal-title {
+      font-size: 1.18em;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: var(--accent);
+      margin-top: 2px;
+    }
+    .modal-close {
+      position: absolute;
+      right: 17px;
+      top: 9px;
+      background: none; border: none;
+      color: #fff;
+      font-size: 1.6em;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .modal-checkin-btn {
+      margin-top: 16px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 33px;
+      font-size: 1.08em;
+      font-weight: 700;
+      box-shadow: 0 2px 8px #00a7e199;
+      cursor: pointer;
+      transition: background 0.16s;
+    }
+    .modal-checkin-btn[disabled] {
+      opacity: 0.5;
+      background: #222;
+      cursor: not-allowed;
+    }
+    /* Redeem modal */
+    .modal-redeem-inpt {
+      width: 93%;
+      font-size: 1.1em;
+      margin: 12px 0;
+      border-radius: 9px;
+      padding: 8px 10px;
+      border: 1.5px solid var(--primary);
+      outline: none;
+      background: #232b33;
+      color: #fff;
+    }
+    .modal-redeem-btn {
+      background: var(--accent);
+      color: #111;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 33px;
+      font-size: 1.08em;
+      font-weight: 700;
+      margin-top: 8px;
+      cursor: pointer;
+      box-shadow: 0 2px 8px #ffb40066;
+    }
+    /* Bottom navigation */
+    .nav-bar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: 74px;
+      background: var(--card);
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      border-top-left-radius: 20px;
+      border-top-right-radius: 20px;
+      z-index: 30;
+      box-shadow: 0 -4px 18px #0003;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    .nav-btn {
+      flex: 1 1 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 0.78em;
+      color: #bbb;
+      cursor: pointer;
+      padding: 7px 0 0 0;
+      transition: color 0.14s;
+      min-width: 62px;
+      gap: 3px;
+    }
+    .nav-btn.active {
+      color: var(--primary);
+    }
+    .nav-btn img {
+      height: 28px;
+      width: 28px;
+      margin-bottom: 2px;
+      border-radius: 50%;
+      background: #fff1;
+      object-fit: contain;
+    }
+    /* Other sections (Trade, Tasks, Wallet, Profile) - Responsive Scroll */
+    .section { display: none; flex: 1 1 auto; flex-direction: column; min-height: 0; }
+    .section.active { display: flex; }
+    /* Trade Section */
+    .plans-list {
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+      margin-top: 18px;
+      overflow-y: auto;
+    }
+    .trade-plan-card {
+      background: linear-gradient(90deg,#151d22 70%,var(--primary) 110%);
+      border-radius: 18px;
+      box-shadow: 0 2px 14px #00a7e144;
+      padding: 18px 15px 15px 15px;
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      position: relative;
+      min-height: 100px;
+      min-width: 0;
+      flex-wrap: wrap;
+    }
+    .plan-secure {
+      position: absolute;
+      left: 10px; top: 10px;
+      height: 28px; width: 28px;
+      border-radius: 50%;
+      z-index: 2;
+    }
+    .plan-content {
+      flex: 1 1 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+    .plan-title {
+      font-size: 1.12em;
+      font-weight: bold;
+      color: var(--accent);
+    }
+    .plan-subrow {
+      display: flex;
+      gap: 10px;
+      font-size: 0.93em;
+      color: #eee;
+    }
+    .plan-balance-row {
+      display: flex;
+      gap: 12px;
+      margin-top: 4px;
+      font-size: 0.92em;
+    }
+    .plan-balance-row img {
+      height: 22px; width: 22px; border-radius: 50%;
+    }
+    .plan-buy-btn, .plan-claim-btn {
+      background: var(--success);
+      color: #fff;
+      border: none;
+      border-radius: 13px;
+      padding: 10px 30px;
+      font-size: 1.03em;
+      font-weight: 700;
+      margin-left: 14px;
+      cursor: pointer;
+      transition: background 0.14s;
+      margin-top: 9px;
+    }
+    .plan-claim-btn {
+      background: var(--primary);
+    }
+    /* Tasks Section */
+    .tasks-list {
+      margin-top: 19px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      overflow-y: auto;
+    }
+    .task-card {
+      background: var(--card);
+      border-radius: 17px;
+      box-shadow: 0 2px 12px #00a7e133;
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      padding: 13px 11px 13px 11px;
+      min-height: 84px;
+      position: relative;
+    }
+    .task-img {
+      height: 56px; width: 56px; border-radius: 11px; object-fit: cover;
+    }
+    .task-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+    .task-title { font-size: 1.07em; font-weight: bold; color: var(--accent);}
+    .task-earn { font-size: 0.96em; color: var(--success);}
+    .task-btn {
+      background: var(--primary);
+      border: none;
+      border-radius: 11px;
+      padding: 9px 21px;
+      font-size: 0.99em;
+      color: #fff;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .task-btn.completed {
+      background: var(--success);
+      color: #fff;
+    }
+    /* Wallet Section */
+    .wallet-section {
+      width: 100%;
+      flex: 1 1 auto;
+      overflow-y: auto;
+      padding-bottom: 110px;
+    }
+    .wallet-btns {
+      display: flex;
+      flex-direction: column;
+      gap: 13px;
+      margin-top: 24px;
+      align-items: center;
+      width: 100%;
+    }
+    .wallet-btn {
+      width: 94vw;
+      max-width: 420px;
+      background: var(--card);
+      color: #fff;
+      border-radius: 18px;
+      padding: 15px 0;
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      font-size: 1.09em;
+      font-weight: 700;
+      justify-content: flex-start;
+      cursor: pointer;
+      box-shadow: 0 2px 10px #0002;
+      border: none;
+    }
+    .wallet-btn img { height: 28px; width: 28px; border-radius: 50%; }
+    .wallet-history-list {
+      margin-top: 18px;
+      padding: 0 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+      overflow-y: auto;
+    }
+    .wallet-history-item {
+      background: #262e37;
+      border-radius: 12px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      justify-content: space-between;
+      font-size: 0.98em;
+      box-shadow: 0 1px 7px #0002;
+    }
+    .wallet-history-status {
+      font-weight: bold;
+      text-transform: capitalize;
+      padding: 2px 8px;
+      border-radius: 7px;
+      font-size: 0.93em;
+      margin-left: 4px;
+    }
+    .wallet-history-status.approved { color: #fff; background: var(--success);}
+    .wallet-history-status.pending { color: #fff; background: var(--accent);}
+    .wallet-history-status.rejected { color: #fff; background: var(--danger);}
+    /* Deposit/Withdraw forms */
+    .wallet-form {
+      background: var(--card);
+      border-radius: 15px;
+      padding: 15px 12px;
+      width: 94vw;
+      max-width: 410px;
+      margin: 16px auto 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 13px;
+      align-items: stretch;
+    }
+    .wallet-form label { font-size: 0.97em; margin-bottom: 2px;}
+    .wallet-form input, .wallet-form select {
+      border-radius: 9px;
+      border: 1.5px solid var(--primary);
+      background: #232b33;
+      color: #fff;
+      font-size: 1.1em;
+      padding: 9px 11px;
+      outline: none;
+      margin-bottom: 5px;
+    }
+    .wallet-form button {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 11px;
+      padding: 10px 0;
+      font-size: 1.1em;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 1px 6px #00a7e177;
+      margin-top: 6px;
+    }
+    .wallet-form .qr-img { width: 100%; max-width: 260px; margin: 0 auto 5px auto; display: block;}
+    .wallet-form .copy-row { display: flex; align-items: center; gap: 7px;}
+    .wallet-form .copy-btn {
+      background: #232b33;
+      border: 1.5px solid var(--primary);
+      border-radius: 7px;
+      color: var(--primary);
+      font-size: 0.92em;
+      padding: 6px 12px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .wallet-timer {
+      color: var(--danger);
+      font-size: 1.09em;
+      text-align: center;
+      font-weight: bold;
+      margin-bottom: 5px;
+      margin-top: -9px;
+    }
+    .wallet-exchange {
+      color: var(--accent);
+      font-size: 0.98em;
+      margin: 3px 0 7px 0;
+      text-align: center;
+    }
+    /* Profile section */
+    .profile-section {
+      width: 100%;
+      flex: 1 1 auto;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-bottom: 110px;
+    }
+    .profile-id-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--card);
+      border-radius: 13px;
+      padding: 8px 17px;
+      margin: 18px 0 10px 0;
+      font-size: 1.1em;
+      box-shadow: 0 1px 7px #0002;
+    }
+    .profile-id-copy {
+      background: #232b33;
+      border: 1.5px solid var(--primary);
+      border-radius: 7px;
+      color: var(--primary);
+      font-size: 0.92em;
+      padding: 5px 10px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .profile-btns {
+      display: flex;
+      flex-direction: column;
+      gap: 13px;
+      width: 94vw;
+      max-width: 420px;
+      align-items: stretch;
+      margin: 10px 0 0 0;
+    }
+    .profile-btn {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      background: var(--card);
+      border-radius: 13px;
+      padding: 14px 0;
+      font-size: 1.08em;
+      color: #fff;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 1px 6px #0001;
+      justify-content: flex-start;
+    }
+    .profile-btn img { height: 28px; width: 28px; border-radius: 50%; }
+    .leaderboard-list {
+      margin: 19px 0 0 0;
+      padding: 0 6px 0 6px;
+      width: 100%;
+      max-width: 430px;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      overflow-y: auto;
+      max-height: 65vh;
+    }
+    .leaderboard-item {
+      background: var(--card);
+      border-radius: 11px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 8px;
+      font-size: 1.01em;
+      box-shadow: 0 1px 5px #0001;
+      position: relative;
+    }
+    .leaderboard-top {
+      position: absolute;
+      left: 10px; top: 7px;
+      height: 22px; width: 22px;
+    }
+    .leaderboard-country {
+      font-size: 0.93em;
+      color: #27c96e;
+      margin-left: 4px;
+    }
+    .leaderboard-balance {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .leaderboard-balance img { height: 20px; width: 20px; }
+    /* Notification section */
+    .notification-list {
+      margin: 19px 0 0 0;
+      width: 100%;
+      max-width: 430px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-y: auto;
+      max-height: 60vh;
+      padding: 0 8px;
+    }
+    .notification-item {
+      background: var(--card);
+      border-radius: 10px;
+      padding: 13px 16px;
+      font-size: 0.99em;
+      color: #eee;
+      box-shadow: 0 1px 5px #0002;
+    }
+    /* Responsive */
+    @media (max-width: 500px) {
+      .energy-bar-wrapper, .wallet-btn, .wallet-form, .profile-btns, .leaderboard-list { max-width: 99vw;}
+      .modal-box { max-width: 99vw;}
+    }
+    ::-webkit-scrollbar { width: 0; height: 0;}
+  </style>
+</head>
+<body>
+
+  <!-- Fullscreen video loading -->
+  <div id="video-loading">
+    <video src="https://github.com/s42144/Shark-Bounty/blob/8b67f2028cd3d33d6545243ea43a57958c428edf/29f4182c-fb84-4f6e-830f-f560ae571afe.mp4?raw=true" autoplay muted playsinline onended="onVideoEnd()" id="introVideo"></video>
+  </div>
+  
+  <!-- Main App UI -->
+  <div id="app">
+    <!-- Top balances bar -->
+    <div class="top-bar">
+      <div class="balance-group">
+        <div class="balance-btn" id="bal-shb-btn">
+          <img src="https://github.com/s42144/Shark-Bounty/files/17510103.gif?raw=true" alt="SHB">
+          <span id="shb-balance">0</span> SHB
+        </div>
+        <div class="balance-btn" id="bal-usdt-btn">
+          <img src="https://github.com/s42144/Shark-Bounty/files/15207964.png?raw=true" alt="USDT">
+          <span id="usdt-balance">0.00</span> USDT
+        </div>
+      </div>
+    </div>
+    <!-- Energy bar -->
+    <div class="energy-bar-wrapper">
+      <div class="energy-bar">
+        <span class="energy-bar-inner" id="energy-bar-inner" style="width:80%;">
+          <img class="energy-logo" src="https://github.com/s42144/Shark-Bounty/files/934817.png?raw=true" alt="Energy">
+          <span id="energy-value">1200</span> Energy
+        </span>
+      </div>
+    </div>
+    <!-- Main section container -->
+    <div class="section active" id="home-section">
+      <div class="home-content">
+        <div class="coin-tap-area">
+          <div class="coin-circle" id="coin-tap">
+            <img src="https://github.com/s42144/Shark-Bounty/files/17510103.gif?raw=true" alt="SHB Coin">
+          </div>
+        </div>
+        <!-- Animated tap feedbacks go here -->
+        <div id="tap-animations"></div>
+      </div>
+      <div class="home-side-btns">
+        <div class="side-btn" onclick="showCheckInModal()">
+          <img src="https://github.com/s42144/Shark-Bounty/files/1142792.png?raw=true" alt="Check In">
+          CHECK IN
+        </div>
+        <div class="side-btn" onclick="showRedeemModal()">
+          <img src="https://github.com/s42144/Shark-Bounty/files/3179668.png?raw=true" alt="Redeem">
+          REDEEM
+        </div>
+      </div>
+    </div>
+    <!-- Trade Section -->
+    <div class="section" id="trade-section">
+      <div class="plans-list" id="plans-list"></div>
+    </div>
+    <!-- Tasks Section -->
+    <div class="section" id="tasks-section">
+      <div class="tasks-list" id="tasks-list"></div>
+    </div>
+    <!-- Wallet Section -->
+    <div class="section" id="wallet-section">
+      <div class="wallet-section" id="wallet-section-content"></div>
+    </div>
+    <!-- Profile Section -->
+    <div class="section" id="profile-section">
+      <div class="profile-section" id="profile-section-content"></div>
+    </div>
+    <!-- Check-in Modal -->
+    <div id="modal-bg" style="display:none;"></div>
+  </div>
+  <!-- Bottom navigation -->
+  <div class="nav-bar" id="bottom-nav">
+    <div class="nav-btn active" onclick="switchSection('home')" id="nav-home">
+      <img src="https://github.com/s42144/Shark-Bounty/files/1057118.png?raw=true" alt="Home">
+      Home
+    </div>
+    <div class="nav-btn" onclick="switchSection('trade')" id="nav-trade">
+      <img src="https://github.com/s42144/Shark-Bounty/files/9084248.png?raw=true" alt="Trade">
+      Trade
+    </div>
+    <div class="nav-btn" onclick="switchSection('tasks')" id="nav-tasks">
+      <img src="https://github.com/s42144/Shark-Bounty/files/16104409.png?raw=true" alt="Tasks">
+      Tasks
+    </div>
+    <div class="nav-btn" onclick="switchSection('wallet')" id="nav-wallet">
+      <img src="https://github.com/s42144/Shark-Bounty/files/6826311.png?raw=true" alt="Wallet">
+      Wallet
+    </div>
+    <div class="nav-btn" onclick="switchSection('profile')" id="nav-profile">
+      <img src="https://github.com/s42144/Shark-Bounty/files/18827926.png?raw=true" alt="Profile">
+      Profile
+    </div>
+  </div>
+  <!-- Scripts -->
+  <script>
+    // ---------------- Video Loading Handler -----------------------
+    function onVideoEnd() {
+      document.getElementById('video-loading').style.display = 'none';
+      document.getElementById('app').style.opacity = '1';
+    }
+    document.getElementById('introVideo').addEventListener('ended', onVideoEnd);
+    setTimeout(onVideoEnd, 7000); // Fallback: auto-hide video after 7s
+
+    // ---------------- SECTION SWITCHING ---------------------------
+    function switchSection(sec) {
+      for(const s of document.querySelectorAll('.section')) s.classList.remove('active');
+      for(const n of document.querySelectorAll('.nav-btn')) n.classList.remove('active');
+      document.getElementById(sec+'-section').classList.add('active');
+      document.getElementById('nav-'+sec).classList.add('active');
+      if(sec==="trade") renderPlans();
+      if(sec==="tasks") renderTasks();
+      if(sec==="wallet") renderWallet();
+      if(sec==="profile") renderProfile();
+    }
+    // ---------------- BALANCES & USER STATE ----------------------
+    let state = {
+      shb: 0,
+      usdt: 0,
+      energy: 1200,
+      maxEnergy: 1200,
+      plans: [],
+      planClaims: {},
+      tasks: [],
+      taskStatus: {},
+      checkin: {claimed: [], last: 0},
+      wallet: {
+        history: [],
+        deposits: [],
+        withdraws: [],
+      },
+      userId: '',
+      notifications: [
+        "Welcome to Shark Bounty! Enjoy daily rewards.",
+      ],
+      leaderboard: [],
+      referralCode: '',
+      nextDepositMemo: '',
+    };
+
+    // --------- Generate an 11-digit user id if not present ----------
+    function genUserId() {
+      let id = '' + Math.floor(10000000000 + Math.random()*89999999999);
+      localStorage.setItem('sb_userId', id);
+      return id;
+    }
+    state.userId = localStorage.getItem('sb_userId') || genUserId();
+
+    // ----------- BALANCES RENDERER ----------------------------------
+    function renderBalances() {
+      document.getElementById('shb-balance').textContent = state.shb.toLocaleString();
+      document.getElementById('usdt-balance').textContent = state.usdt.toFixed(2);
+      let e = Math.min(state.energy, state.maxEnergy);
+      document.getElementById('energy-value').textContent = e;
+      let w = Math.max(10, (e/state.maxEnergy)*100);
+      document.getElementById('energy-bar-inner').style.width = w + '%';
+    }
+    renderBalances();
+
+    // ----------------- ENERGY REGENERATOR --------------------------
+    setInterval(()=>{
+      if(state.energy < state.maxEnergy) {
+        state.energy += 1;
+        renderBalances();
+      }
+    },1000);
+
+    // ----------------- COIN TAP LOGIC ------------------------------
+    function coinTapAnim(amount=1) {
+      // Show tap animation
+      let anim = document.createElement('div');
+      anim.className = 'tap-anim';
+      anim.textContent = `+${amount} SHB`;
+      let tapCont = document.getElementById('tap-animations');
+      tapCont.appendChild(anim);
+      setTimeout(()=>{ anim.remove(); }, 800);
+    }
+    function onCoinTap(e) {
+      e.preventDefault();
+      let touches = e.touches ? e.touches.length : 1;
+      let taps = touches > 1 ? touches : 1;
+      let tapCount = Math.min(taps, state.energy); // Don't allow more than energy
+      if(tapCount<1) return;
+      state.shb += tapCount;
+      state.energy -= tapCount;
+      renderBalances();
+      for(let i=0;i<tapCount;i++) coinTapAnim(1);
+    }
+    // Multi-finger support
+    let coin = document.getElementById('coin-tap');
+    coin.addEventListener('click', onCoinTap);
+    coin.addEventListener('touchstart', onCoinTap);
+
+    // ---------------- CHECK IN MODAL -------------------------------
+    function showCheckInModal() {
+      showModal(renderCheckInModal());
+    }
+    function renderCheckInModal() {
+      const days = [
+        {shb: 1000, usdt: 0.10},
+        {shb: 2000, usdt: 0.20},
+        {shb: 3000, usdt: 0.30},
+        {shb: 4000, usdt: 0.40},
+        {shb: 5000, usdt: 0.50},
+        {shb: 6000, usdt: 0.60},
+        {shb: 7000, usdt: 0.70},
+      ];
+      let lastDay = state.checkin.last || 0;
+      let claimed = state.checkin.claimed || [];
+      let today = new Date(); let todayStr = today.toISOString().slice(0,10);
+      let canClaim = claimed.length < 7 && (claimed.length === 0 || todayStr > lastDay);
+      let html = `<button class="modal-close" onclick="closeModal()">&times;</button>
+        <div class="modal-title">7 Days Daily Check-In</div>
+        <div class="checkin-arrow">`;
+      for(let i=0;i<7;i++) {
+        let c = claimed.includes(i+1);
+        html += `<div class="checkin-day${c?' claimed':''}">
+          <div>Day ${i+1}</div>
+          <div>+${days[i].shb} SHB<br>+${days[i].usdt.toFixed(2)} USDT</div>
+          ${c?'<span class="claimed-badge">Claimed</span>':''}
+        </div>`;
+      }
+      html += `</div>
+        <button class="modal-checkin-btn" onclick="claimCheckIn()" ${canClaim?'':'disabled'}>
+          ${canClaim?'Claim Today':'Already Claimed'}
+        </button>`;
+      return html;
+    }
+    function claimCheckIn() {
+      // Award user for the next unclaimed day
+      const days = [
+        {shb: 1000, usdt: 0.10},
+        {shb: 2000, usdt: 0.20},
+        {shb: 3000, usdt: 0.30},
+        {shb: 4000, usdt: 0.40},
+        {shb: 5000, usdt: 0.50},
+        {shb: 6000, usdt: 0.60},
+        {shb: 7000, usdt: 0.70},
+      ];
+      let claimed = state.checkin.claimed || [];
+      let next = claimed.length;
+      if(next >= 7) return;
+      let reward = days[next];
+      state.shb += reward.shb;
+      state.usdt += reward.usdt;
+      claimed.push(next+1);
+      let todayStr = new Date().toISOString().slice(0,10);
+      state.checkin = {claimed, last: todayStr};
+      renderBalances();
+      showCheckInModal();
+    }
+    // ----------------- REDEEM MODAL -------------------------------
+    function showRedeemModal() {
+      showModal(renderRedeemModal());
+    }
+    function renderRedeemModal() {
+      return `<button class="modal-close" onclick="closeModal()">&times;</button>
+        <div class="modal-title">Redeem Code</div>
+        <input class="modal-redeem-inpt" id="redeem-code" placeholder="Enter redemption code">
+        <button class="modal-redeem-btn" onclick="claimRedeemCode()">Redeem</button>
+        <div id="redeem-result" style="margin-top:9px;font-size:0.97em;"></div>`;
+    }
+    function claimRedeemCode() {
+      let code = document.getElementById('redeem-code').value.trim();
+      let output = document.getElementById('redeem-result');
+      // Dummy logic: code == "GIFT100" gives 1 USDT
+      if(code === "GIFT100") {
+        state.usdt += 1;
+        renderBalances();
+        output.textContent = "Success! 1 USDT added.";
+        output.style.color = "var(--success)";
+      } else {
+        output.textContent = "Invalid or expired code.";
+        output.style.color = "var(--danger)";
+      }
+    }
+    // ------------- Modal Helpers ------------------------------------
+    function showModal(contentHtml) {
+      let modal = document.getElementById('modal-bg');
+      modal.innerHTML = `<div class="modal-box">${contentHtml}</div>`;
+      modal.style.display = 'flex';
+    }
+    function closeModal() {
+      let modal = document.getElementById('modal-bg');
+      modal.innerHTML = '';
+      modal.style.display = 'none';
+    }
+
+    // ----------- TRADE SECTION --------------------------------------
+    function getPlans() {
+      return [
+        {id:1, name:'TON/USDT', price:10, validity:30, daily:1, secure:"https://github.com/s42144/Shark-Bounty/blob/f07926fed7a84d003a20d8c87a22b01c63cbacc8/2592317.png?raw=true"},
+        {id:2, name:'NOT/USDT', price:30, validity:30, daily:3, secure:"https://github.com/s42144/Shark-Bounty/blob/f07926fed7a84d003a20d8c87a22b01c63cbacc8/2592317.png?raw=true"},
+        {id:3, name:'HMSTR/USDT', price:70, validity:30, daily:7, secure:"https://github.com/s42144/Shark-Bounty/blob/f07926fed7a84d003a20d8c87a22b01c63cbacc8/2592317.png?raw=true"},
+        {id:4, name:'ETH/USDT', price:100, validity:30, daily:10, secure:"https://github.com/s42144/Shark-Bounty/blob/f07926fed7a84d003a20d8c87a22b01c63cbacc8/2592317.png?raw=true"},
+        {id:5, name:'BNB/USDT', price:150, validity:30, daily:15, secure:"https://github.com/s42144/Shark-Bounty/blob/f07926fed7a84d003a20d8c87a22b01c63cbacc8/2592317.png?raw=true"},
+        {id:6, name:'BTC/USDT', price:200, validity:30, daily:20, secure:"https://github.com/s42144/Shark-Bounty/blob/f07926fed7a84d003a20d8c87a22b01c63cbacc8/2592317.png?raw=true"},
+      ];
+    }
+    function renderPlans() {
+      let plans = getPlans();
+      let html = '';
+      const usdtIcon = "https://github.com/s42144/Shark-Bounty/files/15207964.png?raw=true";
+      for(let plan of plans) {
+        let userPlan = state.planClaims[plan.id];
+        let btn, btnAct;
+        if(!userPlan) {
+          btn = `<button class="plan-buy-btn" onclick="buyPlan(${plan.id})">Buy</button>`;
+          btnAct = '';
+        } else {
+          btn = `<button class="plan-claim-btn" onclick="claimPlan(${plan.id})">Claim</button>`;
+          btnAct = `Plan expires in ${userPlan.left}d`;
+        }
+        html += `<div class="trade-plan-card">
+          <img class="plan-secure" src="${plan.secure}">
+          <div class="plan-content">
+            <div class="plan-title">${plan.name}</div>
+            <div class="plan-subrow">Price: $${plan.price} | Validity: ${plan.validity}d | Daily: $${plan.daily}</div>
+            <div class="plan-balance-row">
+              <img src="${usdtIcon}"> <span>USDT: ${plan.price}</span>
+            </div>
+            <div style="margin-top:5px;color:#fff;font-size:0.98em;">${btnAct}</div>
+          </div>
+          ${btn}
+        </div>`;
+      }
+      document.getElementById('plans-list').innerHTML = html;
+    }
+    function buyPlan(id) {
+      let plans = getPlans();
+      let plan = plans.find(p=>p.id===id);
+      if(state.usdt < plan.price) { alert('Insufficient USDT. Please deposit.'); return; }
+      state.usdt -= plan.price;
+      state.planClaims[id] = {left:plan.validity, lastClaim:0};
+      renderBalances(); renderPlans();
+    }
+    function claimPlan(id) {
+      let plans = getPlans();
+      let plan = plans.find(p=>p.id===id);
+      let userPlan = state.planClaims[id];
+      if(!userPlan || userPlan.left<=0) return;
+      let now = Date.now();
+      let oneday = 1000*60*60*24;
+      if(userPlan.lastClaim && (now - userPlan.lastClaim) < oneday) {
+        alert('You have already claimed today!');
+        return;
+      }
+      state.usdt += plan.daily;
+      userPlan.left--;
+      userPlan.lastClaim = now;
+      renderBalances(); renderPlans();
+    }
+
+    // ----------- TASKS SECTION -------------------------------------
+    function getTasks() {
+      // Dummy: Admin sets tasks, here are some samples.
+      return [
+        {id:1, img:"https://github.com/s42144/Shark-Bounty/files/17510103.gif?raw=true", name:"Follow Twitter", earn:0.2, url:"https://twitter.com/"},
+        {id:2, img:"https://github.com/s42144/Shark-Bounty/files/15207964.png?raw=true", name:"Join Telegram", earn:0.3, url:"https://t.me/"},
+        {id:3, img:"https://github.com/s42144/Shark-Bounty/files/934817.png?raw=true", name:"Like Facebook", earn:0.5, url:"https://facebook.com/"},
+      ];
+    }
+    function renderTasks() {
+      let tasks = getTasks();
+      let html = '';
+      for(let t of tasks) {
+        let status = state.taskStatus[t.id] || 'pending';
+        let btnLabel = status==='pending'?'Start':'Completed';
+        let btnClass = status==='pending'?'':'completed';
+        html += `<div class="task-card">
+          <img class="task-img" src="${t.img}">
+          <div class="task-content">
+            <div class="task-title">${t.name}</div>
+            <div class="task-earn">Earn: ${t.earn} USDT</div>
+          </div>
+          <button class="task-btn ${btnClass}" onclick="startTask(${t.id})">${btnLabel}</button>
+        </div>`;
+      }
+      document.getElementById('tasks-list').innerHTML = html;
+    }
+    function startTask(id) {
+      let tasks = getTasks();
+      let t = tasks.find(x=>x.id===id);
+      if(state.taskStatus[id]!=='completed') {
+        state.usdt += t.earn;
+        state.taskStatus[id] = 'completed';
+        renderBalances();
+      }
+      window.open(t.url,'_blank');
+      renderTasks();
+    }
+
+    // ---------- WALLET SECTION -------------------------------------
+    function renderWallet() {
+      let html = `
+        <div class="wallet-btns">
+          <button class="wallet-btn" onclick="showDepositForm()">
+            <img src="https://github.com/s42144/Shark-Bounty/blob/044196befa203197dece4b74afe7d5bd49f0a67b/6008139.png?raw=true">Deposit
+          </button>
+          <button class="wallet-btn" onclick="showWithdrawForm()">
+            <img src="https://github.com/s42144/Shark-Bounty/blob/3cd58653ca42a1132928a4c52834ab9a011ea273/Gemini_Generated_Image_fww324fww324fww3.png?raw=true">Withdraw
+          </button>
+          <button class="wallet-btn" onclick="showWalletHistory()">
+            <img src="https://github.com/s42144/Shark-Bounty/blob/46fcd7413a110d3870cf2a9b2f8eb99c9cd25d88/17504646.png?raw=true">History
+          </button>
+        </div>`;
+      document.getElementById('wallet-section-content').innerHTML = html;
+    }
+    function showDepositForm() {
+      showModal(renderDepositForm());
+    }
+    function renderDepositForm() {
+      return `<button class="modal-close" onclick="closeModal()">&times;</button>
+        <div class="modal-title">Deposit</div>
+        <form class="wallet-form" onsubmit="processDeposit(event)">
+          <label>Deposit Method</label>
+          <select id="deposit-method">
+            <option value="toncoin">TONCOIN</option>
+            <option value="usdt">USDT TON</option>
+          </select>
+          <label>Amount</label>
+          <input type="number" id="deposit-amt" min="3" value="3" step="0.01" required>
+          <button type="submit">Confirm</button>
+        </form>`;
+    }
+    function processDeposit(e) {
+      e.preventDefault();
+      let method = document.getElementById('deposit-method').value;
+      let amt = parseFloat(document.getElementById('deposit-amt').value);
+      if ((method === 'toncoin' && amt < 3) || (method === 'usdt' && amt < 10)) {
+        alert(method==='toncoin'?'Min 3 TON':'Min 10 USDT'); return;
+      }
+      showModal(renderDepositQR(method, amt));
+    }
+    function renderDepositQR(method, amt) {
+      let qrimg, addr, memo = genMemo();
+      if(method==='toncoin') {
+        qrimg = "https://github.com/s42144/Shark-Bounty/blob/1890e18b5008f67e6d057aa7a47149bfc84740fc/Screenshot_2025-09-12-18-54-13-944_com.ton_keeper-edit.jpg?raw=true";
+        addr = "UQCOL7arveEVrKfKa9v3SbZnKjIBnOavmX3aXdDV-XD1cQ09";
+      } else {
+        qrimg = "https://github.com/s42144/Shark-Bounty/blob/87e28aa35db580efad4a8befa50df073a1c80e1f/934817.png?raw=true";
+        addr = "UQCOL7arveEVrKfKa9v3SbZnKjIBnOavmX3aXdDV-XD1cQ09";
+      }
+      // Exchange rate
+      let usdtVal = method==='toncoin' ? (amt*3.2).toFixed(2) : amt;
+      let timer = 15*60;
+      setTimeout(()=>{closeModal();}, timer*1000);
+      let codeCopy = `<span class="copy-row"><span id="copy-addr">${addr}</span>
+        <button class="copy-btn" onclick="copyDeposit('copy-addr')">Copy</button></span>`;
+      let memoCopy = `<span class="copy-row"><span id="copy-memo">${memo}</span>
+        <button class="copy-btn" onclick="copyDeposit('copy-memo')">Copy</button></span>`;
+      return `<button class="modal-close" onclick="closeModal()">&times;</button>
+        <div class="modal-title">${method==='toncoin'?'TONCOIN':'USDT TON'} Deposit</div>
+        <div class="wallet-timer" id="wallet-timer"></div>
+        <img class="qr-img" src="${qrimg}">
+        <label>Deposit Address</label>
+        ${codeCopy}
+        ${method==='toncoin'?('<label>Memo / Comment</label>'+memoCopy):''}
+        <div class="wallet-exchange">You will get ≈ ${usdtVal} USDT</div>
+        <button class="modal-checkin-btn" onclick="depositDone('${method}',${amt},'${memo}')">I Have Paid</button>`;
+    }
+    function copyDeposit(id) {
+      let val = document.getElementById(id).textContent;
+      navigator.clipboard.writeText(val);
+    }
+    function genMemo() {
+      return 'D'+Math.floor(Math.random()*900000+100000);
+    }
+    function depositDone(method, amt, memo) {
+      // Add to history, status pending
+      let usdtVal = method==='toncoin' ? (amt*3.2) : amt;
+      state.wallet.history.push({
+        type:'deposit', method, amt, usdt:usdtVal, memo, time:Date.now(), status:'pending'
+      });
+      renderWallet();
+      closeModal();
+    }
+    // Deposit timer
+    let depTimerInt;
+    function depositTimer(secs) {
+      let el = document.getElementById('wallet-timer');
+      if(!el) return;
+      el.textContent = `Time left: ${Math.floor(secs/60)}:${('0'+(secs%60)).slice(-2)}`;
+      if(secs>0) setTimeout(()=>depositTimer(secs-1),1000);
+      else el.textContent = "Expired!";
+    }
+    // After deposit, admin approves/rejects (simulate)
+    // Simulate approve after 10s
+    setInterval(()=>{
+      for(let h of state.wallet.history) {
+        if(h.status==='pending' && Date.now()-h.time > 10000) {
+          h.status = 'approved'; // Simulate admin approve
+          if(h.type==='deposit') state.usdt += h.usdt;
+          renderBalances();
+        }
+      }
+    },4000);
+
+    // Withdraw
+    function showWithdrawForm() {
+      showModal(renderWithdrawForm());
+    }
+    function renderWithdrawForm() {
+      return `<button class="modal-close" onclick="closeModal()">&times;</button>
+        <div class="modal-title">Withdraw</div>
+        <form class="wallet-form" onsubmit="processWithdraw(event)">
+          <label>Method</label>
+          <select id="withdraw-method"><option value="usdt">USDT TON</option></select>
+          <label>Amount ($ min 3)</label>
+          <input type="number" id="withdraw-amt" min="3" value="3" step="0.01" required>
+          <label>USDT TON Address (required)</label>
+          <input type="text" id="withdraw-addr" required>
+          <label>Memo / Comment (optional)</label>
+          <input type="text" id="withdraw-memo">
+          <button type="submit">Confirm</button>
+        </form>`;
+    }
+    function processWithdraw(e) {
+      e.preventDefault();
+      let amt = parseFloat(document.getElementById('withdraw-amt').value);
+      let addr = document.getElementById('withdraw-addr').value.trim();
+      if(amt<3 || !addr) { alert('Invalid input'); return;}
+      if(state.usdt < amt) { alert('Insufficient USDT'); return;}
+      state.usdt -= amt;
+      state.wallet.history.push({
+        type:'withdraw', amt, addr, memo:document.getElementById('withdraw-memo').value, time:Date.now(), status:'pending'
+      });
+      renderBalances(); renderWallet();
+      closeModal();
+    }
+    // Withdraw approve/reject simulation
+    setInterval(()=>{
+      for(let h of state.wallet.history) {
+        if(h.type==='withdraw' && h.status==='pending' && Date.now()-h.time>20000) {
+          h.status = 'approved';
+        }
+      }
+    },6000);
+
+    function showWalletHistory() {
+      showModal(renderWalletHistory());
+    }
+    function renderWalletHistory() {
+      let html = '<button class="modal-close" onclick="closeModal()">&times;</button>';
+      html += '<div class="modal-title">History</div><div class="wallet-history-list">';
+      for(let h of state.wallet.history.slice(-20).reverse()) {
+        html += `<div class="wallet-history-item">
+          <span>${h.type==='deposit'?'Deposit':'Withdraw'}<br>${h.amt} ${h.type==='deposit'?h.method.toUpperCase():'USDT'}</span>
+          <span class="wallet-history-status ${h.status}">${h.status}</span>
+        </div>`;
+      }
+      html += '</div>';
+      return html;
+    }
+
+    // ---------- PROFILE SECTION -------------------------------------
+    function renderProfile() {
+      let html = `
+        <div class="profile-id-row">
+          <span>User ID: ${state.userId}</span>
+          <button class="profile-id-copy" onclick="copyProfileId()">Copy</button>
+        </div>
+        <div class="profile-btns">
+          <button class="profile-btn" onclick="showReferrals()">
+            <img src="https://github.com/s42144/Shark-Bounty/blob/7ed42cc4280dc574de84c66f7e2a5ab6d8d2f516/17675714.png?raw=true">Referrals
+          </button>
+          <button class="profile-btn" onclick="showLeaderboard()">
+            <img src="https://github.com/s42144/Shark-Bounty/blob/74b1e06fd560efe8e058569ffa7b4e363aa1c43d/13311710.png?raw=true">Leaderboard
+          </button>
+          <button class="profile-btn" onclick="showNotifications()">
+            <img src="https://github.com/s42144/Shark-Bounty/blob/0b9b7d728a78c867c6862a6324b55510185b82c5/13146658.png?raw=true">Notifications
+          </button>
+        </div>
+        <div id="profile-extra"></div>
+      `;
+      document.getElementById('profile-section-content').innerHTML = html;
+    }
+    function copyProfileId() {
+      navigator.clipboard.writeText(state.userId);
+    }
+    function showReferrals() {
+      document.getElementById('profile-extra').innerHTML =
+        `<div style="margin:22px 0;color:var(--accent);font-size:1.2em;text-align:center;">Referrals features Coming soon</div>`;
+    }
+    // Leaderboard - 100 random users with balances
+    function showLeaderboard() {
+      let html = `<div class="leaderboard-list">`;
+      let users = [];
+      for(let i=0;i<100;i++) {
+        users.push({
+          name:randomName(),
+          country:randomCountry(),
+          usdt:Math.floor(Math.random()*500+10),
+        });
+      }
+      users = users.sort((a,b)=>b.usdt-a.usdt);
+      for(let i=0;i<users.length;i++) {
+        html += `<div class="leaderboard-item">
+          ${i<3?'<img class="leaderboard-top" src="https://github.com/s42144/Shark-Bounty/blob/0bcaaea5195504abe1ecc2b322ba88302ecd5373/15584494.png?raw=true">':''}
+          <span>${users[i].name}</span>
+          <span class="leaderboard-country">${users[i].country}</span>
+          <span class="leaderboard-balance"><img src="https://github.com/s42144/Shark-Bounty/files/15207964.png?raw=true">${users[i].usdt}</span>
+        </div>`;
+      }
+      html += '</div>';
+      document.getElementById('profile-extra').innerHTML = html;
+    }
+    function showNotifications() {
+      let html = `<div class="notification-list">`;
+      for(let n of state.notifications) {
+        html += `<div class="notification-item">${n}</div>`;
+      }
+      html += '</div>';
+      document.getElementById('profile-extra').innerHTML = html;
+    }
+    // Helper for random names/countries
+    function randomName() {
+      let first = ['John','Alex','Sam','Lily','Emma','Leo','Sophie','Mike','Anna','Max','Ella','Ben','Olivia','Lucas'];
+      let last = ['Smith','Lee','Kim','Singh','Patel','Zhang','Brown','Wang','Garcia','Khan','Martinez','Ivanov'];
+      return first[Math.floor(Math.random()*first.length)] + ' ' + last[Math.floor(Math.random()*last.length)];
+    }
+    function randomCountry() {
+      let c = ['🇺🇸','🇬🇧','🇮🇳','🇷🇺','🇨🇦','🇧🇷','🇩🇪','🇫🇷','🇹🇷','🇰🇷','🇯🇵','🇲🇽','🇨🇳'];
+      return c[Math.floor(Math.random()*c.length)];
+    }
+    // Update leaderboard every 30s
+    setInterval(()=>{ if(document.getElementById('nav-profile').classList.contains('active')) showLeaderboard(); },30000);
+
+    // --------- INITIAL RENDER OF APP --------------
+    renderBalances();
+    renderPlans();
+    renderTasks();
+    renderWallet();
+    renderProfile();
+  </script>
+</body>
+</html>
