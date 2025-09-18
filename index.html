@@ -1,0 +1,1616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Shark Bounty</title>
+  <!-- Google Fonts for mobile UI -->
+  <link href="https://fonts.googleapis.com/css?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #0062ff;
+      --secondary: #00d2d3;
+      --bg: #151d2a;
+      --card: #232e41;
+      --accent: #fff;
+      --border: #333d4b;
+      --radius: 20px;
+      --blur: 22px;
+      --shadow: 0 8px 30px rgba(0,0,0,0.14);
+      --green: #1dd1a1;
+      --red: #ee5253;
+      --yellow: #feca57;
+      --mobileWidth: 430px;
+    }
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--accent);
+      font-family: 'Inter', Arial, sans-serif;
+      width: 100vw;
+      min-height: 100vh;
+      overflow-x: hidden;
+      overscroll-behavior-y: none;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      width: 100vw;
+      position: relative;
+      background: var(--bg);
+      max-width: var(--mobileWidth);
+      margin: 0 auto;
+      overflow: hidden;
+    }
+    #video-overlay {
+      position: fixed;
+      z-index: 9999;
+      inset: 0;
+      background: #000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      width: 100vw;
+    }
+    #video-overlay video {
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      background: #000;
+    }
+    #app {
+      display: none;
+      flex-direction: column;
+      height: 100vh;
+      width: 100vw;
+      max-width: var(--mobileWidth);
+      position: relative;
+      overflow: hidden;
+    }
+    .main-content {
+      flex: 1 1 auto;
+      overflow-y: auto;
+      padding-bottom: 80px;
+      background: var(--bg);
+    }
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100vw;
+      max-width: var(--mobileWidth);
+      background: #191e2b;
+      border-radius: 22px 22px 0 0;
+      box-shadow: 0 -2px 16px rgba(0,0,0,0.13);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      height: 72px;
+      z-index: 50;
+    }
+    .nav-btn {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 700;
+      background: none;
+      border: none;
+      outline: none;
+      transition: color .15s;
+      gap: 2px;
+      cursor: pointer;
+      padding: 8px 0 4px 0;
+      user-select: none;
+    }
+    .nav-btn.active {
+      color: var(--primary);
+    }
+    .nav-btn img {
+      width: 29px;
+      height: 29px;
+      margin-bottom: 2px;
+      filter: drop-shadow(0 1px 0 #10151c22);
+    }
+    .section {
+      display: none;
+      width: 100vw;
+      max-width: var(--mobileWidth);
+      min-height: calc(100vh - 82px);
+      padding-bottom: 80px;
+      padding-top: 12px;
+      background: var(--bg);
+    }
+    .section.active {
+      display: block;
+      animation: fadeIn .7s;
+    }
+    @keyframes fadeIn { from {opacity:0;} to {opacity:1;} }
+
+    /* Home Section */
+    #home-section {
+      padding: 0;
+      padding-bottom: 80px;
+      height: 100%;
+      min-height: calc(100vh - 82px);
+      position: relative;
+    }
+    .home-header {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 14px;
+      padding: 18px 18px 4px 18px;
+      position: relative;
+    }
+    .home-balbox {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 6px 12px 6px 6px;
+      display: flex;
+      align-items: center;
+      min-width: 105px;
+      margin-right: 7px;
+      gap: 8px;
+      box-shadow: var(--shadow);
+    }
+    .home-balimg {
+      width: 28px;
+      height: 28px;
+      object-fit: contain;
+      border-radius: 50%;
+      background: #1d2430;
+      margin-right: 5px;
+    }
+    .home-baltxt {
+      font-size: 1.07em;
+      font-weight: bold;
+      color: #fff;
+      letter-spacing: 1px;
+      display: flex;
+      flex-direction: column;
+    }
+    .home-balsub {
+      font-size: 0.76em;
+      color: #cdd7e3;
+      margin-top: -1px;
+    }
+    .home-balusdt {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 6px 12px 6px 6px;
+      display: flex;
+      align-items: center;
+      min-width: 105px;
+      gap: 8px;
+      box-shadow: var(--shadow);
+    }
+    .coin-tap-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 18px;
+      margin-bottom: 0;
+      user-select: none;
+    }
+    .shark-coin-btn {
+      width: 120px;
+      height: 120px;
+      background: #0a1727;
+      border-radius: 50%;
+      border: 5px solid var(--primary);
+      box-shadow: 0 8px 30px rgba(0,98,255,0.09);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 0 auto;
+      position: relative;
+      cursor: pointer;
+      transition: box-shadow 0.1s;
+      overflow: visible;
+      z-index: 2;
+      touch-action: manipulation;
+    }
+    .shark-coin-btn:active {
+      box-shadow: 0 0 0 3px var(--secondary);
+    }
+    .shark-coin-btn img {
+      width: 78px;
+      height: 78px;
+      object-fit: contain;
+      border-radius: 50%;
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+      background: none;
+    }
+    .coin-tap-anim {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      font-weight: bold;
+      font-size: 1.1em;
+      color: var(--green);
+      opacity: 0.95;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      z-index: 5;
+      animation: popfade 0.8s ease;
+    }
+    @keyframes popfade {
+      0% { transform: translate(-50%,-50%) scale(1); opacity:1;}
+      60% {transform: translate(-50%,-80%) scale(1.2);}
+      80% {transform: translate(-50%,-130%) scale(0.9);}
+      100%{ opacity:0; transform: translate(-50%,-180%) scale(0.95);}
+    }
+    .energy-bar-wrap {
+      margin-top: 13px;
+      margin-bottom: 0;
+      width: 87vw;
+      max-width: 350px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .energy-bar {
+      background: #232e41;
+      border-radius: 18px;
+      position: relative;
+      height: 26px;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      box-shadow: 0 2px 8px #0002;
+      overflow: hidden;
+    }
+    .energy-bar-inner {
+      background: linear-gradient(90deg,#00d2d3,#00b894);
+      height: 100%;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      transition: width .3s;
+      min-width: 30px;
+      z-index: 1;
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+    }
+    .energy-bar-ico {
+      width: 24px;
+      height: 24px;
+      margin-left: 7px;
+      margin-right: 0;
+      z-index: 3;
+      background: #fff3;
+      border-radius: 50%;
+      position: relative;
+      display: inline-block;
+    }
+    .energy-bar-label {
+      color: #fff;
+      font-weight: 700;
+      font-size: 1.01em;
+      letter-spacing: 1px;
+      margin-left: 35px;
+      z-index: 2;
+      position: absolute;
+      right: 12px;
+      top: 3px;
+    }
+    /* Home Section - Right Buttons */
+    .home-right-btns {
+      position: absolute;
+      right: 13px;
+      top: 150px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      z-index: 3;
+      align-items: center;
+    }
+    .home-side-btn {
+      background: #222b38;
+      border-radius: 12px;
+      padding: 7px 17px;
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      font-weight: bold;
+      font-size: 1.02em;
+      color: #fff;
+      border: 2px solid #0062ff55;
+      box-shadow: 0 3px 10px #0062ff12;
+      margin-bottom: 0;
+      cursor: pointer;
+      transition: background .14s;
+      min-width: 120px;
+      user-select: none;
+    }
+    .home-side-btn img {
+      width: 28px;
+      height: 28px;
+      object-fit: contain;
+      margin-right: 8px;
+      background: none;
+    }
+    /* Check-in Modal */
+    .modal-bg {
+      background: rgba(0,0,0,0.62);
+      position: fixed;
+      z-index: 10000;
+      inset: 0;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 0;
+      transition: background .23s;
+    }
+    .modal-bg.active {
+      display: flex;
+    }
+    .modal-sheet {
+      background: #232e41;
+      border-radius: 24px 24px 0 0;
+      width: 100vw;
+      max-width: var(--mobileWidth);
+      min-height: 290px;
+      box-shadow: 0 4px 24px #0005;
+      padding: 24px 10px 30px 10px;
+      position: relative;
+      overflow-x: auto;
+      max-height: 85vh;
+      animation: fadeIn .6s;
+    }
+    .checkin-arrowrow {
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      gap: 17px;
+      margin-bottom: 13px;
+      overflow-x: auto;
+      padding-bottom: 1px;
+      width: 99vw;
+      max-width: 400px;
+      margin-left: auto;
+      margin-right: auto;
+      scroll-behavior: smooth;
+    }
+    .checkin-day {
+      background: #1d2940;
+      border-radius: 16px;
+      padding: 10px 17px 7px 17px;
+      min-width: 78px;
+      text-align: center;
+      border: 2.5px solid #0062ff44;
+      box-shadow: 0 2px 12px #0062ff11;
+      color: #fff;
+      font-weight: bold;
+      font-size: 1.04em;
+      position: relative;
+      margin-bottom: 5px;
+      transition: background .18s, color .14s;
+      user-select: none;
+      outline: none;
+      cursor: pointer;
+    }
+    .checkin-day.claimed {
+      background: #2bd47d;
+      color: #fff;
+      border-color: #21b573;
+      opacity: 0.82;
+      text-decoration: line-through;
+    }
+    .checkin-arrow {
+      width: 22px;
+      height: 22px;
+    }
+    .checkin-reward {
+      color: #fff8;
+      font-size: .92em;
+      margin-top: 2px;
+    }
+    .modal-close {
+      position: absolute;
+      top: 14px;
+      right: 30px;
+      font-size: 2em;
+      color: #fff;
+      background: none;
+      border: none;
+      cursor: pointer;
+      z-index: 10;
+      opacity: 0.68;
+    }
+    .modal-title {
+      font-size: 1.3em;
+      font-weight: bold;
+      margin-bottom: 12px;
+      text-align: center;
+      color: #fff;
+    }
+    /* Redeem Modal */
+    .redeem-form {
+      display: flex;
+      flex-direction: column;
+      gap: 17px;
+      margin-top: 14px;
+      align-items: stretch;
+      width: 99vw;
+      max-width: 350px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .redeem-form input {
+      background: #18203a;
+      border: none;
+      border-radius: 13px;
+      padding: 13px 18px;
+      color: #fff;
+      font-size: 1.06em;
+      font-weight: 500;
+      outline: none;
+      margin-bottom: 0;
+      margin-top: 0;
+    }
+    .redeem-form button {
+      background: var(--primary);
+      color: #fff;
+      border-radius: 13px;
+      border: none;
+      font-size: 1.05em;
+      font-weight: bold;
+      padding: 13px 0;
+      margin-top: 7px;
+      cursor: pointer;
+      transition: background .13s;
+    }
+    .redeem-form button:active {
+      background: #004ecb;
+    }
+    /* Trade Section */
+    #trade-section {
+      padding: 0 5px 80px 5px;
+      min-height: calc(100vh - 82px);
+      overflow-x: hidden;
+    }
+    .plans-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+      margin-top: 22px;
+      margin-bottom: 24px;
+      align-items: center;
+    }
+    .plan-card {
+      background: linear-gradient(140deg, #232e41 65%, #2bd47d 130%);
+      border-radius: 17px;
+      box-shadow: 0 5px 19px #0062ff17;
+      padding: 23px 15px 19px 15px;
+      width: 95vw;
+      max-width: 352px;
+      min-height: 140px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 7px;
+      position: relative;
+      border: 2px solid #1dd1a1;
+      margin-bottom: 0;
+      overflow: visible;
+    }
+    .plan-secure-ico {
+      position: absolute;
+      right: 15px;
+      top: 13px;
+      width: 28px;
+      height: 28px;
+      z-index: 4;
+      object-fit: contain;
+      background: none;
+      filter: drop-shadow(0 2px 5px #0062ff33);
+    }
+    .plan-head-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 3px;
+    }
+    .plan-title {
+      font-size: 1.13em;
+      font-weight: bold;
+      color: #fff;
+      margin-right: 7px;
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .plan-price-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 7px;
+      width: 100%;
+    }
+    .plan-usdt-ico {
+      width: 24px;
+      height: 24px;
+      object-fit: contain;
+      margin-right: 3px;
+      border-radius: 6px;
+    }
+    .plan-price {
+      font-size: 1.19em;
+      font-weight: bold;
+      color: #fff;
+      background: #20293b;
+      border-radius: 8px;
+      padding: 2px 12px;
+    }
+    .plan-validity {
+      font-size: 0.97em;
+      color: #fff9;
+      margin-left: 8px;
+      font-weight: 500;
+    }
+    .plan-earning-row {
+      font-size: 1.07em;
+      color: var(--green);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      margin-top: 3px;
+    }
+    .plan-action-btn {
+      margin-top: 7px;
+      background: linear-gradient(90deg,var(--primary),var(--secondary));
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 13px 0;
+      width: 100%;
+      font-size: 1.08em;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background .16s;
+      box-shadow: 0 2px 8px #0062ff22;
+    }
+    .plan-action-btn:active {
+      background: linear-gradient(90deg,#004ecb,#009e95);
+    }
+    /* Wallet Section */
+    #wallet-section {
+      padding: 0 3px 80px 3px;
+      min-height: calc(100vh - 82px);
+      overflow-x: hidden;
+    }
+    .wallet-btns {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-top: 17px;
+      margin-bottom: 17px;
+      align-items: stretch;
+    }
+    .wallet-action-btn {
+      background: #232e41;
+      color: #fff;
+      border-radius: 15px;
+      border: none;
+      font-size: 1.08em;
+      font-weight: bold;
+      padding: 17px 0;
+      cursor: pointer;
+      box-shadow: 0 2px 17px #0062ff0b;
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      transition: background .15s;
+      user-select: none;
+    }
+    .wallet-action-btn img {
+      width: 29px;
+      height: 29px;
+      margin-right: 9px;
+      background: none;
+    }
+    .wallet-action-btn:active {
+      background: #27334c;
+    }
+    .wallet-form,
+    .wallet-history-list {
+      margin-top: 21px;
+      background: #202631;
+      border-radius: 14px;
+      padding: 18px 12px 18px 12px;
+      box-shadow: 0 2px 8px #0062ff11;
+    }
+    .wallet-form input,
+    .wallet-form select {
+      background: #1d2430;
+      color: #fff;
+      border-radius: 11px;
+      border: none;
+      padding: 11px 15px;
+      font-size: 1.04em;
+      font-weight: 500;
+      margin-bottom: 13px;
+      width: 100%;
+      outline: none;
+    }
+    .wallet-form label {
+      font-size: 1em;
+      color: #fff8;
+      margin-bottom: 3px;
+    }
+    .wallet-form .copy-btn,
+    .profile-copy-btn {
+      display: inline-block;
+      margin-left: 7px;
+      background: #2bd47d;
+      border-radius: 7px;
+      padding: 3px 10px;
+      color: #fff;
+      font-size: 1em;
+      border: none;
+      cursor: pointer;
+      margin-top: 0;
+      margin-bottom: 0;
+      font-weight: bold;
+      transition: background .12s;
+      vertical-align: middle;
+    }
+    .profile-copy-btn img {
+      width: 19px;
+      height: 19px;
+      vertical-align: middle;
+      margin-right: 3px;
+    }
+    .wallet-form .copy-btn:active,
+    .profile-copy-btn:active {
+      background: #21b573;
+    }
+    .wallet-form .qr-code {
+      width: 120px;
+      height: 120px;
+      margin-bottom: 9px;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+      margin-top: 7px;
+    }
+    .wallet-form .addr-row {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 5px;
+    }
+    .wallet-form .timer {
+      font-size: 1.07em;
+      color: #feca57;
+      font-weight: bold;
+      margin-bottom: 11px;
+      text-align: center;
+      margin-top: 6px;
+    }
+    .wallet-form .exchange-row {
+      font-size: 0.99em;
+      color: #fff9;
+      margin-bottom: 5px;
+      text-align: center;
+      font-weight: 500;
+    }
+    .wallet-form button {
+      background: var(--primary);
+      color: #fff;
+      border-radius: 11px;
+      border: none;
+      font-size: 1.07em;
+      font-weight: bold;
+      padding: 13px 0;
+      margin-top: 10px;
+      width: 100%;
+      cursor: pointer;
+      transition: background .13s;
+    }
+    .wallet-form button:active {
+      background: #004ecb;
+    }
+    .wallet-history-list {
+      background: #232e41;
+      color: #fff;
+      font-size: 1em;
+      border-radius: 14px;
+      max-height: 340px;
+      overflow-y: auto;
+      box-shadow: 0 2px 7px #0062ff08;
+    }
+    .wallet-history-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 11px 0;
+      border-bottom: 1px solid #23314d;
+      font-size: 1.01em;
+    }
+    .wallet-history-item:last-child {
+      border-bottom: none;
+    }
+    .wallet-history-status {
+      font-weight: 700;
+      text-transform: capitalize;
+      margin-left: 9px;
+      font-size: .97em;
+    }
+    .wallet-history-status.approved {
+      color: var(--green);
+    }
+    .wallet-history-status.pending {
+      color: var(--yellow);
+    }
+    .wallet-history-status.rejected {
+      color: var(--red);
+    }
+    /* Profile Section */
+    #profile-section {
+      padding: 7px 0 80px 0;
+      min-height: calc(100vh - 82px);
+      overflow-x: hidden;
+      position: relative;
+    }
+    .profile-id-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 15px 20px 10px 20px;
+      font-size: 1.13em;
+      font-weight: bold;
+      color: #fff;
+    }
+    .profile-features-row {
+      display: flex;
+      justify-content: space-around;
+      margin: 18px 0 12px 0;
+      gap: 0;
+    }
+    .profile-feature-btn {
+      background: #232e41;
+      border-radius: 13px;
+      padding: 13px 18px;
+      color: #fff;
+      font-size: 1.01em;
+      font-weight: 700;
+      border: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      user-select: none;
+      transition: background .13s;
+    }
+    .profile-feature-btn img {
+      width: 24px;
+      height: 24px;
+      background: none;
+    }
+    .profile-feature-btn:active {
+      background: #27334c;
+    }
+    .profile-leaderboard-list {
+      margin: 0 10px 0 10px;
+      padding: 0;
+      max-height: 330px;
+      overflow-y: auto;
+    }
+    .profile-leaderboard-item {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      background: #202d40;
+      border-radius: 13px;
+      margin-bottom: 9px;
+      padding: 10px 12px;
+      font-size: 1em;
+      font-weight: 600;
+      box-shadow: 0 2px 8px #0062ff0e;
+      position: relative;
+    }
+    .top-leaderboard {
+      border: 2.5px solid #feca57;
+      background: #191e2b;
+    }
+    .profile-leaderboard-item .usdt-balance {
+      margin-left: auto;
+      color: #00d2d3;
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      font-weight: bold;
+      font-size: 1.04em;
+    }
+    .profile-leaderboard-item .top-rank-icon {
+      width: 24px;
+      height: 24px;
+      margin-right: 3px;
+      object-fit: contain;
+    }
+    .profile-notifications-list {
+      margin: 13px 15px 0 15px;
+      padding: 0;
+      max-height: 340px;
+      overflow-y: auto;
+    }
+    .profile-notification-item {
+      background: #212c3a;
+      border-radius: 11px;
+      padding: 13px 11px;
+      color: #fff;
+      font-size: 0.98em;
+      margin-bottom: 9px;
+      box-shadow: 0 2px 7px #0062ff18;
+    }
+
+    /* Tasks section */
+    #tasks-section {
+      padding: 12px 7px 80px 7px;
+      min-height: calc(100vh - 82px);
+      overflow-x: hidden;
+    }
+    .task-card-list {
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+      margin-top: 17px;
+      margin-bottom: 17px;
+      align-items: stretch;
+    }
+    .task-card {
+      background: #222d42;
+      border-radius: 17px;
+      box-shadow: 0 4px 14px #0062ff11;
+      padding: 17px 17px 13px 12px;
+      width: 96vw;
+      max-width: 333px;
+      min-height: 90px;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 13px;
+      position: relative;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .task-img {
+      width: 54px;
+      height: 54px;
+      border-radius: 11px;
+      object-fit: cover;
+      margin-right: 6px;
+      background: #131c2b;
+    }
+    .task-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .task-title {
+      font-size: 1.07em;
+      font-weight: bold;
+      color: #fff;
+      margin-bottom: 1px;
+    }
+    .task-earning {
+      font-size: .97em;
+      color: var(--green);
+      font-weight: 600;
+      margin-bottom: 0;
+    }
+    .task-action-btn {
+      background: linear-gradient(90deg,var(--primary),var(--secondary));
+      color: #fff;
+      border-radius: 12px;
+      border: none;
+      font-size: 1.05em;
+      font-weight: bold;
+      padding: 11px 13px;
+      cursor: pointer;
+      transition: background .15s;
+      min-width: 93px;
+      margin-left: 6px;
+    }
+    .task-action-btn:active {
+      background: linear-gradient(90deg,#004ecb,#009e95);
+    }
+
+    /* Responsive */
+    @media (max-width: 430px) {
+      html, body, #app { max-width: 100vw; }
+      .bottom-nav { max-width: 100vw; }
+      .section { max-width: 100vw; }
+      .modal-sheet { max-width: 100vw; }
+    }
+    @media (max-width: 350px) {
+      .modal-sheet, .section, .bottom-nav { padding-left: 0 !important; padding-right: 0 !important;}
+    }
+  </style>
+</head>
+<body>
+  <!-- Loading Video Overlay -->
+  <div id="video-overlay">
+    <video id="loading-video" src="https://github.com/s42144/Shark-Bounty/blob/8b67f2028cd3d33d6545243ea43a57958c428edf/29f4182c-fb84-4f6e-830f-f560ae571afe.mp4?raw=true" autoplay muted playsinline></video>
+  </div>
+  <div id="app">
+    <div class="main-content">
+      <!-- Home Section -->
+      <section id="home-section" class="section active">
+        <div class="home-header" style="gap:8px;">
+          <div class="home-balbox" id="shb-balbox">
+            <img class="home-balimg" src="https://github.com/s42144/Shark-Bounty/blob/aeb441877b43b7401af99870ead870597d62f885/17510103.gif?raw=true" alt="SHB Coin">
+            <div class="home-baltxt">
+              <span><span id="shb-balance">0</span> SHB</span>
+              <span class="home-balsub">SHB Balance</span>
+            </div>
+          </div>
+          <div class="home-balusdt" id="usdt-balbox">
+            <img class="home-balimg" src="https://github.com/s42144/Shark-Bounty/blob/1d18d021f596343b63d2ce30ad010396db5f1382/15207964.png?raw=true" alt="USDT">
+            <div class="home-baltxt">
+              <span><span id="usdt-balance">0.00</span> USDT</span>
+              <span class="home-balsub">USDT Balance</span>
+            </div>
+          </div>
+        </div>
+        <div class="coin-tap-area">
+          <div class="shark-coin-btn" id="shb-coin-btn">
+            <img src="https://github.com/s42144/Shark-Bounty/blob/aeb441877b43b7401af99870ead870597d62f885/17510103.gif?raw=true" alt="SHB Coin">
+          </div>
+          <!-- Tap Animations will be injected here -->
+          <div class="energy-bar-wrap">
+            <div class="energy-bar">
+              <div class="energy-bar-inner" id="energy-bar-inner" style="width:90%"></div>
+              <img class="energy-bar-ico" src="https://github.com/s42144/Shark-Bounty/blob/87e28aa35db580efad4a8befa50df073a1c80e1f/934817.png?raw=true" alt="Energy">
+              <span class="energy-bar-label"><span id="energy-value">1200</span>/1200</span>
+            </div>
+          </div>
+        </div>
+        <div class="home-right-btns">
+          <button class="home-side-btn" id="checkin-btn">
+            <img src="https://github.com/s42144/Shark-Bounty/blob/746c5202de3073cfdcaa50fabf6bbdba0d8f7421/1142792.png?raw=true" alt="Check In" />
+            CHECK IN
+          </button>
+          <button class="home-side-btn" id="redeem-btn">
+            <img src="https://github.com/s42144/Shark-Bounty/blob/87e28aa35db580efad4a8befa50df073a1c80e1f/3179668.png?raw=true" alt="Redeem" />
+            REDEEM
+          </button>
+        </div>
+      </section>
+      <!-- Trade Section -->
+      <section id="trade-section" class="section">
+        <div style="margin-top:11px;margin-bottom:3px;">
+          <div class="home-balusdt" style="margin-bottom:9px;">
+            <img class="home-balimg" src="https://github.com/s42144/Shark-Bounty/blob/1d18d021f596343b63d2ce30ad010396db5f1382/15207964.png?raw=true" alt="USDT">
+            <div class="home-baltxt">
+              <span><span id="usdt-balance-trade">0.00</span> USDT</span>
+              <span class="home-balsub">USDT Balance</span>
+            </div>
+          </div>
+        </div>
+        <div class="plans-wrap" id="plans-list"></div>
+      </section>
+      <!-- Tasks Section -->
+      <section id="tasks-section" class="section">
+        <div class="task-card-list" id="tasks-list"></div>
+      </section>
+      <!-- Wallet Section -->
+      <section id="wallet-section" class="section">
+        <div class="wallet-btns">
+          <button class="wallet-action-btn" id="deposit-btn">
+            <img src="https://github.com/s42144/Shark-Bounty/blob/044196befa203197dece4b74afe7d5bd49f0a67b/6008139.png?raw=true" alt="Deposit" />
+            Deposit
+          </button>
+          <button class="wallet-action-btn" id="withdraw-btn">
+            <img src="https://github.com/s42144/Shark-Bounty/blob/3cd58653ca42a1132928a4c52834ab9a011ea273/Gemini_Generated_Image_fww324fww324fww3.png?raw=true" alt="Withdraw" />
+            Withdraw
+          </button>
+          <button class="wallet-action-btn" id="history-btn">
+            <img src="https://github.com/s42144/Shark-Bounty/blob/46fcd7413a110d3870cf2a9b2f8eb99c9cd25d88/17504646.png?raw=true" alt="History" />
+            History
+          </button>
+        </div>
+        <div id="wallet-content"></div>
+      </section>
+      <!-- Profile Section -->
+      <section id="profile-section" class="section">
+        <div class="profile-id-row">
+          <span>User ID: <span id="profile-userid"></span></span>
+          <button class="profile-copy-btn" id="copy-userid-btn">
+            <img src="https://github.com/s42144/Shark-Bounty/blob/177e7fb2815726b7d9710a58dccafff013e0a531/1622069.png?raw=true" alt="Copy" />Copy
+          </button>
+        </div>
+        <div class="profile-features-row">
+          <button class="profile-feature-btn" id="profile-referrals-btn">
+            <img src="https://github.com/s42144/Shark-Bounty/blob/7ed42cc4280dc574de84c66f7e2a5ab6d8d2f516/17675714.png?raw=true" alt="Referrals" />
+            Referrals
+          </button>
+          <button class="profile-feature-btn" id="profile-leaderboard-btn">
+            <img src="https://github.com/s42144/Shark-Bounty/blob/74b1e06fd560efe8e058569ffa7b4e363aa1c43d/13311710.png?raw=true" alt="Leaderboard" />
+            Leaderboard
+          </button>
+          <button class="profile-feature-btn" id="profile-notification-btn">
+            <img src="https://github.com/s42144/Shark-Bounty/blob/0b9b7d728a78c867c6862a6324b55510185b82c5/13146658.png?raw=true" alt="Notification" />
+            Notification
+          </button>
+        </div>
+        <div id="profile-content"></div>
+      </section>
+    </div>
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+      <button class="nav-btn active" id="nav-home">
+        <img src="https://github.com/s42144/Shark-Bounty/blob/dedf1f3379f4a52180a500e818e467dcd99f56c9/1057118.png?raw=true" alt="Home" />
+        Home
+      </button>
+      <button class="nav-btn" id="nav-trade">
+        <img src="https://github.com/s42144/Shark-Bounty/blob/37f8291cb1c52e2baafb4624ec0bf49811b63a87/9084248.png?raw=true" alt="Trade" />
+        Trade
+      </button>
+      <button class="nav-btn" id="nav-tasks">
+        <img src="https://github.com/s42144/Shark-Bounty/blob/2ba42299505308ea4ff2a68f5db8341f3ddc0e92/16104409.png?raw=true" alt="Tasks" />
+        Tasks
+      </button>
+      <button class="nav-btn" id="nav-wallet">
+        <img src="https://github.com/s42144/Shark-Bounty/blob/c06dc8d5e036525c17986aca385518c98926b633/6826311.png?raw=true" alt="Wallet" />
+        Wallet
+      </button>
+      <button class="nav-btn" id="nav-profile">
+        <img src="https://github.com/s42144/Shark-Bounty/blob/11c6e035a7f8f6445526ea07f34893fd3ceec419/18827926.png?raw=true" alt="Profile" />
+        Profile
+      </button>
+    </nav>
+  </div>
+
+  <!-- Modal Background (for Checkin and Redeem) -->
+  <div class="modal-bg" id="modal-bg">
+    <div class="modal-sheet" id="modal-sheet">
+      <button class="modal-close" id="modal-close">&times;</button>
+      <div id="modal-content"></div>
+    </div>
+  </div>
+
+  <script>
+    // --- Video Overlay ---
+    const videoOverlay = document.getElementById('video-overlay');
+    const loadingVideo = document.getElementById('loading-video');
+    const appDiv = document.getElementById('app');
+    loadingVideo.addEventListener('ended', () => {
+      videoOverlay.style.display = 'none';
+      appDiv.style.display = 'flex';
+    });
+    // If video fails to load, fallback after 5s
+    setTimeout(function() {
+      if (videoOverlay.style.display !== 'none') {
+        videoOverlay.style.display = 'none';
+        appDiv.style.display = 'flex';
+      }
+    }, 5000);
+
+    // --- Section Navigation ---
+    const navBtns = {
+      home: document.getElementById('nav-home'),
+      trade: document.getElementById('nav-trade'),
+      tasks: document.getElementById('nav-tasks'),
+      wallet: document.getElementById('nav-wallet'),
+      profile: document.getElementById('nav-profile')
+    };
+    const sections = {
+      home: document.getElementById('home-section'),
+      trade: document.getElementById('trade-section'),
+      tasks: document.getElementById('tasks-section'),
+      wallet: document.getElementById('wallet-section'),
+      profile: document.getElementById('profile-section')
+    };
+    let currentSection = 'home';
+    function switchSection(section) {
+      Object.entries(sections).forEach(([key, el]) => {
+        el.classList.remove('active');
+        navBtns[key].classList.remove('active');
+      });
+      sections[section].classList.add('active');
+      navBtns[section].classList.add('active');
+      currentSection = section;
+    }
+    navBtns.home.onclick = () => switchSection('home');
+    navBtns.trade.onclick = () => switchSection('trade');
+    navBtns.tasks.onclick = () => switchSection('tasks');
+    navBtns.wallet.onclick = () => switchSection('wallet');
+    navBtns.profile.onclick = () => switchSection('profile');
+
+    // --- Home Section Coin Tap/SHB/Energy ---
+    let shbBalance = 0;
+    let usdtBalance = 0.00;
+    let energy = 1200;
+    const energyMax = 1200;
+    const shbBalanceEl = document.getElementById('shb-balance');
+    const usdtBalanceEl = document.getElementById('usdt-balance');
+    const usdtBalanceTradeEl = document.getElementById('usdt-balance-trade');
+    const energyValueEl = document.getElementById('energy-value');
+    const energyBarInner = document.getElementById('energy-bar-inner');
+    function updateBalances() {
+      shbBalanceEl.textContent = shbBalance;
+      usdtBalanceEl.textContent = usdtBalance.toFixed(2);
+      usdtBalanceTradeEl.textContent = usdtBalance.toFixed(2);
+    }
+    function updateEnergyBar() {
+      energyValueEl.textContent = energy;
+      let per = Math.max(0, Math.min(1, energy / energyMax));
+      energyBarInner.style.width = (per * 100) + '%';
+    }
+    updateBalances();
+    updateEnergyBar();
+
+    // Multi-finger tap to earn SHB
+    const coinBtn = document.getElementById('shb-coin-btn');
+    let tapCooldown = false;
+    let tapAnimId = 0;
+    function showTapAnim(x, y) {
+      const coinArea = coinBtn;
+      const rect = coinArea.getBoundingClientRect();
+      const anim = document.createElement('span');
+      anim.className = 'coin-tap-anim';
+      anim.textContent = '+1 SHB';
+      anim.style.left = ((x - rect.left)/rect.width*100) + '%';
+      anim.style.top = ((y - rect.top)/rect.height*100) + '%';
+      coinArea.appendChild(anim);
+      setTimeout(() => anim.remove(), 800);
+    }
+    function handleTap(e) {
+      if (energy < 1) return;
+      let touches = e.touches ? e.touches.length : 1;
+      for (let i = 0; i < touches; ++i) {
+        if (energy < 1) break;
+        shbBalance += 1;
+        energy -= 1;
+        updateBalances();
+        updateEnergyBar();
+        if (e.touches) {
+          showTapAnim(e.touches[i].clientX, e.touches[i].clientY);
+        } else {
+          showTapAnim(
+            e.clientX || coinBtn.offsetLeft + coinBtn.offsetWidth/2,
+            e.clientY || coinBtn.offsetTop + coinBtn.offsetHeight/2
+          );
+        }
+      }
+    }
+    coinBtn.addEventListener('touchstart', function(e) {
+      if (energy < 1) return;
+      e.preventDefault();
+      handleTap(e);
+    }, { passive: false });
+    coinBtn.addEventListener('mousedown', function(e) {
+      if (energy < 1) return;
+      handleTap(e);
+    });
+
+    // Energy recharge per second
+    setInterval(() => {
+      if (energy < energyMax) {
+        energy += 1;
+        updateEnergyBar();
+      }
+    }, 1000);
+
+    // --- Check-in Modal ---
+    const checkinBtn = document.getElementById('checkin-btn');
+    const modalBg = document.getElementById('modal-bg');
+    const modalContent = document.getElementById('modal-content');
+    const modalClose = document.getElementById('modal-close');
+    let checkinData = JSON.parse(localStorage.getItem('shb_checkin') || '[]');
+    let today = (new Date()).toDateString();
+
+    function openCheckinModal() {
+      let days = [
+        {shb:1000,usdt:0.10},
+        {shb:2000,usdt:0.20},
+        {shb:3000,usdt:0.30},
+        {shb:4000,usdt:0.40},
+        {shb:5000,usdt:0.50},
+        {shb:6000,usdt:0.60},
+        {shb:7000,usdt:0.70},
+      ];
+      let claimed = checkinData;
+      let todayIdx = claimed.length;
+      let html = `<div class="modal-title">Daily Check-In</div>
+      <div class="checkin-arrowrow" style="overflow-x:auto;">`;
+      for(let i=0;i<7;i++) {
+        html += `<div class="checkin-day${claimed[i]?' claimed':''}" data-day="${i}">
+          Day ${i+1}
+          <div class="checkin-reward">${days[i].shb} SHB<br>+ ${days[i].usdt.toFixed(2)} USDT</div>
+        </div>`;
+        if(i<6) html += `<img class="checkin-arrow" src="https://cdn-icons-png.flaticon.com/512/545/545680.png" alt="→" />`;
+      }
+      html += `</div>`;
+      modalContent.innerHTML = html;
+      modalBg.classList.add('active');
+      // Claim logic
+      Array.from(document.getElementsByClassName('checkin-day')).forEach((el, i) => {
+        if (!claimed[i] && i === todayIdx) {
+          el.onclick = function() {
+            shbBalance += days[i].shb;
+            usdtBalance += days[i].usdt;
+            updateBalances();
+            claimed[i] = today;
+            localStorage.setItem('shb_checkin', JSON.stringify(claimed));
+            openCheckinModal();
+          }
+        }
+      });
+    }
+    checkinBtn.onclick = openCheckinModal;
+
+    // --- Redeem Modal ---
+    const redeemBtn = document.getElementById('redeem-btn');
+    function openRedeemModal() {
+      modalContent.innerHTML = `
+      <div class="modal-title">Redeem Code</div>
+      <form class="redeem-form" id="redeem-form">
+        <input type="text" id="redeem-code" placeholder="Enter redemption code" maxlength="32" />
+        <button type="submit">Claim</button>
+        <div id="redeem-msg"></div>
+      </form>`;
+      modalBg.classList.add('active');
+      document.getElementById('redeem-form').onsubmit = function(e) {
+        e.preventDefault();
+        let code = document.getElementById('redeem-code').value.trim();
+        if (!code) return;
+        // Simulated redemption for demo
+        document.getElementById('redeem-msg').textContent = 'Please ask admin for code.';
+      };
+    }
+    redeemBtn.onclick = openRedeemModal;
+    modalClose.onclick = () => modalBg.classList.remove('active');
+    modalBg.onclick = function(e) {
+      if (e.target === modalBg) modalBg.classList.remove('active');
+    };
+
+    // --- Trade Section Plans ---
+    const plans = [
+      {name:"TON/USDT", price:10, validity:30, daily:1, mark:"https://github.com/s42144/Shark-Bounty/blob/f07926fed7a84d003a20d8c87a22b01c63cbacc8/2592317.png?raw=true"},
+      {name:"NOT/USDT", price:30, validity:30, daily:3, mark:"https://github.com/s42144/Shark-Bounty/blob/f07926fed7a84d003a20d8c87a22b01c63cbacc8/2592317.png?raw=true"},
+      {name:"HMSTR/USDT", price:70, validity:30, daily:7, mark:"https://github.com/s42144/Shark-Bounty/blob/f07926fed7a84d003a20d8c87a22b01c63cbacc8/2592317.png?raw=true"},
+      {name:"ETH/USDT", price:100, validity:30, daily:10, mark:"https://github.com/s42144/Shark-Bounty/blob/f07926fed7a84d003a20d8c87a22b01c63cbacc8/2592317.png?raw=true"},
+      {name:"BNB/USDT", price:150, validity:30, daily:15, mark:"https://github.com/s42144/Shark-Bounty/blob/f07926fed7a84d003a20d8c87a22b01c63cbacc8/2592317.png?raw=true"},
+      {name:"BTC/USDT", price:200, validity:30, daily:20, mark:"https://github.com/s42144/Shark-Bounty/blob/f07926fed7a84d003a20d8c87a22b01c63cbacc8/2592317.png?raw=true"},
+    ];
+    let ownedPlans = JSON.parse(localStorage.getItem('shb_owned_plans')||'[]');
+    let planClaims = JSON.parse(localStorage.getItem('shb_plan_claims')||'{}');
+    function renderPlans() {
+      let html = '';
+      plans.forEach((plan, idx) => {
+        let owned = ownedPlans.includes(idx);
+        let canClaim = owned && (!planClaims[idx] || Date.now()-planClaims[idx]>86400000);
+        html += `<div class="plan-card">
+          <img class="plan-secure-ico" src="${plan.mark}" alt="Secure" />
+          <div class="plan-head-row">
+            <div class="plan-title">${plan.name}</div>
+          </div>
+          <div class="plan-price-row">
+            <img class="plan-usdt-ico" src="https://github.com/s42144/Shark-Bounty/blob/1d18d021f596343b63d2ce30ad010396db5f1382/15207964.png?raw=true" />
+            <span class="plan-price">$${plan.price}</span>
+            <span class="plan-validity">${plan.validity} days</span>
+          </div>
+          <div class="plan-earning-row">
+            Daily Earning: <img class="plan-usdt-ico" src="https://github.com/s42144/Shark-Bounty/blob/1d18d021f596343b63d2ce30ad010396db5f1382/15207964.png?raw=true" /> $${plan.daily}
+          </div>
+          <button class="plan-action-btn" data-idx="${idx}"${owned && !canClaim ? ' disabled' : ''}>
+            ${owned ? (canClaim ? 'Claim' : 'Claimed') : 'Buy'}
+          </button>
+        </div>`;
+      });
+      document.getElementById('plans-list').innerHTML = html;
+      Array.from(document.getElementsByClassName('plan-action-btn')).forEach(btn=>{
+        btn.onclick = function() {
+          let idx = +btn.dataset.idx;
+          if (!ownedPlans.includes(idx)) {
+            if (usdtBalance >= plans[idx].price) {
+              usdtBalance -= plans[idx].price;
+              ownedPlans.push(idx);
+              localStorage.setItem('shb_owned_plans', JSON.stringify(ownedPlans));
+              updateBalances();
+              renderPlans();
+            } else {
+              btn.textContent = "Insufficient USDT";
+              setTimeout(()=>renderPlans(),1800);
+            }
+          } else {
+            // Claim
+            if (!planClaims[idx] || Date.now()-planClaims[idx]>86400000) {
+              usdtBalance += plans[idx].daily;
+              planClaims[idx] = Date.now();
+              localStorage.setItem('shb_plan_claims', JSON.stringify(planClaims));
+              updateBalances();
+              renderPlans();
+            }
+          }
+        };
+      });
+    }
+    renderPlans();
+
+    // --- Tasks Section (dummy data for now) ---
+    const tasks = [
+      {img:"https://github.com/s42144/Shark-Bounty/blob/2ba42299505308ea4ff2a68f5db8341f3ddc0e92/16104409.png?raw=true", title:"Follow on X", earn:100, url:"https://x.com/", id:"t1"},
+      {img:"https://github.com/s42144/Shark-Bounty/blob/2ba42299505308ea4ff2a68f5db8341f3ddc0e92/16104409.png?raw=true", title:"Join Telegram", earn:200, url:"https://t.me/", id:"t2"},
+    ];
+    let completedTasks = JSON.parse(localStorage.getItem('shb_completed_tasks')||'{}');
+    function renderTasks() {
+      let html = '';
+      tasks.forEach(task => {
+        let completed = completedTasks[task.id];
+        html += `<div class="task-card">
+          <img class="task-img" src="${task.img}" />
+          <div class="task-info">
+            <span class="task-title">${task.title}</span>
+            <span class="task-earning">+${task.earn} SHB</span>
+          </div>
+          <button class="task-action-btn" data-id="${task.id}"${completed?' style="background:#21b573;"':''}>${completed?'Completed':'Start'}</button>
+        </div>`;
+      });
+      document.getElementById('tasks-list').innerHTML = html;
+      Array.from(document.getElementsByClassName('task-action-btn')).forEach(btn=>{
+        btn.onclick = function() {
+          let id = btn.dataset.id;
+          let task = tasks.find(t=>t.id===id);
+          if (!completedTasks[id]) {
+            shbBalance += task.earn;
+            completedTasks[id] = true;
+            localStorage.setItem('shb_completed_tasks', JSON.stringify(completedTasks));
+            updateBalances();
+            renderTasks();
+            window.open(task.url, '_blank');
+          } else {
+            window.open(task.url, '_blank');
+          }
+        }
+      });
+    }
+    renderTasks();
+
+    // --- Wallet Section ---
+    const walletContent = document.getElementById('wallet-content');
+    document.getElementById('deposit-btn').onclick = function() {
+      renderDepositForm();
+    };
+    document.getElementById('withdraw-btn').onclick = function() {
+      renderWithdrawForm();
+    };
+    document.getElementById('history-btn').onclick = function() {
+      renderHistoryList();
+    };
+
+    // Wallet Deposit
+    let depositHistory = JSON.parse(localStorage.getItem('shb_deposit_history')||'[]');
+    let tonRate = 3.2;
+    function renderDepositForm() {
+      walletContent.innerHTML = `
+      <form class="wallet-form" id="deposit-form">
+        <label>Deposit Method</label>
+        <select id="deposit-method">
+          <option value="TONCOIN">TONCOIN</option>
+          <option value="USDT">USDT TON</option>
+        </select>
+        <label>Amount</label>
+        <input type="number" id="deposit-amt" placeholder="Enter amount" min="0" step="0.01" required />
+        <button type="submit">Confirm</button>
+        <div class="exchange-row" id="deposit-exchange"></div>
+      </form>`;
+      document.getElementById('deposit-amt').oninput = function() {
+        let method = document.getElementById('deposit-method').value;
+        let amt = +this.value;
+        let exch = '';
+        if (method=='TONCOIN') {
+          exch = amt>=3 ? `${amt} TON ≈ $${(amt*tonRate).toFixed(2)}` : '(min 3 TON)';
+        } else {
+          exch = amt>=10 ? `$${amt} USDT` : '(min 10 USDT)';
+        }
+        document.getElementById('deposit-exchange').textContent = exch;
+      }
+      document.getElementById('deposit-method').onchange = function() {
+        document.getElementById('deposit-amt').value = '';
+        document.getElementById('deposit-exchange').textContent = '';
+      };
+      document.getElementById('deposit-form').onsubmit = function(e) {
+        e.preventDefault();
+        let method = document.getElementById('deposit-method').value;
+        let amt = +document.getElementById('deposit-amt').value;
+        if ((method=='TONCOIN' && amt<3) || (method=='USDT' && amt<10)) return;
+        let qr = method=='TONCOIN'
+          ? "https://github.com/s42144/Shark-Bounty/blob/87e28aa35db580efad4a8befa50df073a1c80e1f/934817.png?raw=true"
+          : "https://github.com/s42144/Shark-Bounty/blob/87e28aa35db580efad4a8befa50df073a1c80e1f/934817.png?raw=true";
+        let addr = "UQCOL7arveEVrKfKa9v3SbZnKjIBnOavmX3aXdDV-XD1cQ09";
+        let memo = "D"+Math.floor(Math.random()*1e6).toString().padStart(6,'0');
+        let depObj = {
+          method, amt, status:'pending', time:Date.now(), addr, memo
+        };
+        depositHistory.push(depObj);
+        localStorage.setItem('shb_deposit_history', JSON.stringify(depositHistory));
+        // Show Deposit Details
+        walletContent.innerHTML = `
+          <div class="wallet-form">
+            <div class="timer" id="deposit-timer">15:00</div>
+            <img class="qr-code" src="${qr}" alt="QR Code" />
+            <div class="addr-row">
+              <span>${addr}</span>
+              <button class="copy-btn" data-copy="${addr}">Copy</button>
+            </div>
+            <div class="addr-row">
+              Memo: <span>${memo}</span>
+              <button class="copy-btn" data-copy="${memo}">Copy</button>
+            </div>
+            <div class="exchange-row">Send <b>${amt} ${method=='TONCOIN'?'TON':'USDT'}</b> to above address.<br/>
+              ${method=='TONCOIN'?`1 TON ≈ $${tonRate}`:''}
+            </div>
+          </div>`;
+        // Copy buttons
+        Array.from(document.querySelectorAll('.copy-btn')).forEach(btn=>{
+          btn.onclick = function() {
+            navigator.clipboard.writeText(btn.dataset.copy);
+            btn.textContent = "Copied!";
+            setTimeout(()=>btn.textContent="Copy", 1300);
+          };
+        });
+        // Timer
+        let t = 15*60;
+        const timerEl = document.getElementById('deposit-timer');
+        function updateTimer() {
+          let min = Math.floor(t/60), sec = t%60;
+          timerEl.textContent = `${min}:${sec.toString().padStart(2,'0')}`;
+          t--;
+          if (t >= 0) setTimeout(updateTimer,1000);
+        }
+        updateTimer();
+      };
+    }
+
+    // Wallet Withdraw
+    let withdrawHistory = JSON.parse(localStorage.getItem('shb_withdraw_history')||'[]');
+    function renderWithdrawForm() {
+      walletContent.innerHTML = `
+      <form class="wallet-form" id="withdraw-form">
+        <label>Withdraw Method</label>
+        <select id="withdraw-method">
+          <option value="USDT">USDT TON</option>
+        </select>
+        <label>Amount ($)</label>
+        <input type="number" id="withdraw-amt" placeholder="Enter amount (min $3)" min="3" step="0.01" required />
+        <label>USDT TON Chain Address</label>
+        <input type="text" id="withdraw-addr" placeholder="Enter address" maxlength="66" required />
+        <label>Memo/Comment <small>(optional)</small></label>
+        <input type="text" id="withdraw-memo" placeholder="Enter memo/comment" maxlength="32" />
+        <button type="submit">Confirm</button>
+      </form>`;
+      document.getElementById('withdraw-form').onsubmit = function(e) {
+        e.preventDefault();
+        let amt = +document.getElementById('withdraw-amt').value;
+        let addr = document.getElementById('withdraw-addr').value;
+        let memo = document.getElementById('withdraw-memo').value;
+        if (amt<3 || !addr) return;
+        if (usdtBalance < amt) return;
+        let wObj = {
+          method:'USDT', amt, addr, memo, status:'pending', time:Date.now()
+        };
+        withdrawHistory.push(wObj);
+        usdtBalance -= amt;
+        localStorage.setItem('shb_withdraw_history', JSON.stringify(withdrawHistory));
+        updateBalances();
+        walletContent.innerHTML = `<div style="text-align:center; color:var(--green);font-weight:bold;font-size:1.1em;">Withdraw Request Submitted!</div>`;
+      }
+    }
+
+    // Wallet History
+    function renderHistoryList() {
+      let html = '<div class="wallet-history-list">';
+      depositHistory.forEach(dep=>{
+        html += `<div class="wallet-history-item">
+          <span>Deposit ${dep.method} $${dep.amt}</span>
+          <span class="wallet-history-status ${dep.status}">${dep.status}</span>
+        </div>`;
+      });
+      withdrawHistory.forEach(w=>{
+        html += `<div class="wallet-history-item">
+          <span>Withdraw $${w.amt}</span>
+          <span class="wallet-history-status ${w.status}">${w.status}</span>
+        </div>`;
+      });
+      html += '</div>';
+      walletContent.innerHTML = html;
+    }
+
+    // --- Profile Section ---
+    function randomUserID() {
+      if (window.localStorage.getItem('shb_uid')) return window.localStorage.getItem('shb_uid');
+      let id = Math.floor(Math.random()*1e11).toString().padStart(11,'0');
+      window.localStorage.setItem('shb_uid', id);
+      return id;
+    }
+    document.getElementById('profile-userid').textContent = randomUserID();
+    document.getElementById('copy-userid-btn').onclick = function() {
+      navigator.clipboard.writeText(document.getElementById('profile-userid').textContent);
+      this.textContent = "Copied!";
+      setTimeout(()=>this.innerHTML = `<img src="https://github.com/s42144/Shark-Bounty/blob/177e7fb2815726b7d9710a58dccafff013e0a531/1622069.png?raw=true" alt="Copy" />Copy`, 1300);
+    };
+
+    // Feature buttons
+    document.getElementById('profile-referrals-btn').onclick = function() {
+      document.getElementById('profile-content').innerHTML = `<div style="text-align:center;font-weight:bold;font-size:1.19em;color:#fff;margin-top:29px;">Referrals features Coming soon</div>`;
+    };
+    // Leaderboard
+    function randomCountry() {
+      const countries = ['US','IN','RU','CN','BR','ID','NG','DE','FR','JP','BD','MX','PK','IT','PH','VN','TR','IR','EG','GB','TH','KR','ES','UA','AR','PL','CA','MY','SA','AU','KZ','DZ'];
+      return countries[Math.floor(Math.random()*countries.length)];
+    }
+    function randomName() {
+      const names = ["Sharky","CryptoPro","TonLord","USDTKing","MemeBoss","Runner","Hodler","BountyMax","Flash","TraderX","Goldfish","Hamster","Billionaire"];
+      return names[Math.floor(Math.random()*names.length)] + Math.floor(Math.random()*1000);
+    }
+    function renderLeaderboard() {
+      let html = '<div class="profile-leaderboard-list">';
+      let leaderboard = [];
+      for(let i=0;i<100;i++) {
+        leaderboard.push({
+          name: randomName(),
+          country: randomCountry(),
+          usdt: (Math.random()*10000+100).toFixed(2),
+          rank: i+1
+        });
+      }
+      leaderboard = leaderboard.sort((a,b)=>b.usdt-a.usdt);
+      leaderboard.forEach((u,idx)=>{
+        html += `<div class="profile-leaderboard-item${idx<3?' top-leaderboard':''}">
+          ${idx<3?`<img class="top-rank-icon" src="https://github.com/s42144/Shark-Bounty/blob/0bcaaea5195504abe1ecc2b322ba88302ecd5373/15584494.png?raw=true" />`:''}
+          <span>${idx+1}. ${u.name} <span style="font-size:0.9em;color:#fff7;">(${u.country})</span></span>
+          <span class="usdt-balance"><img style="width:19px;height:19px;" src="https://github.com/s42144/Shark-Bounty/blob/1d18d021f596343b63d2ce30ad010396db5f1382/15207964.png?raw=true" />${u.usdt}</span>
+        </div>`;
+      });
+      html += '</div>';
+      document.getElementById('profile-content').innerHTML = html;
+    }
+    document.getElementById('profile-leaderboard-btn').onclick = renderLeaderboard;
+    // Leaderboard refresh every 30s
+    setInterval(()=>{ if(currentSection==='profile') renderLeaderboard(); },30000);
+
+    // Notification section (dummy)
+    function renderNotifications() {
+      let html = '<div class="profile-notifications-list">';
+      let notes = [
+        {msg:"Welcome to Shark Bounty! Daily Check-in for huge rewards!", t:Date.now()-60000},
+        {msg:"Trading plans available now!", t:Date.now()-123000},
+      ];
+      notes.forEach(n=>{
+        html += `<div class="profile-notification-item">${n.msg}</div>`;
+      });
+      html += '</div>';
+      document.getElementById('profile-content').innerHTML = html;
+    }
+    document.getElementById('profile-notification-btn').onclick = renderNotifications;
+
+    // --- Keep bottom nav text and buttons inside screen ---
+    window.addEventListener('resize', function() {
+      document.body.style.maxWidth = window.innerWidth + 'px';
+    });
+
+  </script>
+</body>
+</html>
