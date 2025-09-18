@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Investment Plans & Profile</title>
+  <link href="https://fonts.googleapis.com/css?family=Inter:400,500,600,700&display=swap" rel="stylesheet">
+  <style>
+    html, body { max-width: 100vw; overflow-x: hidden; }
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; padding-bottom: 78px; font-family: 'Inter', Arial, sans-serif; background: linear-gradient(135deg,#f4f7fa 0%,#eef2f7 100%); }
+    .section, .subpage { display: none; padding: 16px 4vw 0 4vw; flex-direction: column; min-height: calc(100vh - 78px); }
+    .active { display: flex; }
+    #trade { flex-direction: column; }
+    /* --- Loading Video Overlay --- */
+    #loading-video-overlay {
+      position: fixed;
+      z-index: 100000;
+      inset: 0;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.35s;
+    }
+    #loading-video-overlay.hide {
+      pointer-events: none;
+      opacity: 0;
+    }
+    #loading-video {
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      background: #000;
+      max-width: 100vw;
+      max-height: 100vh;
+      display: block;
+    }
+    /* --- End Loading Video Overlay --- */
+    .plan-card { position: relative; width: 100%; margin: 12px 0; background: linear-gradient(115deg,#2b8cff 70%,#32b77a 100%); border-radius: 16px; overflow: hidden; box-shadow: 0 8px 22px rgba(44,109,255,0.10); }
+    .top-badge { position: absolute; top: 8px; right: 8px; width: 32px; }
+    .top-badge img { width: 100%; }
+    .plan-overlay { background: rgba(0,0,0,0.74); color: #fff; padding: 18px 16px 18px 20px; display: flex; flex-direction: column; min-height: 124px; }
+    .plan-overlay h3 { margin: 0 0 8px; font-size: 18px; letter-spacing: 0.5px; text-transform: uppercase; }
+    .plan-overlay p { margin: 2px 0; font-size: 15px; opacity: .93;}
+    .buttons { margin-top: 13px; display: flex; gap: 8px; }
+    .buttons button { flex: 1; padding: 10px 0; border: none; border-radius: 8px; font-size: 15px; cursor: pointer; font-weight: 600; }
+    .purchase-btn { background: linear-gradient(90deg,#32b77a 60%,#2b8cff 100%); color: #fff; }
+    .price-btn { background: linear-gradient(90deg,#2b8cff 60%,#32b77a 100%); color: #fff; }
+    .profile-section { align-items: center; }
+    .profile-pic { width: 90px; height: 100px; border-radius: 12px; object-fit: cover; margin-bottom: 17px; border: 3px solid #e7ebf3;}
+    .balance { display: flex; align-items: center; gap: 9px; font-weight: 600; font-size: 20px; margin-bottom: 13px; color: #1a6df4;}
+    .balance img { width: 29px; height: 29px; }
+    .user-id { display: flex; align-items: center; margin-bottom: 18px; }
+    .user-id span { font-weight: 600; margin-right: 10px; font-size: 15px; }
+    .user-id img { width: 22px; height: 22px; cursor: pointer; }
+    .input-group { width: 100%; max-width: 365px; margin-bottom: 13px; }
+    .input-group label { display: block; margin-bottom: 4px; font-weight: 500; }
+    .input-group input { width: 100%; padding: 11px; border: 1px solid #ced2d8; border-radius: 8px; font-size: 15px; }
+    .save-btn { padding: 12px 0; background: linear-gradient(90deg,#2b8cff 60%,#32b77a 100%); color: white; border: none; border-radius: 8px; cursor: pointer; width: 100%; max-width: 365px; font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+    .action-buttons { display: flex; flex-direction: column; gap: 11px; width: 100%; max-width: 365px; }
+    .action-buttons button { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 13px; border: none; border-radius: 7px; font-size: 16px; cursor: pointer; background: linear-gradient(90deg,#fff 80%,#e8f0ff 100%); box-shadow: 0 2px 8px rgba(0,0,0,0.07); width: 100%; font-weight: 500;}
+    .action-buttons img { width: 23px; height: 23px; }
+    .back-btn { display: flex; align-items: center; gap: 8px; background: none; border: none; font-size: 15px; font-weight: 500; cursor: pointer; margin-bottom: 14px; color: #1a6df4;}
+    .back-btn img { width: 23px; height: 23px; }
+    .subpage ul { padding-left: 20px; }
+    .ranking-list { width: 100%; max-height: 54vh; overflow-y: auto; border: 1.5px solid #dde3ea; border-radius: 8px; padding: 8px; background: #fff;}
+    .ranking-item { display: flex; justify-content: space-between; padding: 8px 0; font-size: 15px; border-bottom: 1px solid #f0f3f7; }
+    .faq { background: #fff; padding: 17px; border-radius: 11px; margin-bottom: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+    .faq h3 { margin-top: 0; font-size: 17px; }
+    .faq p { margin: 8px 0; font-size: 14px; }
+    .support-buttons { display: flex; gap: 12px; flex-wrap: wrap; }
+    .support-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 13px; border: none; border-radius: 8px; background: linear-gradient(90deg,#2b8cff 60%,#32b77a 100%); color: #fff; cursor: pointer; font-size: 15px; transition: background 0.3s; }
+    .support-btn:hover { background-color: #0755b3; }
+    .support-btn img { width: 22px; height: 22px; }
+    .bottom-nav { position: fixed; left: 0; right: 0; bottom: 0; height: 78px; background: #fff; border-top: 1.5px solid #dde3ea; display: flex; justify-content: space-around; align-items: center; z-index: 1000; }
+    .bottom-nav a { text-decoration: none; color: #333; font-size: 12px; display: flex; flex-direction: column; align-items: center; flex: 1; transition: color 0.13s;}
+    .bottom-nav img { width: 30px; height: 30px; margin-bottom: 2px; }
+    .bottom-nav a.active-nav { color: #2b8cff; font-weight: 600;}
+    /* WALLET SECTION */
+    #wallet-section { align-items: center; }
+    .wallet-banner {
+      width:100%; max-width:410px; margin:0 auto 20px auto; border-radius:13px;
+      background: linear-gradient(120deg,#2b8cff 55%,#32b77a 100%);
+      color: #fff; display:flex; align-items:center; gap:20px; padding: 18px 19px 15px 19px;
+      box-shadow: 0 2px 16px rgba(44,109,255,0.11);
+      font-size: 16px; font-weight:500;
+      position:relative;
+    }
+    .wallet-banner img { width:45px;height:45px; border-radius:9px; border:2px solid #fff;}
+    .wallet-banner .wallet-balance{font-size: 23px; font-weight: 700; margin-left:5px;}
+    .wallet-banner-stat { margin-top: 3px; opacity:.93; font-size:13.6px;}
+    .wallet-actions { display: flex; flex-direction: column; gap: 17px; width: 100%; max-width: 410px; margin: 0 auto; }
+    .wallet-action-btn {
+      display: flex; align-items: center; gap: 13px; justify-content: flex-start;
+      padding: 17px 0 17px 18px; border: none; border-radius: 10px;
+      background: linear-gradient(93deg,#e6f0ff 90%,#cff0e6 100%);
+      box-shadow: 0 2.5px 16px rgba(44,109,255,0.07);
+      font-size: 17px; cursor: pointer; font-weight: 700;
+      color:#1a356a;
+      transition:background 0.14s;
+    }
+    .wallet-action-btn:hover { background: linear-gradient(93deg,#c7e0ff 90%,#b8e8d9 100%);}
+    .wallet-action-btn img { width: 34px; height: 34px; }
+    .wallet-info { margin: 17px 0 18px 0; color: #2876f6; background: #eafdff; border-radius: 10px; padding: 13px 16px; font-size: 15px; border-left: 4px solid #32b77a; }
+    .wallet-form-group { margin-bottom: 16px; width: 100%; }
+    .wallet-form-group label { font-weight: 600; display: block; margin-bottom: 6px; }
+    .wallet-form-group input { width: 100%; padding: 13px; border-radius: 8px; border: 1.5px solid #b1c8e7; font-size: 15px; background: #f7faff;}
+    .wallet-form-group .copy-btn { margin-left: 10px; padding: 2px 13px; border: none; border-radius: 7px; background: linear-gradient(90deg,#2b8cff 60%,#32b77a 100%); color: #fff; font-size: 14px; cursor: pointer; font-weight:600;}
+    .wallet-methods { display: flex; flex-direction: column; gap: 15px; }
+    .wallet-method-btn {
+      display: flex; align-items: center; gap: 13px; padding: 16px 0 16px 12px;
+      border: 2px solid #2b8cff; border-radius: 8px;
+      background: linear-gradient(90deg,#f7fbff 80%,#e8f3ff 100%);
+      color: #2574e5; font-size: 18px; font-weight: 700; cursor: pointer;
+      transition: background 0.22s, color 0.22s, border 0.13s;
+    }
+    .wallet-method-btn img { height: 38px; width: 38px; }
+    .wallet-method-btn.selected, .wallet-method-btn:hover {
+      background: linear-gradient(90deg,#2b8cff 60%,#32b77a 100%); color: #fff; border:2px solid #32b77a;}
+    .wallet-qr { display: flex; flex-direction: column; align-items: center; gap: 10px; margin: 18px 0; }
+    .wallet-submit-btn { padding: 13px 0; background: linear-gradient(90deg,#32b77a 60%,#2b8cff 100%); color: #fff; border: none; border-radius: 8px; font-size: 17px; font-weight: 700; width: 100%; max-width: 410px;}
+    .wallet-success { display: flex; flex-direction: column; align-items: center; gap: 10px; margin: 24px 0; }
+    .wallet-success img { width: 80px; }
+    .wallet-history { width: 100%; max-width: 410px; margin: 0 auto; }
+    .wallet-history-quote {
+      border-radius: 11px;
+      background:linear-gradient(98deg,#eaf7ff 65%,#e4faee 100%);
+      padding: 17px 22px 18px 20px;
+      margin-bottom: 18px;
+      box-shadow: 0 4px 16px rgba(44,109,255,0.065);
+      position:relative;
+      border-left: 6px solid #32b77a;
+      font-size: 15.5px;
+      color: #1c2449;
+      overflow-wrap:break-word;
+      transition:box-shadow .15s;
+    }
+    .wallet-history-quote:before {
+      content: ""; position: absolute; top: 17px; left: -16px; width: 6px; height: 70%; border-radius: 10px;
+      background:linear-gradient(180deg,#32b77a 10%,#1a6df4 100%);
+      opacity:.14;
+    }
+    .wallet-history-pending { color: #ff9800; font-weight: bold; }
+    .wallet-history-approved { color: #32b77a; font-weight: bold; }
+    .wallet-history-rejected { color: #e91e63; font-weight: bold; }
+    .wallet-history-label { font-weight: 700; color: #1a6df4;}
+    .wallet-history-addr { font-family: monospace; color: #338b6c; background: #e4f7f0; border-radius: 6px; padding: 2px 8px 2px 7px; font-size: 15px; }
+    .wallet-history-txhash { color: #2876f6; background: #f3f8fe; border-radius: 6px; padding: 2px 8px; font-size: 15px;}
+    .wallet-history-date { color: #5e677d;font-size:13.5px;margin-top:4px;}
+    .wallet-history-type {font-size:13px; letter-spacing:0.7px; border-radius:6px; padding:2px 10px; margin-right:8px; background:linear-gradient(90deg,#32b77a 80%,#2b8cff 100%);color:#fff;}
+    /* Notification Dynamic Island */
+    #dynamic-island {
+      position: fixed;
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10001;
+      display: none;
+      min-width: 180px;
+      background: #222;
+      color: #fff;
+      border-radius: 20px;
+      box-shadow: 0 8px 24px #1a6df444;
+      padding: 12px 25px 10px 25px;
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-align: center;
+      animation: islandIn 0.13s cubic-bezier(.72,.06,.6,1.08);
+      border: 2.5px solid #2b8cff;
+    }
+    @keyframes islandIn {
+      from { transform: translateX(-50%) scale(0.9); opacity:0; }
+      to { transform: translateX(-50%) scale(1); opacity:1; }
+    }
+    /* More profile features */
+    .profile-extra-features {
+      width: 100%; max-width: 365px; margin: 17px 0 7px 0; display: flex; flex-direction: column; gap: 9px;
+    }
+    .profile-feature-row {
+      display: flex; gap: 15px; align-items: center; background: #fff; border-radius: 8px; padding: 10px 18px; box-shadow: 0 2px 10px #e8f0ff88;
+      font-size: 15px; color: #2b8cff; font-weight: 500; border-left: 6px solid #32b77a;
+    }
+    .profile-feature-row img { width: 19px; height: 19px; margin-right: 8px;}
+    /* Referral section */
+    .section-referral { background:#f8fbff; min-height: calc(100vh - 78px); flex-direction: column; align-items: center; }
+    .referral-card { background: #fff; border-radius: 13px; box-shadow: 0 5px 24px #2b8cff11; padding: 22px 7vw 19px 7vw; margin: 20px 0 0 0; width:100%; max-width: 420px;}
+    .ref-link-wrap { display: flex; align-items: center; gap: 5px; margin: 13px 0 10px 0; word-break: break-all;}
+    .ref-link { font-size: 15px; color:#32b77a; background: #f7fbff; border-radius: 6px; padding: 8px 12px; flex:1; min-width:0;}
+    .ref-copy-btn { background: #2b8cff; color: #fff; border: none; border-radius:7px; font-size: 13px; padding: 7px 14px; cursor: pointer; font-weight: 600; }
+    .ref-details { margin: 12px 0 0 0; font-size: 15px; color: #1a6df4; }
+    .ref-count { font-size: 18px; font-weight: 700; color:#32b77a; }
+    .ref-desc { font-size: 14.5px; color: #2b8cff; margin-top: 11px; }
+    .ref-icon { width:33px; height:33px; vertical-align:middle; margin-right:7px;}
+    .referral-row { display:flex; align-items:center; gap:12px;}
+    .referral-row span { font-size:16px;}
+    /* Task section */
+    #task-section { align-items: center; }
+    .task-logo-img { width: 150px; margin: 30px auto 16px auto; display: block; }
+    .task-list { width:100%; max-width:400px; margin:18px auto 0 auto; }
+    .task-list .task-item {
+      display:flex; align-items:center; gap:10px; justify-content:space-between; background:#fff; border-radius:10px; box-shadow:0 2px 10px #e8f0ff44;
+      margin-bottom:16px; padding:12px 15px;
+      min-height: 90px;
+    }
+    .task-list .task-info { display: flex; align-items: center; gap: 12px; flex:1; }
+    .task-list .task-photo { width:60px; height:60px; border-radius:8px; object-fit:cover; background:#f4f7fa; }
+    .task-list .task-title { font-size:16px; font-weight:600; color:#2b8cff;}
+    .task-list .task-reward { color:#32b77a; font-weight:600;font-size:14px;}
+    .task-list .task-btn { background:linear-gradient(90deg,#2b8cff 60%,#32b77a 100%);color:#fff;padding:8px 17px;border:none;border-radius:7px;font-size:14px;cursor:pointer;font-weight:600;}
+    .task-list .task-btn[disabled]{background:#ccc;color:#999;cursor:default;}
+    @media (max-width: 650px) {
+      .section, .subpage { padding-left: 2vw; padding-right: 2vw;}
+      .ranking-list, .wallet-actions, .wallet-history,.wallet-banner { max-width: 100%; }
+      .referral-card{padding-left:3vw;padding-right:3vw;}
+    }
+    @media (max-width: 420px) {
+      .section, .subpage { padding-left: 2px; padding-right: 2px;}
+      .wallet-action-btn, .wallet-method-btn { font-size: 15px; }
+      .wallet-form-group input { font-size: 14px;}
+      .faq, .wallet-history-quote, .plan-overlay { font-size: 14px;}
+      .wallet-banner { font-size:15px;}
+      .wallet-banner .wallet-balance{font-size:17.5px;}
+      .referral-card{padding-left:1vw;padding-right:1vw;}
+    }
+    .section, .subpage { scrollbar-width: none; -ms-overflow-style: none; }
+    .section::-webkit-scrollbar, .subpage::-webkit-scrollbar { display: none;}
+  </style>
+  <!-- Firebase 9+ Modular SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+</head>
+<body>
+  <!-- Loading Video Overlay -->
+  <div id="loading-video-overlay">
+    <video id="loading-video" autoplay playsinline muted>
+      <source src="https://github.com/s42144/Shark-Bounty/blob/8b67f2028cd3d33d6545243ea43a57958c428edf/29f4182c-fb84-4f6e-830f-f560ae571afe.mp4?raw=true" type="video/mp4">
+    </video>
+  </div>
+  <!-- End Loading Video Overlay -->
+
+  <div id="dynamic-island"></div>
+  <div class="section active" id="trade"></div>
+  <div class="section profile-section" id="profile">
+    <img class="profile-pic" id="profile-pic-avatar" src="https://github.com/s42144/Shark-Bounty/blob/aeb441877b43b7401af99870ead870597d62f885/17510103.gif" alt="Profile Photo">
+    <div class="balance">
+      <img src="https://github.com/s42144/Shark-Bounty/blob/87e28aa35db580efad4a8befa50df073a1c80e1f/934817.png" alt="TONCOIN">
+      <span id="ton-balance">Balance: 0.00 TON</span>
+    </div>
+    <div class="user-id">
+      <span id="userid">User ID: 93639----</span>
+      <img src="https://github.com/s42144/Shark-Bounty/blob/177e7fb2815726b7d9710a58dccafff013e0a531/1622069.png" alt="Copy" onclick="copyUserId()">
+    </div>
+    <div class="input-group"><label for="fullname">Full Name</label><input type="text" id="fullname" placeholder="Enter your full name"></div>
+    <div class="input-group"><label for="email">Email Address</label><input type="email" id="email" placeholder="Enter your email address"></div>
+    <div class="input-group"><label for="tonaddress">Bind TONCOIN Address</label><input type="text" id="tonaddress" placeholder="Enter your TON address"></div>
+    <button class="save-btn" id="saveBtn" onclick="saveProfile()">Save</button>
+    <div class="profile-extra-features">
+      <div class="profile-feature-row"><img src="https://github.com/s42144/Shark-Bounty/blob/aeb441877b43b7401af99870ead870597d62f885/17510103.gif" alt="Trade"> Current Plan: <span id="current-plan">None</span></div>
+    </div>
+    <div class="action-buttons">
+      <button onclick="toggleSection('rules')"><img src="https://github.com/s42144/Shark-Bounty/blob/2c71873bcde61e7a0672e8c11a0c969ad2d27d3e/12205158.png" alt="Rules">RULES</button>
+      <button onclick="toggleSection('ranking')"><img src="https://github.com/s42144/Shark-Bounty/blob/74b1e06fd560efe8e058569ffa7b4e363aa1c43d/13311710.png" alt="Ranking">RANKING</button>
+      <button onclick="toggleSection('support')"><img src="https://github.com/s42144/Shark-Bounty/blob/10f0eb22cfa927ad57ec3b152b563321396e4bd8/2268705.png" alt="Support">SUPPORT</button>
+      <button onclick="toggleSection('notification')"><img src="https://github.com/s42144/Shark-Bounty/blob/0b9b7d728a78c867c6862a6324b55510185b82c5/13146658.png" alt="Notification">NOTIFICATION</button>
+    </div>
+  </div>
+  <div class="subpage" id="rules">
+    <button class="back-btn" onclick="toggleSection('profile')"><img src="https://github.com/s42144/Shark-Bounty/blob/a088f431e08160c4f883be9cb6d3d3fa02b606de/arrow-circle_17305992.png" alt="Back">Back</button>
+    <h2>Platform Rules</h2>
+    <ul>
+      <li>No spamming or fraudulent activity.</li>
+      <li>Maintain your account confidentiality.</li>
+      <li>Earnings are calculated daily at 00:00 UTC.</li>
+      <li>Referral bonuses apply only to verified users.</li>
+      <li>Support requests must include your User ID.</li>
+    </ul>
+  </div>
+  <div class="subpage" id="ranking">
+    <button class="back-btn" onclick="toggleSection('profile')"><img src="https://github.com/s42144/Shark-Bounty/blob/a088f431e08160c4f883be9cb6d3d3fa02b606de/arrow-circle_17305992.png" alt="Back">Back</button>
+    <h2>Top 100 Users</h2>
+    <div class="ranking-list" id="rankingList"></div>
+  </div>
+  <div class="subpage" id="support">
+    <button class="back-btn" onclick="toggleSection('profile')"><img src="https://github.com/s42144/Shark-Bounty/blob/a088f431e08160c4f883be9cb6d3d3fa02b606de/arrow-circle_17305992.png" alt="Back">Back</button>
+    <h2>Support Center</h2>
+    <div class="faq">
+      <h3>General Questions</h3>
+      <p><strong>Q:</strong> How do I change my referral link?<br><strong>A:</strong> Visit the REFERRAL section and copy your link.</p>
+      <p><strong>Q:</strong> What is the minimum withdrawal amount?<br><strong>A:</strong> The minimum withdrawal is 1 TONCOIN.</p>
+      <p><strong>Q:</strong> How often are earnings updated?<br><strong>A:</strong> Earnings are credited daily at 00:00 UTC.</p>
+    </div>
+    <div class="support-buttons">
+      <button class="support-btn" onclick="window.open('https://t.me/Metlife_An','_blank')"><img src="https://github.com/s42144/Shark-Bounty/blob/2c71873bcde61e7a0672e8c11a0c969ad2d27d3e/12205158.png" alt="Telegram Channel">Telegram Channel</button>
+      <button class="support-btn" onclick="window.open('https://t.me/Xue_WhiteSoul','_blank')"><img src="https://github.com/s42144/Shark-Bounty/blob/2c71873bcde61e7a0672e8c11a0c969ad2d27d3e/12205158.png" alt="Live Support">Telegram Live Support</button>
+    </div>
+  </div>
+  <!-- NOTIFICATION SECTION -->
+  <div class="subpage" id="notification">
+    <button class="back-btn" onclick="toggleSection('profile')"><img src="https://github.com/s42144/Shark-Bounty/blob/a088f431e08160c4f883be9cb6d3d3fa02b606de/arrow-circle_17305992.png" alt="Back">Back</button>
+    <h2>Notifications</h2>
+    <div id="notificationList"></div>
+  </div>
+  <!-- REFERRAL SECTION -->
+  <div class="section section-referral" id="referral-section">
+    <div class="referral-card">
+      <div class="referral-row">
+        <img class="ref-icon" src="https://github.com/s42144/Shark-Bounty/blob/7ed42cc4280dc574de84c66f7e2a5ab6d8d2f516/17675714.png" alt="Referral">
+        <span style="font-size:19px;font-weight:700; color:#32b77a;">Referral Program</span>
+      </div>
+      <div class="ref-link-wrap" style="margin-top:17px;">
+        <span class="ref-link" id="my-ref-link"></span>
+        <button class="ref-copy-btn" id="copy-ref-link-btn">Copy</button>
+      </div>
+      <div class="ref-details">
+        Your total referrals: <span class="ref-count" id="my-ref-count">0</span>
+        <br>
+        For each referral, <b style="color:#2b8cff;">0.001 TON</b> is credited to your balance.
+        <br>
+        Earn <b style="color:#32b77a;">30-50% commission</b> on your referrals' platform earnings!
+      </div>
+      <div class="ref-desc" style="margin-bottom:12px;">
+        Share your personal referral link with friends – when they join and make a deposit, you’ll instantly earn <b>0.001 TON</b> into your balance for each referral. <br><br>
+        The more users that join through you, the higher your potential reward. Our unique system also gives you up to <b>50% commission</b> on your direct referrals’ plan earnings. <br><br>
+        Track your total referrals and commission live on this page. <br>
+        <span style="color:#2b8cff;font-weight:600;">Referral program has no limit – invite as many as you want!</span><br>
+        <span style="color:#32b77a;font-weight:600;">Bonuses are paid instantly after your referral’s deposit is approved.</span><br>
+        <span style="color:#ff9800;">Your link is unique. Use it wherever you want: social, private, or website.</span><br>
+        <span style="color:#e91e63;">Note: Fake/multiple accounts will NOT be rewarded. Only real, active users count towards your bonus.</span>
+      </div>
+    </div>
+  </div>
+  <!-- TASK SECTION -->
+  <div class="section" id="task-section">
+    <div id="tasks-content"></div>
+  </div>
+  <div class="section" id="wallet-section"></div>
+  <div class="subpage" id="deposit-method-section"></div>
+  <div class="subpage" id="deposit-details-section"></div>
+  <div class="subpage" id="deposit-success-section"></div>
+  <nav class="bottom-nav">
+    <a href="#home" onclick="toggleSection('home')" id="nav-home">
+      <img src="https://github.com/s42144/Shark-Bounty/blob/dedf1f3379f4a52180a500e818e467dcd99f56c9/1057118.png" alt="Home">
+      <span>HOME</span>
+    </a>
+    <a href="#trade" onclick="toggleSection('trade')" id="nav-trade">
+      <img src="https://github.com/s42144/Shark-Bounty/blob/37f8291cb1c52e2baafb4624ec0bf49811b63a87/9084248.png" alt="Trade">
+      <span>TRADE</span>
+    </a>
+    <a href="#referral" onclick="toggleSection('referral-section')" id="nav-referral"><img src="https://github.com/s42144/Shark-Bounty/blob/7ed42cc4280dc574de84c66f7e2a5ab6d8d2f516/17675714.png" alt="Referral"><span>REFERRAL</span></a>
+    <a href="#task" onclick="toggleSection('task-section')" id="nav-task"><img src="https://github.com/s42144/Shark-Bounty/blob/2ba42299505308ea4ff2a68f5db8341f3ddc0e92/16104409.png" alt="Task"><span>TASK</span></a>
+    <a href="#wallet" onclick="toggleSection('wallet-section')" id="nav-wallet"><img src="https://github.com/s42144/Shark-Bounty/blob/c06dc8d5e036525c17986aca385518c98926b633/6826311.png" alt="Wallet"><span>WALLET</span></a>
+    <a href="#profile" onclick="toggleSection('profile')" id="nav-profile"><img src="https://github.com/s42144/Shark-Bounty/blob/11c6e035a7f8f6445526ea07f34893fd3ceec419/18827926.png" alt="Profile"><span>PROFILE</span></a>
+  </nav>
+  <script>
+    // --- Loading Video Overlay logic ---
+    window.addEventListener('DOMContentLoaded', function() {
+      var overlay = document.getElementById('loading-video-overlay');
+      var video = document.getElementById('loading-video');
+      let hideOverlay = function() {
+        if (overlay) overlay.classList.add('hide');
+        setTimeout(function() {
+          if (overlay) overlay.style.display = 'none';
+        }, 400);
+      };
+      // Hide on video end or after 5 seconds (fallback)
+      if (video) {
+        video.onended = hideOverlay;
+        setTimeout(hideOverlay, 6000);
+      } else {
+        setTimeout(hideOverlay, 3000);
+      }
+    });
+    // --- End Loading Video Overlay logic ---
+
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyAHofuS76xf2oGPaJqEtopmcxdoJzjkDL4",
+      authDomain: "zmex-investments.firebaseapp.com",
+      databaseURL: "https://zmex-investments-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "zmex-investments",
+      storageBucket: "zmex-investments.appspot.com",
+      messagingSenderId: "971623941364",
+      appId: "1:971623941364:web:6c65604fc45c3f64e74aa1",
+      measurementId: "G-KQ1LYP77JF"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    // Avatars
+    const profileAvatars = [
+      "https://github.com/s42144/Shark-Bounty/blob/aeb441877b43b7401af99870ead870597d62f885/17510103.gif",
+      "https://github.com/s42144/Shark-Bounty/blob/aeb441877b43b7401af99870ead870597d62f885/17510103.gif",
+      "https://github.com/s42144/Shark-Bounty/blob/aeb441877b43b7401af99870ead870597d62f885/17510103.gif",
+      "https://github.com/s42144/Shark-Bounty/blob/aeb441877b43b7401af99870ead870597d62f885/17510103.gif",
+      "https://github.com/s42144/Shark-Bounty/blob/aeb441877b43b7401af99870ead870597d62f885/17510103.gif",
+      "https://github.com/s42144/Shark-Bounty/blob/aeb441877b43b7401af99870ead870597d62f885/17510103.gif",
+      "https://github.com/s42144/Shark-Bounty/blob/aeb441877b43b7401af99870ead870597d62f885/17510103.gif",
+      "https://github.com/s42144/Shark-Bounty/blob/aeb441877b43b7401af99870ead870597d62f885/17510103.gif"
+    ];
+    let userAvatarIndex = 0;
+    let depositStatusCache = {};
+    let withdrawStatusCache = {};
+    let lastDepositHistory = [];
+    let lastWithdrawHistory = [];
+    // User state
+    let userId, profile = {}, wallet = { history: [] }, planPurchases = {}, notifications = [], refCount = 0, totalEarnings = 0;
+    let plans = [
+      {name:'BTC/USDT',price:1500,daily:150,id:'bitcoin'},
+      {name:'ETH/USDT',price:1000,daily:100,id:'ethereum'},
+      {name:'BNB/USDT',price:500,daily:50,id:'binancecoin'},
+      {name:'TON/USDT',price:250,daily:25,id:'toncoin'},
+      {name:'NOT/USDT',price:125,daily:12,id:'notcoin'},
+      {name:'USDC/USDT',price:25,daily:2.5,id:'usd-coin'},
+      {name:'ALT/USDT',price:10,daily:1,id:'alt'}
+    ];
+    function showIsland(msg){
+      const el=document.getElementById('dynamic-island');
+      el.innerText=msg; el.style.display='block';
+      setTimeout(()=>{el.style.display='none';},1900);
+    }
+    function toast(msg){ showIsland(msg); }
+    function toggleSection(id){
+      document.querySelectorAll('.section, .subpage')
+        .forEach(e=>e.classList.remove('active'));
+      document.getElementById(
+        id === 'trade' ? 'trade' :
+        id === 'home' ? 'trade' : // Home and Trade go to the same section (per requirements, "trade" is the main plans page)
+        id
+      ).classList.add('active');
+      highlightNav(id);
+      if(id==='wallet-section') renderWalletSection();
+      if(id==='profile') renderProfile();
+      if(id==='notification') renderNotifications();
+      if(id==='referral-section') renderReferral();
+      if(id==='task-section') renderTasks();
+    }
+    function highlightNav(id){
+      document.querySelectorAll('.bottom-nav a').forEach(a=>a.classList.remove('active-nav'));
+      if(id==='home') document.getElementById('nav-home').classList.add('active-nav');
+      else if(id==='trade') document.getElementById('nav-trade').classList.add('active-nav');
+      else if(id==='profile') document.getElementById('nav-profile').classList.add('active-nav');
+      else if(id==='wallet-section') document.getElementById('nav-wallet').classList.add('active-nav');
+      else if(id==='referral-section') document.getElementById('nav-referral').classList.add('active-nav');
+      else if(id==='task-section') document.getElementById('nav-task').classList.add('active-nav');
+    }
+    function loadUser() {
+      userId = localStorage.getItem('userid');
+      if(!userId) {
+        userId='93639'+Math.floor(1000+Math.random()*9000);
+        localStorage.setItem('userid',userId);
+        db.ref("users/"+userId).set({
+          fullname: "", email: "", tonaddress: "", balance: 0, referred: 0, created: Date.now()
+        });
+        db.ref("balances/"+userId).set({main:0});
+      }
+      document.getElementById('userid').innerText='User ID: '+userId;
+      userAvatarIndex = parseInt(userId.substr(userId.length-2,2),10)%profileAvatars.length;
+      document.getElementById('profile-pic-avatar').src = profileAvatars[userAvatarIndex];
+    }
+    function saveProfile(){
+      profile.fullname=document.getElementById('fullname').value;
+      profile.email=document.getElementById('email').value;
+      profile.tonaddress=document.getElementById('tonaddress').value;
+      db.ref("users/"+userId).update(profile);
+      toast('Profile updated!');
+    }
+    function renderProfile(){
+      db.ref("users/"+userId).once("value").then(s=>{
+        let p=s.val()||{};
+        profile=p;
+        document.getElementById('fullname').value=profile.fullname||'';
+        document.getElementById('email').value=profile.email||'';
+        document.getElementById('tonaddress').value=profile.tonaddress||'';
+      });
+      db.ref("balances/"+userId).on("value",s=>{
+        let bal=s.val()&&s.val().main?s.val().main:0;
+        wallet.balance=bal;
+        document.getElementById('ton-balance').innerHTML = `Balance: ${(bal||0).toFixed(2)} TON`;
+      });
+      db.ref("userPlans/"+userId).once("value").then(s=>{
+        let plansData = s.val()||{};
+        document.getElementById('current-plan').innerText = Object.keys(plansData).length>0 ? Object.keys(plansData).join(', ') : 'None';
+      });
+      document.getElementById('profile-pic-avatar').src = profileAvatars[userAvatarIndex];
+    }
+    function renderPlans(){
+      db.ref("userPlans/"+userId).once("value").then(s=>{
+        planPurchases=s.val()||{};
+        const c=document.getElementById('trade');c.innerHTML='';
+        plans.forEach((p,i)=>{
+          const t=p.daily*30;
+          const purchaseState = (planPurchases && planPurchases[p.name])?true:false;
+          const b=i<5?`<div class='top-badge'><img src='https://github.com/s42144/Shark-Bounty/blob/a1689933fb7cd9af2287b694de3afe81c85d0b32/19026492.png' alt='Top'></div>`:'';
+          let purchaseBtn;
+          if(purchaseState){
+            purchaseBtn = `<button class="purchase-btn" style="background:#bbb;cursor:not-allowed;" disabled>Purchased</button>`;
+          } else {
+            purchaseBtn = `<button class="purchase-btn" onclick="purchasePlan('${p.name}')">Purchase</button>`;
+          }
+          c.insertAdjacentHTML('beforeend',`
+          <div class="plan-card">${b}
+            <div class="plan-overlay">
+              <h3>${p.name}</h3>
+              <p>Price: $${p.price} <span style="color:#fff6b0;">(${(p.price*0.3).toFixed(2)} TON)</span></p>
+              <p>Daily: $${p.daily} <span style="color:#b5fbe7;">(${(p.daily*0.3).toFixed(2)} TON)</span></p>
+              <p>Total: $${t}</p>
+              <div class="buttons">
+                ${purchaseBtn}
+                <button class="price-btn" onclick="showLivePrice('${p.id}')">See Live Price</button>
+              </div>
+            </div>
+          </div>`);
+        });
+      });
+    }
+    function showLivePrice(id){window.open(`https://www.coingecko.com/en/coins/${id}`,'_blank');}
+    window.purchasePlan=function(planName){
+      db.ref("balances/"+userId).once("value").then(bs=>{
+        let bal=bs.val()?bs.val().main:0;
+        let plan=plans.find(p=>p.name===planName);
+        let tonCost=plan.price*0.3;
+        if(bal<tonCost){
+          toast("Insufficient balance.");
+          return;
+        }
+        db.ref("userPlans/"+userId+"/"+planName).once("value").then(ps=>{
+          if(ps.exists()){
+            toast("You already purchased this plan.");
+            return;
+          }
+          db.ref("balances/"+userId).set({main:(bal-tonCost)});
+          let now=Date.now();
+          db.ref("userPlans/"+userId+"/"+planName).set({
+            planName,buyDate:now,nextEarning:now+24*3600*1000,
+            totalDays:30,earned:0,status:"active",price:plan.price,tonCost:tonCost,
+            daily:plan.daily,dailyTon:plan.daily*0.3,remainingDays:30
+          });
+          let ph = db.ref("planHistory/"+userId).push();
+          ph.set({planName,date:now,action:"purchase",amount:tonCost,status:"success"});
+          addNotification({title:"Plan Purchased",body:`You have purchased ${planName} plan! Daily earnings will be credited for 30 days.`,date:new Date(now).toLocaleString()});
+          toast("Plan purchased successfully!");
+          renderPlans();
+          renderProfile();
+        });
+      });
+    }
+    function autoEarnings(){
+      db.ref("userPlans/"+userId).once("value").then(s=>{
+        let plansData = s.val()||{};
+        let changed=false,now=Date.now();
+        for(let pname in plansData){
+          let plan=plansData[pname];
+          if(plan.status!=='active') continue;
+          if(now>=plan.nextEarning && plan.remainingDays>0){
+            db.ref("balances/"+userId).once("value").then(bs=>{
+              let bal=bs.val()?bs.val().main:0;
+              db.ref("balances/"+userId).set({main:bal+plan.dailyTon});
+              let newEarned = (plan.earned||0) + plan.dailyTon;
+              let newRem = plan.remainingDays-1;
+              let newNext = plan.nextEarning+24*3600*1000;
+              if(newRem<=0) newNext = null;
+              db.ref("userPlans/"+userId+"/"+pname).update({
+                earned:newEarned,remainingDays:newRem,nextEarning:newNext,status:newRem<=0?"completed":"active"
+              });
+              addNotification({title:"Daily Earning",body:`Your daily earning from ${pname} plan credited: ${plan.dailyTon.toFixed(3)} TON.`,date:new Date().toLocaleString()});
+              renderProfile();
+              renderPlans();
+            });
+          }
+        }
+      });
+    }
+    setInterval(autoEarnings, 60000);
+    function addNotification(n){
+      let notifRef=db.ref("notifications/"+userId).push();
+      notifRef.set(n);
+      renderNotifications();
+    }
+    function renderNotifications(){
+      db.ref("notifications/"+userId).limitToLast(20).once("value",snap=>{
+        let arr=[];
+        snap.forEach(c=>arr.unshift(c.val()));
+        let html='';
+        if(arr.length===0){
+          html=`<div style="margin:19px 0;color:#1a6df4;font-weight:600;">No notifications yet.</div>`;
+        } else {
+          for(let n of arr){
+            html+=`<div style="background:#f7fbff;color:#1a6df4;border-radius:9px;padding:13px 17px;margin-bottom:10px;box-shadow:0 2px 7px #e8f0ff77;font-size:15px;">
+              <b>${n.title||''}</b><br>${n.body||''}<br>
+              <span style="font-size:12.5px;color:#32b77a;">${n.date||''}</span>
+            </div>`;
+          }
+        }
+        document.getElementById('notificationList').innerHTML=html;
+      });
+    }
+    // Listen for deposit/withdraw status changes for notifications and update wallet history
+    function watchDepositWithdrawNotifications() {
+      // Deposit requests (with full history update)
+      db.ref("depositRequests").orderByChild("userId").equalTo(userId).on("value", function(dsnap) {
+        let hist = [];
+        dsnap.forEach(function(child) {
+          const val = child.val();
+          const key = child.key;
+          hist.push({...val, type:'deposit', key});
+          // Cache previous status
+          if (!depositStatusCache[key]) depositStatusCache[key] = val.status;
+          if (depositStatusCache[key] !== val.status) {
+            // Status changed
+            if(val.status === "approved") addNotification({title: "Deposit Approved", body: "Your deposit was approved. Funds credited.", date: new Date().toLocaleString()});
+            if(val.status === "rejected") addNotification({title: "Deposit Rejected", body: "Your deposit request was rejected.", date: new Date().toLocaleString()});
+            depositStatusCache[key] = val.status;
+          }
+        });
+        lastDepositHistory = hist;
+        renderWalletSection(); // always update on change
+      });
+      db.ref("withdrawRequests").orderByChild("userId").equalTo(userId).on("value", function(wsnap) {
+        let hist = [];
+        wsnap.forEach(function(child) {
+          const val = child.val();
+          const key = child.key;
+          hist.push({...val, type:'withdraw', key});
+          if (!withdrawStatusCache[key]) withdrawStatusCache[key] = val.status;
+          if (withdrawStatusCache[key] !== val.status) {
+            if(val.status === "approved") addNotification({title: "Withdraw Approved", body: "Your withdrawal was approved.", date: new Date().toLocaleString()});
+            if(val.status === "rejected") addNotification({title: "Withdraw Rejected", body: "Your withdrawal request was rejected and funds refunded.", date: new Date().toLocaleString()});
+            withdrawStatusCache[key] = val.status;
+          }
+        });
+        lastWithdrawHistory = hist;
+        renderWalletSection();
+      });
+    }
+    function renderReferral(){
+      const link = `http://t.me/met_life_bot/start_app${userId}`;
+      document.getElementById('my-ref-link').innerText = link;
+      document.getElementById('my-ref-link').setAttribute('data-link',link);
+      document.getElementById('copy-ref-link-btn').onclick = function(){
+        navigator.clipboard.writeText(link).then(()=>toast('Referral link copied!'));
+      };
+      db.ref("refCount/"+userId).once("value").then(s=>{
+        let cnt=s.val()||0;
+        document.getElementById('my-ref-count').innerText = cnt;
+      });
+    }
+    function renderWalletSection(){
+      db.ref("balances/"+userId).once("value",s=>{
+        let bal=s.val()?s.val().main:0;
+        wallet.balance=bal;
+        document.getElementById('ton-balance').innerHTML = `Balance: ${(bal||0).toFixed(2)} TON`;
+      });
+      // Use cached deposit/withdraw histories (always up to date)
+      let hist = (lastDepositHistory.concat(lastWithdrawHistory)).slice();
+      hist.sort((a,b)=>new Date(b.datetime||b.ts||0)-new Date(a.datetime||a.ts||0));
+      wallet.history = hist;
+      const banner = `
+        <div class="wallet-banner">
+          <img src="https://github.com/s42144/Shark-Bounty/blob/87e28aa35db580efad4a8befa50df073a1c80e1f/934817.png" alt="TON">
+          <div>
+            <div class="wallet-balance">${wallet.balance||0} TON</div>
+            <div class="wallet-banner-stat">Wallet Balance</div>
+            <div class="wallet-banner-stat" style="color:#fff6b0;"><span>Deposited:</span> <b style="color:#fff">${hist.filter(x=>x.type==='deposit'&&x.status==='approved').reduce((s,x)=>s+Number(x.amount||0),0)}</b> <span style="color:#b5fbe7;">Withdrawn:</span> <b style="color:#fff">${hist.filter(x=>x.type==='withdraw'&&x.status==='approved').reduce((s,x)=>s+Number(x.amount||0),0)}</b></div>
+          </div>
+        </div>
+      `;
+      const info = `
+        <div class="wallet-info">
+          <b>Welcome to your Wallet!</b><br>
+          Manage all your TONCOIN transactions securely.<br>
+          <span style="color:#32b77a; font-weight:600;">Deposit</span> instantly & track your deposit/withdrawal history.<br>
+          <span style="color:#2b8cff">Minimum deposit</span>: 1 TON | <span style="color:#2b8cff">Min withdraw</span>: 0.01 TON
+        </div>
+      `;
+      const html = banner + info + `
+        <div class="wallet-actions">
+          <button class="wallet-action-btn" onclick="onWalletDeposit()">
+            <img src="https://github.com/s42144/Shark-Bounty/blob/044196befa203197dece4b74afe7d5bd49f0a67b/6008139.png" alt="Deposit">Deposit Funds (TON/USDT)
+          </button>
+          <button class="wallet-action-btn" onclick="onWalletWithdraw()">
+            <img src="https://github.com/s42144/Shark-Bounty/blob/c8dd426115db94b2a2c218f7f876364dcd6b3173/Gemini_Generated_Image_fww324fww324fww3.png" alt="Withdraw">Withdraw Funds
+          </button>
+          <button class="wallet-action-btn" onclick="onWalletHistory()">
+            <img src="https://github.com/s42144/Shark-Bounty/blob/46fcd7413a110d3870cf2a9b2f8eb99c9cd25d88/17504646.png" alt="History">Wallet History & Transactions
+          </button>
+        </div>
+      `;
+      document.getElementById('wallet-section').innerHTML = html;
+    }
+    function onWalletDeposit(){
+      const html = `
+        <button class="back-btn" onclick="toggleSection('wallet-section')"><img src="https://github.com/s42144/Shark-Bounty/blob/a088f431e08160c4f883be9cb6d3d3fa02b606de/arrow-circle_17305992.png" alt="Back">Back</button>
+        <div class="wallet-info">
+          <b>Deposit Options:</b><br>
+          Securely fund your account with <span style="color:#2b8cff;font-weight:600;">TONCOIN</span> or <span style="color:#32b77a;font-weight:600;">USDT (TON chain)</span>.<br>
+          <span style="font-weight:600;">Minimum deposit:</span> 1 TON or 5 USDT.
+        </div>
+        <h2>Deposit</h2>
+        <form onsubmit="event.preventDefault();depositEnterAmount();">
+          <div class="wallet-form-group">
+            <label for="deposit-amount">Deposit Amount</label>
+            <input type="number" id="deposit-amount" min="1" step="any" placeholder="Enter amount (min 1)">
+          </div>
+          <button type="submit" class="wallet-submit-btn">Continue</button>
+        </form>
+      `;
+      const div = document.getElementById('deposit-method-section');
+      div.innerHTML = html;
+      toggleSection('deposit-method-section');
+    }
+    function depositEnterAmount(){
+      const amount = parseFloat(document.getElementById('deposit-amount').value);
+      if(isNaN(amount) || amount < 1){
+        toast('Minimum deposit amount is 1');
+        return;
+      }
+      localStorage.setItem('deposit_amount', amount);
+      showDepositMethod(amount);
+    }
+    function showDepositMethod(amount){
+      const html = `
+        <button class="back-btn" onclick="onWalletDeposit()"><img src="https://github.com/s42144/Shark-Bounty/blob/a088f431e08160c4f883be9cb6d3d3fa02b606de/arrow-circle_17305992.png" alt="Back">Back</button>
+        <div class="wallet-info">
+          <b>Choose a Method:</b> Use <span style="color:#2b8cff;font-weight:600;">TONCOIN</span> for fastest confirmations or <span style="color:#32b77a;font-weight:600;">USDT (TON chain)</span> for stablecoin deposits.<br>
+          <span style="font-weight:600;">Amount:</span> ${amount}
+        </div>
+        <h2>Select Deposit Method</h2>
+        <div class="wallet-methods">
+          <button class="wallet-method-btn" onclick="onDepositMethodSelect('toncoin')">
+            <img src="https://github.com/s42144/Shark-Bounty/blob/87e28aa35db580efad4a8befa50df073a1c80e1f/934817.png" alt="TONCOIN">TONCOIN
+          </button>
+          <button class="wallet-method-btn" onclick="onDepositMethodSelect('usdt')">
+            <img src="https://github.com/s42144/Shark-Bounty/blob/87e28aa35db580efad4a8befa50df073a1c80e1f/934817.png" alt="USDT TONCHAIN">USDT TON CHAIN
+          </button>
+        </div>
+      `;
+      const div = document.getElementById('deposit-details-section');
+      div.innerHTML = html;
+      toggleSection('deposit-details-section');
+    }
+    function onDepositMethodSelect(method){
+      const amount = parseFloat(localStorage.getItem('deposit_amount'));
+      const memo = generateMemo();
+      localStorage.setItem('deposit_memo', memo);
+      const address = 'UQBQ-5DCmwRAoQ_o0zB_4pCkdcUbbFi0uMoZ5L084XVs2yJx';
+      let qrImg = '', label = '', min = 1, infoHtml = '';
+      if(method === 'toncoin'){
+        qrImg = 'https://github.com/s42144/Shark-Bounty/blob/87e28aa35db580efad4a8befa50df073a1c80e1f/934817.png';
+        label = 'TONCOIN';
+        infoHtml = `<small>Minimum deposit: <span style="color:#32b77a;font-weight:600;">1 TONCOIN</span></small>`;
+      }else{
+        qrImg = 'https://github.com/s42144/Shark-Bounty/blob/87e28aa35db580efad4a8befa50df073a1c80e1f/934817.png';
+        label = 'USDT TONCHAIN';
+        min = 5;
+        infoHtml = `<small>Minimum deposit: <span style="color:#32b77a;font-weight:600;">5 USDT</span> | <span style="color:#2b8cff">1 USDT = 0.30 TONCOIN</span></small>`;
+        if(amount < 5){
+          toast('Minimum deposit for USDT TONCHAIN is 5 USDT');
+          return;
+        }
+      }
+      const html = `
+        <button class="back-btn" onclick="showDepositMethod(${amount})"><img src="https://github.com/s42144/Shark-Bounty/blob/a088f431e08160c4f883be9cb6d3d3fa02b606de/arrow-circle_17305992.png" alt="Back">Back</button>
+        <div class="wallet-info">
+          <b>Send your deposit to the below address.</b><br>
+          <span style="color:#2b8cff;font-weight:600;">Please double-check the address and memo before sending.</span>
+        </div>
+        <h2>Deposit via ${label}</h2>
+        <div class="wallet-qr">
+          <img src="${qrImg}" alt="Deposit QR" style="width:153px; height:153px; border-radius: 13px; box-shadow:0 2px 10px rgba(44,109,255,0.10);">
+        </div>
+        <div class="wallet-form-group">
+          <label>Deposit Amount</label>
+          <span style="font-size: 18px; font-weight: 700;color:#32b77a;" id="copy-amount">${amount}</span>
+          <button class="copy-btn" onclick="copyText('${amount}')">Copy</button>
+        </div>
+        <div class="wallet-form-group">
+          <label>${label} Address</label>
+          <span style="font-size: 16px;font-family:monospace;word-break:break-all;" id="copy-address">${address}</span>
+          <button class="copy-btn" onclick="copyText('${address}')">Copy</button>
+        </div>
+        <div class="wallet-form-group">
+          <label>TON MEMO/COMMENT</label>
+          <span style="font-size: 16px;" id="copy-memo">${memo}</span>
+          <button class="copy-btn" onclick="copyText('${memo}')">Copy</button>
+        </div>
+        ${infoHtml}
+        <form onsubmit="event.preventDefault();onDepositSubmit('${method}')">
+          <div class="wallet-form-group">
+            <label for="txhash">TX HASH</label>
+            <input type="text" id="txhash" required placeholder="Enter transaction hash">
+          </div>
+          <button type="submit" class="wallet-submit-btn">Submit Deposit</button>
+        </form>
+      `;
+      const div = document.getElementById('deposit-details-section');
+      div.innerHTML = html;
+      toggleSection('deposit-details-section');
+    }
+    function onDepositSubmit(method){
+      const txhash = document.getElementById('txhash').value.trim();
+      if(!txhash){ toast('Please enter TX HASH'); return; }
+      const amount = parseFloat(localStorage.getItem('deposit_amount'));
+      const memo = localStorage.getItem('deposit_memo');
+      const address = 'UQBQ-5DCmwRAoQ_o0zB_4ac4-816a-bb97b1c939c8/IMG_20250620_025423_286.jpg?v=1750366486550';
+      let label = method === 'toncoin' ? 'TONCOIN' : 'USDT TONCHAIN';
+      let entry = {
+        userId, type: 'deposit',
+        method: label,
+        amount: amount,
+        address: address,
+        memo: memo,
+        txhash: txhash,
+        status: 'pending',
+        ts: Date.now(),
+        datetime: new Date().toLocaleString()
+      };
+      db.ref("depositRequests").push(entry).then(()=>{
+        addNotification({
+          title: "Deposit Request",
+          body: "Deposit request submitted. Please wait for admin approval.",
+          date: new Date().toLocaleString()
+        });
+        const html = `
+          <div class="wallet-success">
+            <img src="https://github.com/s42144/Shark-Bounty/blob/aeb441877b43b7401af99870ead870597d62f885/17510103.gif" alt="Success">
+            <div style="font-size:17px; text-align:center; color:#32b77a;"><b>DEPOSIT REQUEST SUBMITTED SUCCESSFULLY</b><br>
+            <span style="color:#1a6df4;">PLEASE WAIT, THE FUNDS WILL BE ADDED WITHIN 5 MINUTES</span></div>
+            <button class="wallet-submit-btn" onclick="toggleSection('wallet-section')">Back to Wallet</button>
+          </div>
+        `;
+        document.getElementById('deposit-success-section').innerHTML = html;
+        toggleSection('deposit-success-section');
+        renderProfile();
+      });
+    }
+    function onWalletHistory(){
+      // Use up-to-date cached deposit/withdraw history
+      let hist = (lastDepositHistory.concat(lastWithdrawHistory)).slice();
+      hist.sort((a,b)=>new Date(b.datetime||b.ts||0)-new Date(a.datetime||a.ts||0));
+      let html = `<button class="back-btn" onclick="toggleSection('wallet-section')"><img src="https://github.com/s42144/Shark-Bounty/blob/a088f431e08160c4f883be9cb6d3d3fa02b606de/arrow-circle_17305992.png" alt="Back">Back</button>
+      <h2>Wallet History</h2>
+      <div class="wallet-history">`;
+      if(hist.length === 0){
+        html += `<div class="wallet-history-quote">No history found.</div>`;
+      } else {
+        hist.forEach(x=>{
+          let shortAddr = '';
+          if(x.type==='deposit'){
+            shortAddr = x.address.slice(0,7)+'...'+x.address.slice(-7);
+          }else if(x.type==='withdraw'){
+            shortAddr = x.to?x.to.slice(0,7)+'...'+x.to.slice(-7):'';
+          }
+          let rows = '';
+          rows += `<span class="wallet-history-type">${x.type==='deposit'?'DEPOSIT':'WITHDRAW'}</span>`;
+          if(x.type==='deposit'){
+            rows += `<span class="wallet-history-label">Method:</span> ${x.method}<br>`;
+            rows += `<span class="wallet-history-label">Amount:</span> <span style="color:#32b77a;font-weight:700;">${x.amount}</span><br>`;
+            rows += `<span class="wallet-history-label">Address:</span> <span class="wallet-history-addr">${shortAddr}</span><br>`;
+            rows += `<span class="wallet-history-label">Memo:</span> <span>${x.memo}</span><br>`;
+            rows += `<span class="wallet-history-label">TX HASH:</span> <span class="wallet-history-txhash">${x.txhash?x.txhash.slice(0,8)+'...':''}</span><br>`;
+          } else {
+            rows += `<span class="wallet-history-label">To:</span> <span class="wallet-history-addr">${shortAddr}</span><br>`;
+            rows += `<span class="wallet-history-label">Memo:</span> <span>${x.memo || '-'}</span><br>`;
+            rows += `<span class="wallet-history-label">Amount:</span> <span style="color:#2b8cff;font-weight:700;">${x.amount}</span><br>`;
+          }
+          rows += `<span class="wallet-history-date">${x.datetime||''}</span><br>`;
+          rows += `<span class="wallet-history-label">Status:</span> `;
+          if(x.status==='approved') rows += `<span class="wallet-history-approved">Approved</span>`;
+          else if(x.status==='rejected') rows += `<span class="wallet-history-rejected">Rejected</span>`;
+          else rows += `<span class="wallet-history-pending">Pending</span>`;
+          html += `<blockquote class="wallet-history-quote">${rows}</blockquote>`;
+        });
+      }
+      html += `</div>`;
+      document.getElementById('deposit-method-section').innerHTML = html;
+      toggleSection('deposit-method-section');
+    }
+    function onWalletWithdraw(){
+      db.ref("balances/"+userId).once("value",s=>{
+        let bal=s.val()?s.val().main:0;
+        if(bal < 0.01){
+          toast('Insufficient balance for withdrawal (min 0.01 TONCOIN)');
+          return;
+        }
+        const html = `
+          <button class="back-btn" onclick="toggleSection('wallet-section')"><img src="https://github.com/s42144/Shark-Bounty/blob/a088f431e08160c4f883be9cb6d3d3fa02b606de/arrow-circle_17305992.png" alt="Back">Back</button>
+          <div class="wallet-info">
+            <b>Withdraw instantly!</b><br>
+            Enter your <span style="color:#32b77a;font-weight:600;">TONCOIN wallet address</span> and the amount.<br>
+            <span style="font-weight:600;">Minimum withdraw:</span> 0.01 TONCOIN.
+          </div>
+          <h2>Withdraw</h2>
+          <form onsubmit="event.preventDefault();onWithdrawSubmit();">
+            <div class="wallet-form-group">
+              <label for="withdraw-address">TONCOIN WALLET ADDRESS <span style="color:red">*</span></label>
+              <input type="text" id="withdraw-address" required placeholder="Enter TONCOIN address">
+            </div>
+            <div class="wallet-form-group">
+              <label for="withdraw-memo">TONCOIN MEMO/COMMENT (Optional)</label>
+              <input type="text" id="withdraw-memo" placeholder="Enter memo/comment (optional)">
+            </div>
+            <div class="wallet-form-group">
+              <label for="withdraw-amount">Withdrawal Amount <small>(min 0.01 TONCOIN)</small></label>
+              <input type="number" id="withdraw-amount" min="0.01" step="any" required placeholder="Enter amount">
+            </div>
+            <button type="submit" class="wallet-submit-btn">Submit Withdrawal</button>
+          </form>
+        `;
+        document.getElementById('deposit-details-section').innerHTML = html;
+        toggleSection('deposit-details-section');
+      });
+    }
+    function onWithdrawSubmit(){
+      const to = document.getElementById('withdraw-address').value.trim();
+      const memo = document.getElementById('withdraw-memo').value.trim();
+      const amount = parseFloat(document.getElementById('withdraw-amount').value);
+      db.ref("balances/"+userId).once("value",s=>{
+        let bal=s.val()?s.val().main:0;
+        if(!to){ toast('TONCOIN wallet address is required'); return; }
+        if(isNaN(amount) || amount < 0.01){
+          toast('Minimum withdrawal amount is 0.01 TONCOIN');
+          return;
+        }
+        if(bal<amount){
+          toast('Insufficient balance.');
+          return;
+        }
+        db.ref("balances/"+userId).set({main:bal-amount});
+        let entry = {
+          userId, type:'withdraw', to, memo, amount, status:'pending', ts:Date.now(), datetime:new Date().toLocaleString()
+        };
+        db.ref("withdrawRequests").push(entry).then(()=>{
+          addNotification({title:"Withdraw Request",body:"Withdraw request submitted. Please wait for admin approval.",date:new Date().toLocaleString()});
+          const html = `
+            <div class="wallet-success">
+              <img src="https://github.com/s42144/Shark-Bounty/blob/aeb441877b43b7401af99870ead870597d62f885/17510103.gif" alt="Success">
+              <div style="font-size:17px; text-align:center;"><b style="color:#32b77a;">WITHDRAW REQUEST SUBMITTED SUCCESSFULLY</b><br>
+              <span style="color:#1a6df4;">PLEASE WAIT, THE FUNDS WILL BE SENT WITHIN 5 MINUTES</span></div>
+              <button class="wallet-submit-btn" onclick="toggleSection('wallet-section')">Back to Wallet</button>
+            </div>
+          `;
+          document.getElementById('deposit-success-section').innerHTML = html;
+          toggleSection('deposit-success-section');
+          renderProfile();
+        });
+      });
+    }
+    function copyText(text){
+      navigator.clipboard.writeText(text).then(()=>toast('Copied!'));
+    }
+    function generateMemo(){
+      let id = userId || '93639----';
+      let rand = Math.floor(100000 + Math.random() * 900000);
+      return `R_${id}_${rand}`;
+    }
+    function renderTasks(){
+      db.ref('tasks').once("value",snap=>{
+        let completedTasks = {};
+        db.ref('tasksCompleted/'+userId).once('value',snap2=>{
+          if(snap2.exists()) completedTasks = snap2.val();
+          let tasks = [];
+          snap.forEach(child=>{
+            let t = child.val();
+            tasks.push({...t, key: child.key});
+          });
+          let content = '';
+          if(tasks.length === 0) {
+            content = `<img class="task-logo-img" src="https://github.com/s42144/Shark-Bounty/blob/2ba42299505308ea4ff2a68f5db8341f3ddc0e92/16104409.png" alt="Tasks"><div class="task-coming">No tasks yet.</div>`;
+          } else {
+            content = `<div class="task-list">`;
+            for(const t of tasks){
+              let completed = !!completedTasks[t.key];
+              content += `
+                <div class="task-item">
+                  <div class="task-info">
+                    <img class="task-photo" src="${t.photo ? t.photo : 'https://github.com/s42144/Shark-Bounty/blob/2ba42299505308ea4ff2a68f5db8341f3ddc0e92/16104409.png'}" alt="Task">
+                    <div>
+                      <div class="task-title">${t.name}</div>
+                      <div class="task-reward">Reward: ${t.reward} TON</div>
+                    </div>
+                  </div>
+                  <button class="task-btn" ${completed ? '' : ''} onclick="${completed ? `window.open('${t.link}','_blank')` : `completeTask('${t.key}','${t.link}','${t.reward}')`}">${completed ? 'Completed' : `Get ${t.reward} TON`}</button>
+                </div>
+              `;
+            }
+            content += `</div>`;
+          }
+          document.getElementById('tasks-content').innerHTML = content;
+        });
+      });
+    }
+    window.completeTask = function(taskId,link,reward){
+      db.ref('tasksCompleted/'+userId+'/'+taskId).once('value').then(s=>{
+        if(s.exists()) {
+          window.open(link,'_blank');
+          return;
+        }
+        db.ref("tasksCompleted/"+userId+"/"+taskId).set(true);
+        db.ref("balances/"+userId).once("value").then(bs=>{
+          let bal=bs.val()?bs.val().main:0;
+          db.ref("balances/"+userId).set({main:bal+parseFloat(reward)});
+          addNotification({title:"Task Completed",body:`You completed a task and earned ${reward} TON!`,date:new Date().toLocaleString()});
+          toast("Task completed and reward credited!");
+          window.open(link,"_blank");
+          renderTasks();
+          renderProfile();
+        });
+      });
+    }
+    document.addEventListener('DOMContentLoaded',()=>{
+      loadUser();
+      renderPlans();
+      renderProfile();
+      renderRanking();
+      renderNotifications();
+      watchDepositWithdrawNotifications();
+      setInterval(renderRanking,3500);
+    });
+    function renderRanking(){
+      const list=document.getElementById('rankingList'),countries=['USA','Canada','UK','Germany','France','Japan','Australia','Brazil','India','China'];let html='';
+      for(let i=1;i<=100;i++){
+        const u='93639'+Math.floor(1000+Math.random()*9000),c=countries[Math.floor(Math.random()*countries.length)],bal=(Math.random()*2000+3000).toFixed(2);
+        html+=`<div class="ranking-item"><span>${i}. ${u} (${c})</span><span>$${bal}</span></div>`;
+      }
+      list.innerHTML=html;
+    }
+  </script>
+</body>
+</html>
