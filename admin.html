@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Shark Bounty Admin Panel</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <style>
+    body { font-family: 'Roboto', Arial, sans-serif; background: #f7f9fc; margin: 0; padding: 0;}
+    .container { max-width: 900px; margin: 40px auto 20px auto; background: #fff; border-radius: 18px; box-shadow: 0 4px 22px rgba(0,0,0,0.13); padding: 24px 22px;}
+    h1 { color: #2575fc;}
+    .section { margin-top: 28px;}
+    .tasks-admin-list { display: flex; flex-direction: column; gap: 14px;}
+    .task-admin-card { background: #f4faff; border-radius: 14px; box-shadow: 0 2px 6px rgba(0,0,0,.08); padding: 12px 18px; display: flex; align-items: center; justify-content: space-between; gap: 10px;}
+    .task-admin-card img { width: 48px; height: 48px; border-radius: 8px; }
+    .task-admin-info { flex: 1;}
+    .task-admin-title { font-size: 16px; color: #2575fc; font-weight: bold;}
+    .task-admin-amount { color: #43e97b; font-weight: bold; font-size: 15px;}
+    .task-admin-actions button { margin: 0 2px; }
+    .add-task-form input, .add-task-form button { margin: 0 7px 8px 0; padding: 8px;}
+    .add-task-form input { border-radius: 8px; border: 1px solid #bbb;}
+    .add-task-form button { border-radius: 8px; border: none; font-weight: bold; background: #2575fc; color: #fff;}
+    .user-search-form input, .user-search-form button { margin: 0 7px 8px 0; padding: 8px;}
+    .user-search-form input { border-radius: 8px; border: 1px solid #bbb;}
+    .user-search-form button { border-radius: 8px; border: none; font-weight: bold; background: #43e97b; color: #fff;}
+    .user-admin-info { background: #e3f6f5; border-radius: 12px; padding: 10px 18px; color: #2575fc; font-size: 16px; margin-top: 8px; box-shadow: 0 2px 6px rgba(0,0,0,.09);}
+    .redeem-form input, .redeem-form button { margin: 0 7px 8px 0; padding: 8px;}
+    .redeem-form input { border-radius: 8px; border: 1px solid #bbb;}
+    .redeem-form button { border-radius: 8px; border: none; font-weight: bold; background: #ff8456; color: #fff;}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Admin Panel</h1>
+    <div class="section">
+      <h2>Add New Task</h2>
+      <form class="add-task-form" id="add-task-form">
+        <input type="text" id="task-name" placeholder="Task Name" required>
+        <input type="text" id="task-photo" placeholder="Task Photo URL" required>
+        <input type="text" id="task-link" placeholder="Task Link" required>
+        <input type="number" id="task-amount" placeholder="SHB Amount" required>
+        <button type="submit">Add Task</button>
+      </form>
+      <div class="tasks-admin-list" id="tasks-admin-list">
+        <!-- List of tasks editable -->
+      </div>
+    </div>
+    <div class="section">
+      <h2>Redeem Codes</h2>
+      <form class="redeem-form" id="add-redeem-form">
+        <input type="number" id="redeem-code" placeholder="4 Digit Code" required>
+        <button type="submit">Generate Code</button>
+      </form>
+      <div id="redeem-codes-list"></div>
+    </div>
+    <div class="section">
+      <h2>Stats</h2>
+      <div>
+        <span id="total-users">Total Users: ...</span> |
+        <span id="total-ads">Ads Shown: ...</span>
+      </div>
+    </div>
+    <div class="section">
+      <h2>User Search</h2>
+      <form class="user-search-form" id="user-search-form">
+        <input type="text" id="search-userid" placeholder="User ID">
+        <button type="submit">Search</button>
+      </form>
+      <div class="user-admin-info" id="user-admin-info"></div>
+    </div>
+  </div>
+
+  <script>
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyAHofuS76xf2oGPaJqEtopmcxdoJzjkDL4",
+      authDomain: "zmex-investments.firebaseapp.com",
+      databaseURL: "https://zmex-investments-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "zmex-investments",
+      storageBucket: "zmex-investments.firebasestorage.app",
+      messagingSenderId: "971623941364",
+      appId: "1:971623941364:web:6c65604fc45c3f64e74aa1",
+      measurementId: "G-KQ1LYP77JF"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // Tasks Admin
+    function loadAdminTasks(){
+      db.ref('tasks').on('value',snapshot=>{
+        const tasks = snapshot.val()||{};
+        const list = document.getElementById('tasks-admin-list'); list.innerHTML="";
+        Object.keys(tasks).forEach(taskId=>{
+          const t = tasks[taskId];
+          let card = document.createElement('div');
+          card.className='task-admin-card';
+          card.innerHTML = `<img src="${t.photo}">
+            <div class="task-admin-info">
+              <div class="task-admin-title">${t.name}</div>
+              <div class="task-admin-amount">${t.amount} SHB</div>
+            </div>
+            <div class="task-admin-actions">
+              <button onclick="editTask('${taskId}')">Edit</button>
+              <button onclick="deleteTask('${taskId}')">Delete</button>
+              <button onclick="moveTask('${taskId}',-1)">Up</button>
+              <button onclick="moveTask('${taskId}',1)">Down</button>
+            </div>
+          `;
+          list.appendChild(card);
+        });
+      });
+    }
+    // Add Task
+    document.getElementById('add-task-form').onsubmit=function(e){
+      e.preventDefault();
+      let name = document.getElementById('task-name').value;
+      let photo = document.getElementById('task-photo').value;
+      let link = document.getElementById('task-link').value;
+      let amount = document.getElementById('task-amount').value;
+      let taskId = Date.now();
+      db.ref('tasks/'+taskId).set({name,photo,link,amount});
+      this.reset();
+    }
+    // Edit Task
+    function editTask(taskId){
+      db.ref('tasks/'+taskId).once('value').then(snapshot=>{
+        const t=snapshot.val();
+        document.getElementById('task-name').value=t.name;
+        document.getElementById('task-photo').value=t.photo;
+        document.getElementById('task-link').value=t.link;
+        document.getElementById('task-amount').value=t.amount;
+        deleteTask(taskId);
+      });
+    }
+    // Delete Task
+    function deleteTask(taskId){ db.ref('tasks/'+taskId).remove(); }
+    // Move Task (Up/Down)
+    function moveTask(taskId,dir){
+      db.ref('tasks').once('value').then(snapshot=>{
+        const tasks=snapshot.val()||{};
+        const keys=Object.keys(tasks);
+        const idx=keys.indexOf(taskId);
+        if(idx==-1) return;
+        let swapIdx = idx+dir;
+        if(swapIdx<0||swapIdx>=keys.length) return;
+        let temp = tasks[keys[idx]];
+        tasks[keys[idx]]=tasks[keys[swapIdx]];
+        tasks[keys[swapIdx]]=temp;
+        db.ref('tasks').set(tasks);
+      });
+    }
+
+    // Redeem Codes
+    function loadRedeemCodes(){
+      db.ref('redeem_codes').on('value',snapshot=>{
+        const codes = snapshot.val()||{};
+        let list = document.getElementById('redeem-codes-list');
+        list.innerHTML="";
+        Object.keys(codes).forEach(code=>{
+          list.innerHTML += `<div>Code: ${code} <button onclick="deleteRedeemCode('${code}')">Delete</button></div>`;
+        });
+      });
+    }
+    document.getElementById('add-redeem-form').onsubmit=function(e){
+      e.preventDefault();
+      let code = document.getElementById('redeem-code').value;
+      db.ref('redeem_codes/'+code).set({active:true});
+      this.reset();
+    }
+    function deleteRedeemCode(code){ db.ref('redeem_codes/'+code).remove(); }
+
+    // Stats
+    function loadStats(){
+      db.ref('users').once('value').then(snapshot=>{
+        document.getElementById('total-users').innerText = "Total Users: "+snapshot.numChildren();
+      });
+      db.ref('ads-shown').once('value').then(snapshot=>{
+        document.getElementById('total-ads').innerText = "Ads Shown: "+(snapshot.val()||0);
+      });
+    }
+
+    // User Search
+    document.getElementById('user-search-form').onsubmit=function(e){
+      e.preventDefault();
+      let uid = document.getElementById('search-userid').value;
+      db.ref('users/'+uid).once('value').then(snapshot=>{
+        const user = snapshot.val();
+        if(user){
+          document.getElementById('user-admin-info').innerHTML = `
+            Balance: ${user.balance||0} SHB<br>
+            Energy: ${user.energy||0}/${user.maxEnergy||1200}<br>
+            MultiTap: ${user.multiTap||1}<br>
+            IncomeBooster: ${user.incomeBooster?'YES':'NO'}<br>
+            TON Wallet: ${user.tonWallet||''}<br>
+            Refers: ${user.refCount||0}<br>
+            Eject Refers: ${user.ejectRefCount||0}
+          `;
+        } else {
+          document.getElementById('user-admin-info').innerText = "User not found.";
+        }
+      });
+    }
+
+    // Init
+    document.addEventListener('DOMContentLoaded',()=>{
+      loadAdminTasks();
+      loadRedeemCodes();
+      loadStats();
+    });
+  </script>
+</body>
+</html>
