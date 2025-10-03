@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Shark Bounty Admin Panel</title>
+  <link rel="stylesheet" href="admin.css">
+  <script defer src="admin.js"></script>
+</head>
+<body>
+  <div id="admin-login">
+    <h2>Admin Login</h2>
+    <input type="email" id="admin-email" placeholder="Email">
+    <input type="password" id="admin-password" placeholder="Password">
+    <button id="admin-login-btn">Login</button>
+    <div id="login-error"></div>
+  </div>
+  <div id="admin-app" style="display:none;">
+    <nav id="admin-nav">
+      <button data-section="dashboard">Dashboard</button>
+      <button data-section="users">Users</button>
+      <button data-section="tasks">Tasks</button>
+      <button data-section="deposits">Deposits</button>
+      <button data-section="withdrawals">Withdrawals</button>
+      <button data-section="plans">Plans</button>
+      <button data-section="leaderboard">Leaderboard</button>
+      <button data-section="assets">Assets</button>
+      <button data-section="logs">Logs</button>
+      <button data-section="settings">Settings</button>
+      <button id="admin-logout">Logout</button>
+    </nav>
+    <section id="admin-dashboard" class="admin-section active"></section>
+    <section id="admin-users" class="admin-section"></section>
+    <section id="admin-tasks" class="admin-section"></section>
+    <section id="admin-deposits" class="admin-section"></section>
+    <section id="admin-withdrawals" class="admin-section"></section>
+    <section id="admin-plans" class="admin-section"></section>
+    <section id="admin-leaderboard" class="admin-section"></section>
+    <section id="admin-assets" class="admin-section"></section>
+    <section id="admin-logs" class="admin-section"></section>
+    <section id="admin-settings" class="admin-section"></section>
+  </div>
+</body>
+</html>
