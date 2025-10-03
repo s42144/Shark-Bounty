@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Shark Bounty</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="script.js"></script>
+</head>
+<body>
+  <!-- Loading Overlay -->
+  <div id="loading-overlay">
+    <video id="loading-video" autoplay muted playsinline poster="https://yourdomain.com/29f4182c-fb84-4f6e-830f-f560ae571afe.jpg">
+      <source src="https://yourdomain.com/29f4182c-fb84-4f6e-830f-f560ae571afe.mp4" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>
+    <button id="skip-loading">Skip</button>
+  </div>
+  <!-- Main SPA Container -->
+  <div id="app" style="display:none;">
+    <!-- Bottom Navigation -->
+    <nav id="bottom-nav">
+      <button data-route="home"><img src="https://yourdomain.com/1057118.png" alt="Home"></button>
+      <button data-route="trade"><img src="https://yourdomain.com/9084248.png" alt="Trade"></button>
+      <button data-route="tasks"><img src="https://yourdomain.com/16104409.png" alt="Tasks"></button>
+      <button data-route="wallet"><img src="https://yourdomain.com/6826311.png" alt="Wallet"></button>
+      <button data-route="profile"><img src="https://yourdomain.com/18827926.png" alt="Profile"></button>
+    </nav>
+    <!-- Route containers -->
+    <section id="route-home" class="route active">
+      <div class="top-bar">
+        <span class="balance-shb"><img src="https://yourdomain.com/17510103.gif" alt="SHB"> <span id="shb-balance">0</span></span>
+        <span class="balance-usdt"><img src="https://yourdomain.com/15207964.png" alt="USDT"> <span id="usdt-balance">0</span></span>
+      </div>
+      <div class="center-coin">
+        <div id="tap-coin">
+          <img src="https://yourdomain.com/17510103.gif" alt="Shark GIF">
+          <div id="floating-plus" style="display:none;">+1</div>
+        </div>
+        <div id="energy-bar">
+          <img src="https://yourdomain.com/934817.png" alt="Energy"> <span id="energy-count">1200</span>
+        </div>
+      </div>
+    </section>
+    <section id="route-trade" class="route"></section>
+    <section id="route-tasks" class="route"></section>
+    <section id="route-wallet" class="route"></section>
+    <section id="route-profile" class="route"></section>
+    <!-- Toasts -->
+    <div id="toast"></div>
+  </div>
+</body>
+</html>
