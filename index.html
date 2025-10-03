@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Shark Bounty</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link rel="icon" href="https://github.com/s42144/Shark-Bounty/blob/dedf1f3379f4a52180a500e818e467dcd99f56c9/1057118.png?raw=true">
+  <style>
+    body, html {
+      margin: 0; padding: 0; box-sizing: border-box;
+      font-family: 'Roboto', Arial, sans-serif;
+      background: #0c153a;
+      color: #fff;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+    #intro-video {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: 9999; display: block;
+    }
+    #main-app { display: none; }
+    .balance { position: absolute; top: 10px; left: 15px; background: #131e4b; padding: 8px 16px; border-radius: 18px; font-weight: bold; font-size: 18px; box-shadow: 0 2px 8px #0003; }
+    .energy-bar { width: 90%; margin: 18px auto 0; height: 22px; background: #23306c; border-radius: 12px; position: relative; }
+    .energy { height: 100%; border-radius: 12px; background: linear-gradient(90deg, #ffde00 0%, #f9801c 100%); transition: width 0.4s; }
+    .energy-label { position: absolute; left: 50%; top: 0; width: 100%; text-align: center; font-size: 15px; color: #fff; transform: translateX(-50%); }
+    .tab-bar { position: fixed; bottom: 0; width: 100%; background: #18225a; display: flex; justify-content: space-around; border-top: 1px solid #23306c; z-index: 1000; }
+    .tab-btn { flex: 1; padding: 10px 0; background: none; border: none; outline: none; color: #fff; font-size: 15px; display: flex; flex-direction: column; align-items: center; }
+    .tab-btn.active { background: #23306c; }
+    .tab-btn img { width: 32px; height: 32px; }
+    .tab-content { margin-bottom: 70px; }
+    /* Home (Coin) */
+    .coin-section { display: flex; flex-direction: column; align-items: center; margin-top: 50px; }
+    .coin-img { width: 70px; height: 70px; border-radius: 50%; border: 3px solid #fff; margin-bottom: 15px; box-shadow: 0 0 8px #fff4; cursor: pointer; }
+    .big-coin { 
+      width: 170px; height: 170px; border-radius: 50%; background: #fff; 
+      display: flex; align-items: center; justify-content: center;
+      margin-top: 25px; margin-bottom: 15px; box-shadow: 0 0 30px #ffae0033;
+      cursor: pointer; position: relative; 
+      animation: popin 0.35s;
+    }
+    @keyframes popin {
+      0% { transform: scale(0.5); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .big-coin img { width: 110px; height: 110px; }
+    .plus-anim {
+      position: absolute; left: 50%; top: 35%; transform: translate(-50%, -50%);
+      font-size: 36px; font-weight: bold; color: #ffd700; opacity: 0;
+      animation: plusAnim 0.7s forwards;
+    }
+    @keyframes plusAnim {
+      0% { opacity: 1; top: 35%; }
+      80% { opacity: 1; top: 0%; }
+      100% { opacity: 0; top: -10%; }
+    }
+    /* Booster/Earn/Tasks/Profile/Ranking/Redeem modal styles */
+    .section-panel {
+      background: #16205a;
+      margin: 22px auto; border-radius: 18px; box-shadow: 0 4px 16px #0003;
+      width: 95%; max-width: 430px; padding: 18px 12px;
+    }
+    .booster-item {
+      display: flex; align-items: center; margin: 14px 0; border-radius: 10px; overflow: hidden;
+      background: #23306c; box-shadow: 0 2px 10px #0002;
+      padding: 10px;
+      position: relative;
+    }
+    .booster-bg { position: absolute; left: 0; top: 0; width: 100%; height: 100%; opacity: 0.11; z-index: 0; object-fit: cover; }
+    .booster-info { z-index: 1; flex: 1; }
+    .booster-title { font-weight: 600; font-size: 15px; }
+    .booster-desc { font-size: 13px; color: #eee; margin-bottom: 3px; }
+    .booster-action { z-index: 1; }
+    .booster-action button {
+      background: #ffd700; color: #222; border: none; border-radius: 6px; padding: 7px 15px;
+      font-weight: bold; cursor: pointer; font-size: 14px;
+    }
+    .booster-action button:disabled { background: #bbb; color: #555; cursor: not-allowed; }
+    /* Earn */
+    .stat-box { background: #23306c; border-radius: 10px; padding: 12px 8px; margin: 10px 0; color: #fff; font-size: 15px; display: flex; justify-content: space-around; }
+    .earn-btn { background: #ffd700; color: #222; padding: 10px 20px; border-radius: 8px; font-weight: bold; border: none; cursor: pointer; margin-top: 8px; font-size: 16px; }
+    /* Tasks */
+    .tasks-list { margin-top: 10px; }
+    .task-item { background: #23306c; border-radius: 10px; padding: 8px 10px; margin-bottom: 9px; display: flex; align-items: center; }
+    .task-img { width: 40px; height: 40px; border-radius: 6px; margin-right: 12px; }
+    .task-info { flex: 1; }
+    .task-title { font-weight: 600; font-size: 15px; margin-bottom: 2px; }
+    .task-amt { color: #ffd700; font-size: 14px; font-weight: bold; margin-bottom: 2px; }
+    .task-btn { background: #ffd700; color: #222; border: none; border-radius: 5px; padding: 5px 12px; font-size: 13px; font-weight: bold; cursor: pointer; }
+    .task-btn.completed { background: #bbb; color: #555; cursor: not-allowed; }
+    /* Profile */
+    .profile-avatar { width: 68px; height: 68px; border-radius: 50%; border: 2px solid #ffd700; margin-bottom: 12px; }
+    .userid-row { display: flex; align-items: center; margin-bottom: 10px; }
+    .userid-text { font-size: 15px; font-weight: bold; margin-right: 10px; }
+    .copy-btn { background: none; border: none; cursor: pointer; }
+    .copy-btn img { width: 22px; height: 22px; }
+    .form-row { margin-bottom: 8px; }
+    .form-label { font-size: 14px; margin-bottom: 3px; }
+    .wallet-input { width: 80%; padding: 7px; border-radius: 7px; border: 1px solid #23306c; margin-right: 5px; }
+    .save-btn { background: #ffd700; color: #222; border: none; border-radius: 7px; padding: 7px 14px; font-weight: bold; cursor: pointer; }
+    /* Referral */
+    .ref-link-row { display: flex; align-items: center; }
+    .ref-link { color: #ffd700; font-size: 14px; font-weight: bold; margin-right: 6px; }
+    /* Ranking */
+    .ranking-table { width: 100%; margin-top: 13px; border-radius: 10px; overflow: hidden; }
+    .ranking-table th, .ranking-table td { padding: 7px 4px; font-size: 13px; text-align: center; background: #19225a; }
+    .ranking-table th { background: #23306c; font-weight: bold; color: #ffd700; }
+    /* Redeem */
+    .redeem-input { width: 60%; padding: 7px; border-radius: 7px; border: 1px solid #23306c; margin-right: 5px; }
+    .redeem-btn { background: #ffd700; color: #222; border: none; border-radius: 7px; padding: 7px 14px; font-weight: bold; cursor: pointer; }
+    /* Dynamic notification (iPhone-style) */
+    .dyn-notif {
+      position: fixed; top: 18px; left: 50%; transform: translateX(-50%);
+      background: #232b44; color: #ffd700; border-radius: 18px; padding: 10px 20px;
+      font-size: 16px; z-index: 6000; box-shadow: 0 4px 16px #0007;
+      animation: notifShow 2.2s;
+    }
+    @keyframes notifShow {
+      0% { opacity: 0; transform: translateX(-50%) scale(0.7);}
+      15% { opacity: 1; transform: translateX(-50%) scale(1.1);}
+      85% { opacity: 1; }
+      100% { opacity: 0; transform: translateX(-50%) scale(0.7);}
+    }
+  </style>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-analytics-compat.js"></script>
+  <!-- Monetag ad SDK -->
+  <script src="//libtl.com/sdk.js" data-zone="9970324" data-sdk="show_9970324"></script>
+</head>
+<body>
+  <!-- Intro Video -->
+  <video id="intro-video" autoplay muted playsinline>
+    <source src="https://github.com/s42144/Shark-Bounty/blob/8b67f2028cd3d33d6545243ea43a57958c428edf/29f4182c-fb84-4f6e-830f-f560ae571afe.mp4?raw=true" type="video/mp4">
+  </video>
+  
+  <div id="main-app">
+    <div class="balance"><span id="balance">0</span> SHB</div>
+    <div class="energy-bar">
+      <div class="energy" id="energy-bar" style="width: 100%;"></div>
+      <div class="energy-label"><span id="energy">1200</span>/1200 Energy</div>
+    </div>
+    <div class="tab-content" id="tab-home">
+      <div class="coin-section">
+        <img src="https://github.com/s42144/Shark-Bounty/blob/dedf1f3379f4a52180a500e818e467dcd99f56c9/1057118.png?raw=true" class="coin-img" id="coin-btn">
+        <div id="big-coin" style="display:none;" class="big-coin">
+          <img src="https://github.com/s42144/Shark-Bounty/blob/aeb441877b43b7401af99870ead870597d62f885/17510103.gif?raw=true" alt="SHB Coin">
+          <span class="plus-anim" id="plus-anim" style="display:none;">+1</span>
+        </div>
+      </div>
+    </div>
+    <div class="tab-content" id="tab-booster" style="display:none;">
+      <div class="section-panel">
+        <h3 style="color:#ffd700;text-align:center;font-size:20px;margin-bottom:12px;">Booster Shop</h3>
+        <div class="booster-item">
+          <img class="booster-bg" src="https://github.com/s42144/Shark-Bounty/blob/79fd7356e653ad0460b3d96e51be077d49c2255e/images%20(2).png?raw=true">
+          <div class="booster-info">
+            <div class="booster-title">Increase Energy</div>
+            <div class="booster-desc">+500 Energy per purchase</div>
+            <div class="booster-desc">Price: 10,000 SHB</div>
+          </div>
+          <div class="booster-action">
+            <button id="buy-energy">Buy</button>
+          </div>
+        </div>
+        <div class="booster-item">
+          <img class="booster-bg" src="https://github.com/s42144/Shark-Bounty/blob/f3ddf6b3fe4ecd6276ce8ff07b54c35ed8cab5ea/images%20(3).png?raw=true">
+          <div class="booster-info">
+            <div class="booster-title">Multi-Finger Tapping</div>
+            <div class="booster-desc">Unlock up to 4-finger tap</div>
+            <div class="booster-desc">Price: 15,000 SHB per upgrade</div>
+          </div>
+          <div class="booster-action">
+            <button id="buy-multifinger">Buy</button>
+          </div>
+        </div>
+        <div class="booster-item">
+          <img class="booster-bg" src="https://github.com/s42144/Shark-Bounty/blob/67f79ce003358d837c24fccb6df407f1ff52175e/images%20(4).png?raw=true">
+          <div class="booster-info">
+            <div class="booster-title">Income Booster</div>
+            <div class="booster-desc">Earn 1 SHB every 10s (offline/online)</div>
+            <div class="booster-desc">Price: 100,000 SHB (one-time)</div>
+          </div>
+          <div class="booster-action">
+            <button id="buy-income">Buy</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="tab-content" id="tab-earn" style="display:none;">
+      <div class="section-panel">
+        <h3 style="color:#ffd700;text-align:center;font-size:20px;margin-bottom:12px;">Earn SHB</h3>
+        <div class="stat-box">
+          <div>Today Ads: <span id="ads-today">0</span></div>
+          <div>Daily: <span id="ads-daily">0</span></div>
+          <div>Monthly: <span id="ads-monthly">0</span></div>
+          <div>Lifetime: <span id="ads-lifetime">0</span></div>
+        </div>
+        <button class="earn-btn" id="show-ads">SHOW ADS</button>
+      </div>
+    </div>
+    <div class="tab-content" id="tab-tasks" style="display:none;">
+      <div class="section-panel">
+        <h3 style="color:#ffd700;text-align:center;font-size:20px;margin-bottom:12px;">Tasks</h3>
+        <div class="tasks-list" id="tasks-list">
+          <!-- Tasks will be rendered here -->
+        </div>
+      </div>
+    </div>
+    <div class="tab-content" id="tab-profile" style="display:none;">
+      <div class="section-panel">
+        <div style="text-align:center;">
+          <img src="https://github.com/s42144/Shark-Bounty/blob/11c6e035a7f8f6445526ea07f34893fd3ceec419/18827926.png?raw=true" class="profile-avatar">
+        </div>
+        <div class="userid-row">
+          <span class="userid-text" id="userid">UserID: XXXXXX</span>
+          <button class="copy-btn" id="copy-userid">
+            <img src="https://github.com/s42144/Shark-Bounty/blob/177e7fb2815726b7d9710a58dccafff013e0a531/1622069.png?raw=true">
+          </button>
+        </div>
+        <div class="form-row">
+          <div class="form-label">TON Wallet Address:</div>
+          <input type="text" id="wallet-input" class="wallet-input" placeholder="Enter your TON wallet">
+          <button id="save-wallet" class="save-btn">Save</button>
+        </div>
+        <div class="form-row">
+          <button id="referral-btn" class="save-btn" style="margin-top:10px;">Referrals</button>
+        </div>
+      </div>
+      <div class="section-panel" style="margin-top:-10px;">
+        <button id="ranking-btn" class="save-btn" style="width:100%;">Ranking</button>
+      </div>
+      <div class="section-panel" style="margin-top:-10px;">
+        <button id="redeem-btn" class="save-btn" style="width:100%;">Redeem</button>
+      </div>
+    </div>
+    <!-- Referral panel -->
+    <div class="section-panel" id="referral-panel" style="display:none;">
+      <h3 style="color:#ffd700;text-align:center;font-size:20px;margin-bottom:8px;">Invite & Earn</h3>
+      <div class="ref-link-row">
+        <span class="ref-link" id="ref-link"></span>
+        <button class="copy-btn" id="copy-ref">
+          <img src="https://github.com/s42144/Shark-Bounty/blob/177e7fb2815726b7d9710a58dccafff013e0a531/1622069.png?raw=true">
+        </button>
+      </div>
+      <div style="margin-top:8px;">Total Referrals: <span id="total-ref">0</span></div>
+      <div style="margin-top:4px;">Eject Referrals: <span id="eject-ref">0</span></div>
+      <button class="save-btn" id="close-referral" style="margin-top:12px;">Close</button>
+    </div>
+    <!-- Ranking panel -->
+    <div class="section-panel" id="ranking-panel" style="display:none;">
+      <h3 style="color:#ffd700;text-align:center;font-size:20px;margin-bottom:8px;">Top 200 Ranking</h3>
+      <table class="ranking-table" id="ranking-table">
+        <thead>
+          <tr><th>#</th><th>UserID</th><th>Balance</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <button class="save-btn" id="close-ranking" style="margin-top:10px;">Close</button>
+    </div>
+    <!-- Redeem panel -->
+    <div class="section-panel" id="redeem-panel" style="display:none;">
+      <h3 style="color:#ffd700;text-align:center;font-size:20px;margin-bottom:8px;">Redeem Code</h3>
+      <input type="text" id="redeem-input" class="redeem-input" maxlength="4" placeholder="Enter 4 digit code">
+      <button id="do-redeem" class="redeem-btn">Redeem</button>
+      <button class="save-btn" id="close-redeem" style="margin-top:12px;">Close</button>
+    </div>
+    <!-- Notification -->
+    <div class="dyn-notif" id="dyn-notif" style="display:none;"></div>
+    <!-- Tab bar -->
+    <div class="tab-bar">
+      <button class="tab-btn active" id="btn-home"><img src="https://github.com/s42144/Shark-Bounty/blob/dedf1f3379f4a52180a500e818e467dcd99f56c9/1057118.png?raw=true"><span>Home</span></button>
+      <button class="tab-btn" id="btn-booster"><img src="https://github.com/s42144/Shark-Bounty/blob/afd79a5abbf33e4b89606ee8f02538a8d385b1d9/images%20(1).png?raw=true"><span>Booster</span></button>
+      <button class="tab-btn" id="btn-earn"><img src="https://github.com/s42144/Shark-Bounty/blob/e39a21566184e34a27cd1d48c67c6bd04429acde/images%20(4).jpeg?raw=true"><span>Earn</span></button>
+      <button class="tab-btn" id="btn-tasks"><img src="https://github.com/s42144/Shark-Bounty/blob/2ba42299505308ea4ff2a68f5db8341f3ddc0e92/16104409.png?raw=true"><span>Tasks</span></button>
+      <button class="tab-btn" id="btn-profile"><img src="https://github.com/s42144/Shark-Bounty/blob/11c6e035a7f8f6445526ea07f34893fd3ceec419/18827926.png?raw=true"><span>Profile</span></button>
+    </div>
+  </div>
+  <script>
+    // --- App Logic ---
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyAHofuS76xf2oGPaJqEtopmcxdoJzjkDL4",
+      authDomain: "zmex-investments.firebaseapp.com",
+      databaseURL: "https://zmex-investments-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "zmex-investments",
+      storageBucket: "zmex-investments.firebasestorage.app",
+      messagingSenderId: "971623941364",
+      appId: "1:971623941364:web:6c65604fc45c3f64e74aa1",
+      measurementId: "G-KQ1LYP77JF"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // --- User State ---
+    let userId = localStorage.getItem("shb_userid");
+    if (!userId) { userId = "u" + Math.random().toString(36).substr(2, 9); localStorage.setItem("shb_userid", userId); }
+    let balance = 0, energy = 1200, maxEnergy = 1200, multitap = 1, energyBooster = 0, incomeBooster = false;
+    let tonWallet = "";
+    let referralCount = 0, ejectReferralCount = 0;
+    // Energy recovery
+    setInterval(() => {
+      if (energy < maxEnergy) { energy++; updateEnergyBar(); }
+    }, 2000);
+
+    // --- UI Handling ---
+    function showTab(tab) {
+      for (const el of document.querySelectorAll('.tab-content')) el.style.display = 'none';
+      document.getElementById('tab-' + tab).style.display = 'block';
+      for (const btn of document.querySelectorAll('.tab-btn')) btn.classList.remove('active');
+      document.getElementById('btn-' + tab).classList.add('active');
+      hidePanels();
+    }
+    function hidePanels() {
+      document.getElementById('referral-panel').style.display = 'none';
+      document.getElementById('ranking-panel').style.display = 'none';
+      document.getElementById('redeem-panel').style.display = 'none';
+    }
+    document.getElementById('btn-home').onclick = () => showTab("home");
+    document.getElementById('btn-booster').onclick = () => showTab("booster");
+    document.getElementById('btn-earn').onclick = () => showTab("earn");
+    document.getElementById('btn-tasks').onclick = () => showTab("tasks");
+    document.getElementById('btn-profile').onclick = () => showTab("profile");
+
+    // --- Coin Tap Logic ---
+    document.getElementById('coin-btn').onclick = () => {
+      document.getElementById('coin-btn').style.display = 'none';
+      document.getElementById('big-coin').style.display = '';
+    };
+    document.getElementById('big-coin').onclick = (e) => {
+      if (energy <= 0) { showNotif("Not enough energy!"); return; }
+      let tapCount = multitap;
+      if (e.touches && e.touches.length) tapCount = Math.min(e.touches.length, multitap);
+      energy -= tapCount;
+      balance += tapCount;
+      updateBalance(); updateEnergyBar();
+      showPlusAnim("+" + tapCount);
+      showNotif("+" + tapCount + " SHB");
+      saveUser();
+    };
+    function showPlusAnim(txt) {
+      let el = document.getElementById('plus-anim');
+      el.textContent = txt;
+      el.style.display = '';
+      setTimeout(()=>{ el.style.display='none'; }, 700);
+    }
+    function updateBalance() {
+      document.getElementById('balance').textContent = balance;
+    }
+    function updateEnergyBar() {
+      document.getElementById('energy').textContent = energy;
+      document.getElementById('energy-bar').style.width = (energy/maxEnergy*100) + "%";
+      document.querySelector('.energy-label').textContent = energy + "/" + maxEnergy + " Energy";
+    }
+    // --- Booster Shop ---
+    document.getElementById('buy-energy').onclick = () => {
+      if (balance >= 10000) {
+        balance -= 10000; maxEnergy += 500; energy += 500;
+        showNotif("+500 Energy!"); updateBalance(); updateEnergyBar(); saveUser();
+      } else showNotif("Not enough SHB!");
+    };
+    document.getElementById('buy-multifinger').onclick = () => {
+      let price = 15000;
+      if (multitap < 2 && balance >= price) { multitap = 2; balance -= price;}
+      else if (multitap < 4 && balance >= price) { multitap = 4; balance -= price;}
+      else { showNotif("Max multi-finger reached or not enough SHB!"); return; }
+      showNotif("Multi-finger tap upgraded!"); updateBalance(); saveUser();
+    };
+    document.getElementById('buy-income').onclick = () => {
+      if (!incomeBooster && balance >= 100000) {
+        balance -= 100000; incomeBooster = true; updateBalance(); saveUser();
+        showNotif("Income booster activated!");
+      } else showNotif("Already bought or not enough SHB!");
+    };
+    // Passive income
+    setInterval(() => {
+      if (incomeBooster) { balance += 1; updateBalance(); saveUser(); }
+    }, 10000);
+
+    // --- Earn (Ads) ---
+    document.getElementById('show-ads').onclick = () => {
+      // Monetag SDK will show ad here
+      if (typeof window.show_9970324 === "function") window.show_9970324();
+      balance += 500;
+      updateBalance(); showNotif("+500 SHB for watching ad!");
+      // Update stats
+      // TODO: update daily/monthly/lifetime stats in DB
+      saveUser();
+    };
+
+    // --- Tasks Section ---
+    function loadTasks() {
+      // Load tasks from Firebase
+      db.ref("tasks").once("value").then((snap) => {
+        const tasks = snap.val() || {};
+        let html = "";
+        Object.keys(tasks).forEach((tid) => {
+          const t = tasks[tid];
+          html += `<div class="task-item">
+            <img src="${t.photo}" class="task-img">
+            <div class="task-info">
+              <div class="task-title">${t.name}</div>
+              <div class="task-amt">${t.amount} SHB</div>
+            </div>
+            <button class="task-btn" onclick="startTask('${tid}', '${t.link}', ${t.amount}, this)">Start</button>
+          </div>`;
+        });
+        document.getElementById('tasks-list').innerHTML = html;
+      });
+    }
+    window.startTask = function(tid, link, amt, btn) {
+      // Mark completed on DB (stub)
+      balance += amt;
+      updateBalance(); saveUser();
+      btn.textContent = "Completed";
+      btn.classList.add("completed");
+      btn.disabled = true;
+      window.open(link, "_blank");
+      showNotif("+" + amt + " SHB for task");
+    };
+
+    // --- Profile Section ---
+    document.getElementById('userid').textContent = "UserID: " + userId;
+    document.getElementById('copy-userid').onclick = () => {
+      navigator.clipboard.writeText(userId);
+      showNotif("UserID copied!");
+    };
+    document.getElementById('save-wallet').onclick = () => {
+      tonWallet = document.getElementById('wallet-input').value;
+      showNotif("Wallet saved!");
+      saveUser();
+    };
+
+    // --- Referral Section ---
+    document.getElementById('referral-btn').onclick = () => {
+      hidePanels(); document.getElementById('referral-panel').style.display = 'block';
+      document.getElementById('ref-link').textContent = "https://t.me/SharkBountybot?start=r_" + userId;
+    };
+    document.getElementById('copy-ref').onclick = () => {
+      navigator.clipboard.writeText("https://t.me/SharkBountybot?start=r_" + userId);
+      showNotif("Referral link copied!");
+    };
+    document.getElementById('close-referral').onclick = () => document.getElementById('referral-panel').style.display = 'none';
+
+    // --- Ranking Section ---
+    document.getElementById('ranking-btn').onclick = () => {
+      hidePanels(); document.getElementById('ranking-panel').style.display = 'block';
+      // Load top 200 ranking from DB
+      db.ref("users").orderByChild("balance").limitToLast(200).once("value").then((snap) => {
+        let arr = [];
+        snap.forEach((child) => arr.push(child.val()));
+        arr = arr.sort((a,b)=>b.balance-a.balance);
+        let html = "";
+        arr.forEach((u,i) => {
+          html += `<tr><td>${i+1}</td><td>${u.userid}</td><td>${u.balance}</td></tr>`;
+        });
+        document.querySelector("#ranking-table tbody").innerHTML = html;
+      });
+    };
+    document.getElementById('close-ranking').onclick = () => document.getElementById('ranking-panel').style.display = 'none';
+
+    // --- Redeem Section ---
+    document.getElementById('redeem-btn').onclick = () => {
+      hidePanels(); document.getElementById('redeem-panel').style.display = 'block';
+    };
+    document.getElementById('do-redeem').onclick = () => {
+      let code = document.getElementById('redeem-input').value;
+      db.ref("redeem/" + code).once("value").then((snap) => {
+        if (snap.exists()) {
+          balance += 500; updateBalance(); saveUser();
+          showNotif("+500 SHB redeemed!"); db.ref("redeem/" + code).remove();
+        } else showNotif("Invalid code!");
+      });
+    };
+    document.getElementById('close-redeem').onclick = () => document.getElementById('redeem-panel').style.display = 'none';
+
+    // --- Notification ---
+    function showNotif(msg) {
+      let el = document.getElementById('dyn-notif');
+      el.textContent = msg;
+      el.style.display = '';
+      setTimeout(()=>{ el.style.display='none'; }, 2200);
+    }
+
+    // --- Save to Firebase ---
+    function saveUser() {
+      db.ref("users/" + userId).set({
+        userid: userId,
+        balance: balance,
+        energy: energy,
+        maxEnergy: maxEnergy,
+        multitap: multitap,
+        incomeBooster: incomeBooster,
+        tonWallet: tonWallet
+      });
+    }
+
+    // --- Initial Load ---
+    function loadUser() {
+      db.ref("users/" + userId).once("value").then((snap) => {
+        if (snap.exists()) {
+          const u = snap.val();
+          balance = u.balance || 0;
+          energy = u.energy || 1200;
+          maxEnergy = u.maxEnergy || 1200;
+          multitap = u.multitap || 1;
+          tonWallet = u.tonWallet || "";
+          incomeBooster = u.incomeBooster || false;
+          updateBalance(); updateEnergyBar();
+          document.getElementById('wallet-input').value = tonWallet;
+        }
+      });
+    }
+    loadUser(); loadTasks();
+
+    // --- Hide intro video after play ---
+    document.getElementById('intro-video').addEventListener('ended', () => {
+      document.getElementById('intro-video').style.display = 'none';
+      document.getElementById('main-app').style.display = '';
+    });
+    window.onload = () => {
+      setTimeout(() => {
+        document.getElementById('intro-video').style.display = 'none';
+        document.getElementById('main-app').style.display = '';
+      }, 4500);
+    };
+  </script>
+</body>
+</html>
