@@ -1,0 +1,43 @@
+{
+  "rules": {
+    "users": {
+      "$uid": {
+        ".read": "$uid === auth.uid || root.child('users/' + auth.uid + '/isAdmin').val() === true",
+        ".write": "$uid === auth.uid",
+        "shbBalance": { ".write": "root.child('users/' + auth.uid + '/isAdmin').val() === true" },
+        "usdtBalance": { ".write": "root.child('users/' + auth.uid + '/isAdmin').val() === true" },
+        "plans": { ".write": "root.child('users/' + auth.uid + '/isAdmin').val() === true" },
+        "energy": { ".write": "$uid === auth.uid" },
+        "profile": { ".write": "$uid === auth.uid" }
+      }
+    },
+    "tasks": {
+      ".read": true,
+      ".write": "root.child('users/' + auth.uid + '/isAdmin').val() === true"
+    },
+    "deposits": {
+      ".read": "auth != null",
+      ".write": "root.child('users/' + auth.uid + '/isAdmin').val() === true"
+    },
+    "withdrawals": {
+      ".read": "auth != null",
+      ".write": "root.child('users/' + auth.uid + '/isAdmin').val() === true"
+    },
+    "plans": {
+      ".read": true,
+      ".write": "root.child('users/' + auth.uid + '/isAdmin').val() === true"
+    },
+    "leaderboard": {
+      ".read": true,
+      ".write": "root.child('users/' + auth.uid + '/isAdmin').val() === true"
+    },
+    "settings": {
+      ".read": true,
+      ".write": "root.child('users/' + auth.uid + '/isAdmin').val() === true"
+    },
+    "assets": {
+      ".read": true,
+      ".write": "root.child('users/' + auth.uid + '/isAdmin').val() === true"
+    }
+  }
+}
