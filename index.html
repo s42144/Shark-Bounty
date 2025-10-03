@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Shark Bounty</title>
+  <!-- Monetag SDK -->
+  <script src='//libtl.com/sdk.js' data-zone='9970324' data-sdk='show_9970324'></script>
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:400,700">
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      font-family: 'Roboto', Arial, sans-serif;
+      background: linear-gradient(135deg, #6a11cb, #2575fc);
+      overflow-x: hidden;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #video-overlay {
+      position: fixed;
+      z-index: 9999;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: #000;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #video-overlay video {
+      width: 100vw; height: 100vh; object-fit: cover;
+    }
+    #video-overlay .skip-btn {
+      position: absolute; bottom: 10vh; left: 50%; transform: translateX(-50%);
+      background: rgba(255,255,255,0.8); color: #2575fc; font-weight: bold; border: none;
+      border-radius: 25px; padding: 12px 28px; font-size: 22px; cursor: pointer; box-shadow: 0 2px 10px rgb(0 0 0 / 15%);
+    }
+    #main-app {
+      display: none;
+    }
+    .balance-bar {
+      position: fixed; top: 10px; left: 10px; background: #fff; color: #2575fc;
+      border-radius: 16px; padding: 10px 18px; font-size: 20px; font-weight: bold;
+      box-shadow: 0 2px 8px rgba(0,0,0,.11); z-index: 10;
+      min-width: 110px; text-align: left;
+    }
+    .energy-bar {
+      margin: 14px auto 0 auto; width: 90%; background: #dff0ff; border-radius: 16px; overflow: hidden;
+      height: 28px; box-shadow: 0 1px 6px rgba(0,0,0,0.09);
+      position: relative;
+    }
+    .energy-fill { height: 100%; background: linear-gradient(90deg,#6a11cb,#2575fc); width: 100%; transition: width .3s;}
+    .energy-text { position: absolute; top: 0; left: 0; width: 100%; height: 100%; text-align: center; line-height: 28px; font-weight: bold; color: #fff;}
+    .nav-bar {
+      position: fixed; bottom: 0; left: 0; width: 100vw; background: #fff; box-shadow: 0 -3px 12px rgba(0,0,0,0.12);
+      display: flex; justify-content: space-around; align-items: center; padding: 5px 0 10px 0; z-index: 10;
+    }
+    .nav-btn {
+      background: none; border: none; outline: none; cursor: pointer; padding: 0; display: flex; flex-direction: column; align-items: center; gap: 2px;
+    }
+    .nav-btn img { width: 44px; height: 44px; border-radius: 12px; }
+    .nav-btn span { font-size: 15px; font-weight: bold; color: #2575fc; }
+    #home-section, #booster-section, #earn-section, #tasks-section, #profile-section, #ranking-section, #redeem-section {
+      display: none;
+      max-width: 420px;
+      margin: 80px auto 90px auto;
+      padding: 18px 10px 10px 10px;
+      background: rgba(255,255,255,0.97);
+      border-radius: 18px;
+      box-shadow: 0 4px 22px rgba(0,0,0,0.13);
+      min-height: 320px;
+      position: relative;
+      animation: fadeIn .35s;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px);} to {opacity:1;transform:translateY(0);} }
+    .coin-circle {
+      width: 120px; height: 120px;
+      border-radius: 50%;
+      margin: 28px auto 0 auto;
+      background: radial-gradient(circle at 45% 55%, #ffe066, #f9c74f 95%);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 2px 18px rgba(0,0,0,0.12);
+      position: relative;
+      animation: coinPop .15s;
+    }
+    @keyframes coinPop { from { transform: scale(.85);} to {transform:scale(1);} }
+    .coin-circle img { width: 104px; height: 104px; }
+    .plus1-anim {
+      position: absolute; left: 50%; top: 22%; transform: translate(-50%,0);
+      color: #43e97b; font-size: 36px; font-weight: bold; opacity: 0;
+      animation: plus1 .8s linear;
+      pointer-events: none;
+    }
+    @keyframes plus1 { 0%{opacity:1;top:22%;} 100%{opacity:0;top:-12%;} }
+    /* Booster Section */
+    .booster-grid {
+      display: flex; flex-direction: column; gap: 16px;
+    }
+    .booster-card {
+      display: flex; align-items: center; justify-content: space-between;
+      background: #f4faff;
+      border-radius: 18px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      padding: 12px 18px;
+      min-height: 82px;
+      position: relative;
+    }
+    .booster-card .bg-img {
+      position: absolute; left: 0; top: 0; width: 100%; height: 100%; z-index: 0; opacity: 0.18; object-fit: cover; border-radius: 18px;
+    }
+    .booster-info { position: relative; z-index: 1; }
+    .booster-title { font-size: 18px; font-weight: bold; color: #2575fc; }
+    .booster-price { font-size: 16px; color: #ff8456; font-weight: bold; }
+    .booster-btn {
+      z-index: 2;
+      background: linear-gradient(90deg,#ffbe0b,#ff006e);
+      color: #fff; border: none; border-radius: 12px; font-weight: bold; font-size: 16px; padding: 10px 18px; cursor: pointer; box-shadow: 0 2px 7px rgba(0,0,0,0.10);
+      transition: background .2s;
+    }
+    .booster-btn:disabled { background: #bbb; cursor: not-allowed; }
+    /* Earn Section */
+    .earn-tasks { display: flex; flex-direction: column; gap: 16px; margin-top: 12px;}
+    .earn-task-card {
+      background: #f7fff7; border-radius: 14px; box-shadow: 0 2px 8px rgba(0,0,0,.07);
+      padding: 12px 18px; display: flex; align-items: center; justify-content: space-between;
+    }
+    .earn-task-card .task-title { font-size: 17px; color: #2575fc; font-weight: bold;}
+    .earn-task-card .task-btn {
+      background: linear-gradient(90deg,#6a11cb,#2575fc);
+      color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: bold; padding: 7px 14px; cursor: pointer;
+    }
+    .stats-box {
+      background: #e3f6f5; border-radius: 12px; padding: 10px 18px; color: #2575fc; font-size: 16px; margin-top: 8px; box-shadow: 0 2px 6px rgba(0,0,0,.09);
+    }
+    /* Tasks Section */
+    .tasks-list { display: flex; flex-direction: column; gap: 14px; margin-top: 10px;}
+    .task-card {
+      background: #f4faff; border-radius: 14px; box-shadow: 0 2px 6px rgba(0,0,0,.08);
+      padding: 12px 18px; display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    }
+    .task-card img { width: 48px; height: 48px; border-radius: 8px; }
+    .task-info { flex: 1;}
+    .task-title { font-size: 16px; color: #2575fc; font-weight: bold;}
+    .task-amount { color: #43e97b; font-weight: bold; font-size: 15px;}
+    .task-start-btn {
+      background: linear-gradient(90deg,#6a11cb,#2575fc);
+      color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: bold; padding: 7px 14px; cursor: pointer;
+    }
+    .task-complete-btn { background: #aaa; color: #fff; cursor: not-allowed;}
+    /* Profile Section */
+    .profile-avatar { margin: 0 auto 10px auto; display: block; width: 64px; height: 64px; border-radius: 50%; }
+    .profile-id-box { display: flex; align-items: center; gap: 7px; margin: 10px 0;}
+    .profile-id-text { font-size: 15px; color: #2575fc; font-weight: bold;}
+    .copy-btn { border: none; background: none; padding: 0; cursor: pointer; }
+    .copy-btn img { width: 28px; height: 28px;}
+    .profile-form { margin: 10px 0;}
+    .profile-form input { width: 90%; padding: 8px; font-size: 15px; border-radius: 9px; border: 1px solid #ccc; margin-bottom: 6px;}
+    .profile-form button { background: linear-gradient(90deg,#6a11cb,#2575fc); color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: bold; padding: 7px 14px; cursor: pointer;}
+    /* Referral Section */
+    .referral-section { margin-top: 18px;}
+    .referral-link-box { display: flex; align-items: center; gap: 8px;}
+    .referral-link-text { font-size: 14px; color: #2575fc; font-weight: bold;}
+    /* Ranking Section */
+    .ranking-list { margin-top: 12px;}
+    .ranking-entry { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; border-bottom: 1px solid #eaeaea;}
+    .ranking-entry .user-id { color: #2575fc; font-weight: bold;}
+    .ranking-entry .user-balance { font-weight: bold; color: #43e97b;}
+    /* Redeem Section */
+    .redeem-form { margin: 16px 0;}
+    .redeem-form input { width: 80%; padding: 8px; font-size: 16px; border-radius: 9px; border: 1px solid #ccc; margin-bottom: 8px;}
+    .redeem-form button { background: linear-gradient(90deg,#6a11cb,#2575fc); color: #fff; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; padding: 7px 14px; cursor: pointer;}
+    /* Dynamic Island Notification */
+    #notification {
+      display: none;
+      position: fixed; top: 14px; left: 50%; transform: translateX(-50%);
+      background: #222; color: #fff; padding: 13px 26px; border-radius: 30px;
+      font-size: 18px; font-weight: bold; z-index: 10000;
+      box-shadow: 0 2px 18px rgba(0,0,0,0.19);
+      animation: fadeNotif .7s;
+    }
+    @keyframes fadeNotif { from { opacity: 0;} to {opacity: 1;} }
+    /* Responsive for mobile */
+    @media (max-width:500px){
+      #home-section, #booster-section, #earn-section, #tasks-section, #profile-section, #ranking-section, #redeem-section {
+        margin: 60px auto 75px auto; max-width: 96vw; padding: 12px 3vw 10px 3vw;
+      }
+      .coin-circle { width: 90px; height: 90px;}
+      .coin-circle img { width: 75px; height: 75px;}
+    }
+  </style>
+</head>
+<body>
+  <!-- Fullscreen Video Overlay -->
+  <div id="video-overlay">
+    <video src="https://github.com/s42144/Shark-Bounty/raw/8b67f2028cd3d33d6545243ea43a57958c428edf/29f4182c-fb84-4f6e-830f-f560ae571afe.mp4" autoplay muted playsinline controls></video>
+    <button class="skip-btn" onclick="endVideo()">Enter App</button>
+  </div>
+
+  <!-- Dynamic Island Notification -->
+  <div id="notification"></div>
+
+  <!-- App Main -->
+  <div id="main-app">
+    <!-- Main SHB Balance -->
+    <div class="balance-bar" id="balance-bar">Balance: 0 SHB</div>
+    <!-- Sections -->
+    <div id="home-section">
+      <h2 style="color:#2575fc;">SHARK BOUNTY</h2>
+      <div class="coin-circle" id="coin-circle" style="display:none;">
+        <img src="https://github.com/s42144/Shark-Bounty/raw/aeb441877b43b7401af99870ead870597d62f885/17510103.gif" alt="SHB Coin" id="coin-img">
+        <span class="plus1-anim" id="plus1-anim"></span>
+      </div>
+      <button class="nav-btn" style="margin-top:18px;" id="show-coin-btn">
+        <img src="https://github.com/s42144/Shark-Bounty/raw/dedf1f3379f4a52180a500e818e467dcd99f56c9/1057118.png" alt="Home Icon">
+        <span>Home</span>
+      </button>
+      <div class="energy-bar" style="margin-top:22px;">
+        <div class="energy-fill" id="energy-fill"></div>
+        <div class="energy-text" id="energy-text">Energy: 1200/1200</div>
+      </div>
+    </div>
+
+    <div id="booster-section">
+      <h2 style="color:#2575fc;">Booster Shop</h2>
+      <div class="booster-grid">
+        <div class="booster-card" id="boost-energy">
+          <img class="bg-img" src="https://github.com/s42144/Shark-Bounty/raw/79fd7356e653ad0460b3d96e51be077d49c2255e/images%20(2).png">
+          <div class="booster-info">
+            <div class="booster-title">Increase Energy</div>
+            <div class="booster-price">10,000 SHB</div>
+          </div>
+          <button class="booster-btn" onclick="buyBooster('energy')">Buy</button>
+        </div>
+        <div class="booster-card" id="boost-multifinger">
+          <img class="bg-img" src="https://github.com/s42144/Shark-Bounty/raw/f3ddf6b3fe4ecd6276ce8ff07b54c35ed8cab5ea/images%20(3).png">
+          <div class="booster-info">
+            <div class="booster-title">Multi Finger Tapping</div>
+            <div class="booster-price">15,000 SHB</div>
+          </div>
+          <button class="booster-btn" onclick="buyBooster('multi')">Buy</button>
+        </div>
+        <div class="booster-card" id="boost-income">
+          <img class="bg-img" src="https://github.com/s42144/Shark-Bounty/raw/67f79ce003358d837c24fccb6df407f1ff52175e/images%20(4).png">
+          <div class="booster-info">
+            <div class="booster-title">Income Booster</div>
+            <div class="booster-price">100,000 SHB</div>
+          </div>
+          <button class="booster-btn" onclick="buyBooster('income')">Buy</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="earn-section">
+      <h2 style="color:#2575fc;">Earn Tasks</h2>
+      <div class="earn-tasks">
+        <div class="earn-task-card">
+          <div class="task-title">SHOW ADS</div>
+          <button class="task-btn" id="show-ad-btn" onclick="showAdTask()">Show Ad</button>
+        </div>
+        <div class="stats-box" id="ad-stats">
+          Today: <span id="ads-today">0</span> |
+          Daily: <span id="ads-daily">0</span> |
+          Monthly: <span id="ads-monthly">0</span> |
+          Lifetime: <span id="ads-lifetime">0</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="tasks-section">
+      <h2 style="color:#2575fc;">Tasks</h2>
+      <div class="tasks-list" id="tasks-list">
+        <!-- Tasks fetched from Firebase -->
+      </div>
+    </div>
+
+    <div id="profile-section">
+      <h2 style="color:#2575fc;">Profile</h2>
+      <img class="profile-avatar" src="https://github.com/s42144/Shark-Bounty/raw/11c6e035a7f8f6445526ea07f34893fd3ceec419/18827926.png" alt="Avatar">
+      <div class="profile-id-box">
+        <span class="profile-id-text" id="profile-userid">ID: ...</span>
+        <button class="copy-btn" onclick="copyUserId()">
+          <img src="https://github.com/s42144/Shark-Bounty/raw/177e7fb2815726b7d9710a58dccafff013e0a531/1622069.png" alt="Copy">
+        </button>
+      </div>
+      <div class="profile-form">
+        <input type="text" id="ton-wallet-input" placeholder="Enter TON Wallet Address">
+        <button onclick="saveTonWallet()">Save</button>
+      </div>
+      <div class="referral-section">
+        <div>Referrals</div>
+        <div class="referral-link-box">
+          <span class="referral-link-text" id="ref-link">...</span>
+          <button class="copy-btn" onclick="copyReferralLink()">
+            <img src="https://github.com/s42144/Shark-Bounty/raw/177e7fb2815726b7d9710a58dccafff013e0a531/1622069.png" alt="Copy">
+          </button>
+        </div>
+        <div>Total Refers: <span id="ref-count">0</span> | Eject Refers: <span id="eject-ref-count">0</span></div>
+      </div>
+    </div>
+
+    <div id="ranking-section">
+      <h2 style="color:#2575fc;">Ranking</h2>
+      <div class="ranking-list" id="ranking-list"></div>
+    </div>
+
+    <div id="redeem-section">
+      <h2 style="color:#2575fc;">Redeem</h2>
+      <div class="redeem-form">
+        <input type="number" maxlength="4" id="redeem-code-input" placeholder="Enter 4 digit code">
+        <button onclick="redeemCode()">Redeem</button>
+      </div>
+      <div id="redeem-status"></div>
+    </div>
+
+    <!-- Bottom Navigation Bar -->
+    <div class="nav-bar">
+      <button class="nav-btn" onclick="showSection('home-section')">
+        <img src="https://github.com/s42144/Shark-Bounty/raw/dedf1f3379f4a52180a500e818e467dcd99f56c9/1057118.png"><span>Home</span>
+      </button>
+      <button class="nav-btn" onclick="showSection('booster-section')">
+        <img src="https://github.com/s42144/Shark-Bounty/raw/afd79a5abbf33e4b89606ee8f02538a8d385b1d9/images%20(1).png"><span>Booster</span>
+      </button>
+      <button class="nav-btn" onclick="showSection('earn-section')">
+        <img src="https://github.com/s42144/Shark-Bounty/raw/e39a21566184e34a27cd1d48c67c6bd04429acde/images%20(4).jpeg"><span>Earn</span>
+      </button>
+      <button class="nav-btn" onclick="showSection('tasks-section')">
+        <img src="https://github.com/s42144/Shark-Bounty/raw/2ba42299505308ea4ff2a68f5db8341f3ddc0e92/16104409.png"><span>Tasks</span>
+      </button>
+      <button class="nav-btn" onclick="showSection('profile-section')">
+        <img src="https://github.com/s42144/Shark-Bounty/raw/11c6e035a7f8f6445526ea07f34893fd3ceec419/18827926.png"><span>Profile</span>
+      </button>
+      <button class="nav-btn" onclick="showSection('ranking-section')">
+        <img src="https://github.com/s42144/Shark-Bounty/raw/74b1e06fd560efe8e058569ffa7b4e363aa1c43d/13311710.png"><span>Ranking</span>
+      </button>
+      <button class="nav-btn" onclick="showSection('redeem-section')">
+        <img src="https://github.com/s42144/Shark-Bounty/raw/87e28aa35db580efad4a8befa50df073a1c80e1f/3179668.png"><span>Redeem</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- JS Logic -->
+  <script>
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyAHofuS76xf2oGPaJqEtopmcxdoJzjkDL4",
+      authDomain: "zmex-investments.firebaseapp.com",
+      databaseURL: "https://zmex-investments-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "zmex-investments",
+      storageBucket: "zmex-investments.firebasestorage.app",
+      messagingSenderId: "971623941364",
+      appId: "1:971623941364:web:6c65604fc45c3f64e74aa1",
+      measurementId: "G-KQ1LYP77JF"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // User Data
+    let userId = localStorage.getItem('shark_userid');
+    if (!userId) {
+      userId = Math.floor(10000 + Math.random() * 90000).toString();
+      localStorage.setItem('shark_userid', userId);
+    }
+
+    // UI Navigation
+    function showSection(sectionId){
+      document.querySelectorAll('#main-app > div').forEach(e=>e.style.display='none');
+      document.getElementById(sectionId).style.display='block';
+    }
+
+    // Video End
+    function endVideo(){
+      document.getElementById('video-overlay').style.display='none';
+      document.getElementById('main-app').style.display='block';
+      showSection('home-section');
+      loadUserData();
+    }
+    // Autoplay overlay video and enter after 5 seconds
+    setTimeout(()=>{ if(document.getElementById('video-overlay').style.display!='none'){ endVideo(); } },5500);
+
+    // Notification
+    function showNotif(msg){
+      const notif = document.getElementById('notification');
+      notif.innerText=msg;
+      notif.style.display='block';
+      setTimeout(()=>notif.style.display='none',1900);
+    }
+
+    // User Data Defaults
+    let balance = 0, energy = 1200, maxEnergy = 1200, multiTap = 1, incomeBooster=false, tonWallet="", refCount=0, ejectRefCount=0;
+    let energyRecoveryInterval, incomeInterval;
+
+    function loadUserData(){
+      // Get user data from Firebase (or create default if not found)
+      db.ref('users/' + userId).once('value').then(snapshot=>{
+        const user = snapshot.val() || {};
+        balance = user.balance || 0;
+        energy = user.energy || 1200;
+        maxEnergy = user.maxEnergy || 1200;
+        multiTap = user.multiTap || 1;
+        incomeBooster = user.incomeBooster || false;
+        tonWallet = user.tonWallet || "";
+        refCount = user.refCount || 0;
+        ejectRefCount = user.ejectRefCount || 0;
+        updateUI();
+        setupIntervals();
+      });
+    }
+    function saveUserData(){
+      db.ref('users/' + userId).set({
+        balance, energy, maxEnergy, multiTap, incomeBooster, tonWallet, refCount, ejectRefCount
+      });
+    }
+    function updateUI(){
+      document.getElementById('balance-bar').innerText=`Balance: ${balance} SHB`;
+      document.getElementById('energy-fill').style.width=`${Math.round(energy/maxEnergy*100)}%`;
+      document.getElementById('energy-text').innerText=`Energy: ${energy}/${maxEnergy}`;
+      document.getElementById('profile-userid').innerText=`ID: ${userId}`;
+      document.getElementById('ton-wallet-input').value=tonWallet;
+      document.getElementById('ref-link').innerText=`https://t.me/SharkBountybot?start=r_users${userId}`;
+      document.getElementById('ref-count').innerText=refCount;
+      document.getElementById('eject-ref-count').innerText=ejectRefCount;
+    }
+    function setupIntervals(){
+      clearInterval(energyRecoveryInterval); clearInterval(incomeInterval);
+      energyRecoveryInterval = setInterval(()=>{
+        if(energy<maxEnergy){ energy++; updateUI(); saveUserData(); }
+      },2000);
+      if(incomeBooster){
+        incomeInterval = setInterval(()=>{
+          balance++; updateUI(); saveUserData();
+        },10000);
+      }
+    }
+
+    // Coin Logic
+    document.getElementById('show-coin-btn').onclick=()=>{
+      document.getElementById('coin-circle').style.display='flex';
+      showNotif('Tap the coin to earn SHB!');
+    };
+    document.getElementById('coin-circle').onclick=function(e){
+      if(energy<1){ showNotif('Not enough energy!'); return; }
+      let taps = multiTap;
+      if(e.touches && e.touches.length>1){ taps = Math.min(e.touches.length,multiTap); }
+      let tapCount = taps;
+      if(energy<tapCount) tapCount=energy;
+      balance+=tapCount; energy-=tapCount;
+      saveUserData(); updateUI();
+      plus1Animation(tapCount);
+    };
+    function plus1Animation(tapCount){
+      let anim = document.getElementById('plus1-anim');
+      anim.innerText = `+${tapCount}`;
+      anim.style.opacity=1; anim.style.animation="plus1 .8s linear";
+      setTimeout(()=>{ anim.style.opacity=0; anim.style.animation=""; },700);
+    }
+
+    // Booster Shop
+    function buyBooster(type){
+      if(type=='energy' && balance>=10000){
+        maxEnergy+=500; balance-=10000; saveUserData(); updateUI(); showNotif('Energy Increased!');
+      } else if(type=='multi' && balance>=15000){
+        if(multiTap==1){ multiTap=2; balance-=15000; showNotif('Multi tap 2x enabled!'); }
+        else if(multiTap==2 && balance>=15000){ multiTap=4; balance-=15000; showNotif('Multi tap 4x enabled!'); }
+        saveUserData(); updateUI();
+      } else if(type=='income' && balance>=100000 && !incomeBooster){
+        incomeBooster=true; balance-=100000; saveUserData(); updateUI(); setupIntervals(); showNotif('Income Booster Activated!');
+      } else { showNotif('Not enough SHB or already purchased!'); }
+    }
+
+    // Earn Section (Show Ad)
+    let adStats = {today:0, daily:0, monthly:0, lifetime:0};
+    function showAdTask(){
+      if(typeof show_9970324==='function'){
+        show_9970324().then(()=>{
+          balance+=500; adStats.today++; adStats.daily++; adStats.monthly++; adStats.lifetime++;
+          saveUserData(); updateUI(); updateAdStats();
+          showNotif('+500 SHB for watching ad!');
+        }).catch(()=>showNotif('Ad failed.'));
+      } else { showNotif('Ad not available.'); }
+    }
+    function updateAdStats(){
+      document.getElementById('ads-today').innerText=adStats.today;
+      document.getElementById('ads-daily').innerText=adStats.daily;
+      document.getElementById('ads-monthly').innerText=adStats.monthly;
+      document.getElementById('ads-lifetime').innerText=adStats.lifetime;
+    }
+
+    // Tasks Section (from Firebase)
+    function loadTasks(){
+      db.ref('tasks').on('value',snapshot=>{
+        const tasks = snapshot.val()||{};
+        const list = document.getElementById('tasks-list'); list.innerHTML="";
+        Object.keys(tasks).forEach(taskId=>{
+          const t = tasks[taskId];
+          let completed = localStorage.getItem('task_'+taskId)=='1';
+          let card = document.createElement('div');
+          card.className='task-card';
+          card.innerHTML = `<img src="${t.photo}" alt="Task">
+            <div class="task-info">
+              <div class="task-title">${t.name}</div>
+              <div class="task-amount">${t.amount} SHB</div>
+            </div>
+            <button class="task-start-btn ${completed?'task-complete-btn':''}" ${completed?'disabled':''} onclick="startTask('${taskId}','${t.link}',${t.amount})">${completed?'Completed':'Start'}</button>
+          `;
+          list.appendChild(card);
+        });
+      });
+    }
+    function startTask(taskId,link,amount){
+      window.open(link,'_blank');
+      if(localStorage.getItem('task_'+taskId)=='1') return;
+      balance+=Number(amount); saveUserData(); updateUI();
+      localStorage.setItem('task_'+taskId,'1');
+      showNotif(`+${amount} SHB for task!`);
+      loadTasks();
+    }
+
+    // Profile Section
+    function copyUserId(){
+      navigator.clipboard.writeText(userId);
+      showNotif('User ID copied!');
+    }
+    function saveTonWallet(){
+      tonWallet = document.getElementById('ton-wallet-input').value;
+      saveUserData();
+      showNotif('TON Wallet Saved!');
+    }
+    function copyReferralLink(){
+      navigator.clipboard.writeText(`https://t.me/SharkBountybot?start=r_users${userId}`);
+      showNotif('Referral link copied!');
+    }
+
+    // Ranking Section
+    function loadRanking(){
+      db.ref('users').orderByChild('balance').limitToLast(200).once('value').then(snapshot=>{
+        const users = [];
+        snapshot.forEach(child=>users.push({id:child.key,balance:child.val().balance||0}));
+        users.sort((a,b)=>b.balance-a.balance);
+        const list = document.getElementById('ranking-list'); list.innerHTML="";
+        users.forEach((u,i)=>{
+          list.innerHTML += `<div class="ranking-entry"><span>${i+1}.</span> <span class="user-id">ID:${u.id}</span> <span class="user-balance">${u.balance} SHB</span></div>`;
+        });
+      });
+    }
+
+    // Redeem Section
+    function redeemCode(){
+      let code = document.getElementById('redeem-code-input').value;
+      db.ref('redeem_codes/'+code).once('value').then(snapshot=>{
+        if(snapshot.exists()){
+          balance+=500; saveUserData(); updateUI();
+          showNotif('Redeemed 500 SHB!');
+          document.getElementById('redeem-status').innerText='Success!';
+          db.ref('redeem_codes/'+code).remove();
+        } else {
+          showNotif('Invalid code!');
+          document.getElementById('redeem-status').innerText='Invalid code!';
+        }
+      });
+    }
+
+    // Initial Loads
+    document.addEventListener('DOMContentLoaded',()=>{
+      loadTasks(); loadRanking();
+    });
+
+    // Auto update when user switches section
+    window.showSection = function(section){
+      showSection(section);
+      if(section==='ranking-section') loadRanking();
+      if(section==='tasks-section') loadTasks();
+      if(section==='profile-section') updateUI();
+      if(section==='home-section') updateUI();
+    };
+
+    // Multi Finger Tapping Support
+    document.getElementById('coin-circle').addEventListener('touchstart',function(e){
+      if(energy<1){ showNotif('Not enough energy!'); return; }
+      let taps = Math.min(e.touches.length,multiTap);
+      if(energy<taps) taps=energy;
+      balance+=taps; energy-=taps;
+      saveUserData(); updateUI();
+      plus1Animation(taps);
+    },{passive:true});
+
+  </script>
+</body>
+</html>
