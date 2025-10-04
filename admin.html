@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Shark Bounty Admin Panel</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <link rel="icon" href="https://github.com/s42144/Shark-Bounty/blob/dedf1f3379f4a52180a500e818e467dcd99f56c9/1057118.png?raw=true">
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-database-compat.js"></script>
+  <style>
+    body { margin:0;padding:0; background:linear-gradient(135deg,#6a11cb,#2575fc); font-family:Arial,sans-serif;}
+    .admin-container {
+      max-width: 430px; margin: 20px auto; background:#fff;
+      border-radius:16px; box-shadow:0 6px 24px rgba(0,0,0,0.12); padding:20px;
+    }
+    h2 { color:#2575fc; text-align:center; margin-bottom:16px;}
+    .form-section { padding:14px 0; border-bottom:1px solid #eee; margin-bottom:16px; }
+    .form-group { display:flex; flex-direction:column; gap:7px; margin-bottom:13px; }
+    label { font-size:15px; color:#2575fc; font-weight:bold;}
+    input, textarea { padding:7px; font-size:15px; border-radius:8px; border:1px solid #ccc;}
+    button { background:#2575fc; color:#fff; font-weight:bold; border:none; border-radius:8px; padding:7px 18px; font-size:15px; cursor:pointer; margin-top:8px;}
+    .tasks-table { width:100%; border-collapse:collapse; margin-top:9px; }
+    .tasks-table th, .tasks-table td { padding:7px; border-bottom:1px solid #eee; text-align:left;}
+    .tasks-table th { background:#f0f7ff; color:#2575fc;}
+    .action-btn { background:#6a11cb; color:#fff; border:none; border-radius:7px; padding:4px 8px; font-size:13px; margin:0 3px; cursor:pointer;}
+    .action-btn.delete{background:#ff4500;}
+    .action-btn.edit{background:#ff8c00;}
+    .action-btn.up,.action-btn.down{background:#2575fc;}
+    .stats-section { margin:16px 0;}
+    .stats-box { background:#e0eeff; border-radius:10px; padding:10px 14px; color:#2575fc; font-weight:bold; margin-bottom:8px;}
+    .search-section { margin:10px 0;}
+    .user-info { background:#f7f7f7; border-radius:8px; padding:8px 14px; margin-top:8px; }
+    .redeem-section { margin:16px 0;}
+    .redeem-table { width:100%; border-collapse:collapse;}
+    .redeem-table th, .redeem-table td { padding:5px 8px; border-bottom:1px solid #eee;}
+    .redeem-table th { background:#f0f7ff; color:#2575fc;}
+    .notif { position:fixed;top:22px;left:50%;transform:translateX(-50%);
+      background:#fff;color:#2575fc;border-radius:18px;font-weight:bold;padding:18px 48px;box-shadow:0 4px 24px rgba(0,0,0,0.09);z-index:999999;font-size:20px;opacity:0;pointer-events:none;transition:opacity 0.35s;}
+    .notif.show { opacity:1;pointer-events:auto;}
+  </style>
+</head>
+<body>
+  <div class="admin-container">
+    <h2>Shark Bounty Admin Panel</h2>
+    <div class="form-section">
+      <form id="task-form">
+        <div class="form-group">
+          <label>Task Name</label>
+          <input type="text" id="task-name" required>
+        </div>
+        <div class="form-group">
+          <label>Task Photo URL</label>
+          <input type="text" id="task-photo" required>
+        </div>
+        <div class="form-group">
+          <label>Task Link</label>
+          <input type="url" id="task-link" required>
+        </div>
+        <div class="form-group">
+          <label>Amount (SHB)</label>
+          <input type="number" id="task-amount" required min="1">
+        </div>
+        <button type="submit">Add Task</button>
+      </form>
+    </div>
+    <div>
+      <h3 style="color:#2575fc;">Tasks Management</h3>
+      <table class="tasks-table" id="tasks-table">
+        <thead>
+          <tr>
+            <th>Name</th><th>Photo</th><th>Link</th><th>SHB</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="stats-section">
+      <div class="stats-box" id="total-users">Total Users: 0</div>
+      <div class="stats-box" id="total-balance">Total SHB Balance: 0</div>
+      <div class="stats-box" id="ads-shown">Total Ads Shown: 0</div>
+    </div>
+    <div class="search-section">
+      <label style="color:#2575fc;">Search User by ID:</label>
+      <input type="text" id="search-userid" style="padding:5px;font-size:15px;border-radius:7px;margin-right:9px;">
+      <button type="button" id="search-user-btn">Search</button>
+      <div class="user-info" id="user-info"></div>
+    </div>
+    <div class="redeem-section">
+      <h3 style="color:#2575fc;margin-bottom:8px;">Redeem Codes</h3>
+      <form id="redeem-form">
+        <input type="text" id="redeem-code" maxlength="4" placeholder="4 digit code" required style="margin-right:7px;">
+        <button type="submit">Generate Code</button>
+      </form>
+      <table class="redeem-table" id="redeem-table">
+        <thead>
+          <tr><th>Code</th><th>Action</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="notif" id="notif"></div>
+  <!-- Firebase SDK + Admin Logic -->
+  <script>
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyAHofuS76xf2oGPaJqEtopmcxdoJzjkDL4",
+      authDomain: "zmex-investments.firebaseapp.com",
+      databaseURL: "https://zmex-investments-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "zmex-investments",
+      storageBucket: "zmex-investments.firebasestorage.app",
+      messagingSenderId: "971623941364",
+      appId: "1:971623941364:web:6c65604fc45c3f64e74aa1",
+      measurementId: "G-KQ1LYP77JF"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    function showNotif(msg) {
+      const notif = document.getElementById('notif');
+      notif.textContent = msg;
+      notif.classList.add('show');
+      setTimeout(()=>notif.classList.remove('show'),1700);
+    }
+
+    // Task Add/Edit/Delete/Move
+    let editingTaskId = null;
+    document.getElementById('task-form').onsubmit = function(e){
+      e.preventDefault();
+      const name = document.getElementById('task-name').value.trim();
+      const photo = document.getElementById('task-photo').value.trim();
+      const link = document.getElementById('task-link').value.trim();
+      const amount = parseInt(document.getElementById('task-amount').value.trim());
+      if (!name || !photo || !link || !amount) return showNotif('Fill all fields!');
+      if (editingTaskId) {
+        db.ref('tasks/'+editingTaskId).set({name,photo,link,amount});
+        editingTaskId = null;
+        showNotif('Task updated!');
+      } else {
+        const id = Date.now().toString();
+        db.ref('tasks/'+id).set({name,photo,link,amount});
+        showNotif('Task added!');
+      }
+      this.reset();
+    };
+
+    function loadTasksTable(){
+      db.ref('tasks').on('value',snap=>{
+        const tasks = snap.val()||{};
+        const tbody = document.getElementById('tasks-table').querySelector('tbody');
+        tbody.innerHTML='';
+        const keys = Object.keys(tasks);
+        keys.forEach((tid,i)=>{
+          const t = tasks[tid];
+          let tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${t.name}</td>
+            <td><img src="${t.photo}" style="width:36px;height:36px;border-radius:7px;"></td>
+            <td><a href="${t.link}" target="_blank">Visit</a></td>
+            <td>${t.amount}</td>
+            <td>
+              <button class="action-btn edit">Edit</button>
+              <button class="action-btn delete">Delete</button>
+              <button class="action-btn up">↑</button>
+              <button class="action-btn down">↓</button>
+            </td>
+          `;
+          tr.querySelector('.edit').onclick = function(){
+            editingTaskId = tid;
+            document.getElementById('task-name').value = t.name;
+            document.getElementById('task-photo').value = t.photo;
+            document.getElementById('task-link').value = t.link;
+            document.getElementById('task-amount').value = t.amount;
+          };
+          tr.querySelector('.delete').onclick = function(){
+            db.ref('tasks/'+tid).remove();
+            showNotif('Task deleted!');
+          };
+          tr.querySelector('.up').onclick = function(){
+            if (i==0) return;
+            const prevId = keys[i-1];
+            const temp = tasks[prevId];
+            db.ref('tasks/'+prevId).set(t);
+            db.ref('tasks/'+tid).set(temp);
+          };
+          tr.querySelector('.down').onclick = function(){
+            if (i==keys.length-1) return;
+            const nextId = keys[i+1];
+            const temp = tasks[nextId];
+            db.ref('tasks/'+nextId).set(t);
+            db.ref('tasks/'+tid).set(temp);
+          };
+          tbody.appendChild(tr);
+        });
+      });
+    }
+    loadTasksTable();
+
+    // Stats
+    function loadStats(){
+      db.ref('users').once('value',snap=>{
+        let totalUsers = 0, totalBalance = 0, adsShown = 0;
+        snap.forEach(u=>{
+          totalUsers++;
+          const ud = u.val();
+          totalBalance += (ud.balance||0);
+          if (ud.adsStats) adsShown += (ud.adsStats.total||0);
+        });
+        document.getElementById('total-users').textContent = 'Total Users: '+totalUsers;
+        document.getElementById('total-balance').textContent = 'Total SHB Balance: '+totalBalance;
+        document.getElementById('ads-shown').textContent = 'Total Ads Shown: '+adsShown;
+      });
+    }
+    setInterval(loadStats,2000);
+    loadStats();
+
+    // Search user
+    document.getElementById('search-user-btn').onclick = function(){
+      const uid = document.getElementById('search-userid').value.trim();
+      if (!uid) return showNotif('Enter user ID!');
+      db.ref('users/'+uid).once('value',snap=>{
+        if (!snap.exists()) return showNotif('User not found!');
+        const u = snap.val();
+        document.getElementById('user-info').innerHTML = `
+          <div>ID: ${u.id}</div>
+          <div>Balance: ${u.balance||0} SHB</div>
+          <div>Wallet: ${u.wallet||'-'}</div>
+          <div>Energy: ${u.energy||0}/${u.energyMax||0}</div>
+          <div>Ads Seen: ${u.adsStats?.total||0}</div>
+        `;
+      });
+    };
+
+    // Redeem codes
+    document.getElementById('redeem-form').onsubmit = function(e){
+      e.preventDefault();
+      const code = document.getElementById('redeem-code').value.trim();
+      if (!code || code.length!==4) return showNotif('Enter 4 digit code!');
+      db.ref('redeem_codes/'+code).set(true);
+      showNotif('Code generated!');
+      this.reset();
+    };
+    function loadRedeemTable(){
+      db.ref('redeem_codes').on('value',snap=>{
+        const codes = snap.val()||{};
+        const tbody = document.getElementById('redeem-table').querySelector('tbody');
+        tbody.innerHTML='';
+        Object.keys(codes).forEach(code=>{
+          let tr = document.createElement('tr');
+          tr.innerHTML = `<td>${code}</td><td><button class="action-btn delete">Delete</button></td>`;
+          tr.querySelector('.delete').onclick = function(){
+            db.ref('redeem_codes/'+code).remove();
+            showNotif('Code deleted!');
+          };
+          tbody.appendChild(tr);
+        });
+      });
+    }
+    loadRedeemTable();
+  </script>
+</body>
+</html>
