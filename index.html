@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Shark Bounty - Earn SHB</title>
+  <!-- Monetag SDK -->
+  <script src='//libtl.com/sdk.js' data-zone='9970324' data-sdk='show_9970324'></script>
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <style>
+    :root {
+      --main-bg: linear-gradient(135deg, #6a11cb, #2575fc);
+      --section-bg: rgba(255,255,255,0.98);
+      --radius: 18px;
+      --shadow: 0px 8px 30px rgba(0,0,0,0.18);
+      --primary: #ff8c00;
+      --secondary: #ff4500;
+      --font: 'Arial', sans-serif;
+    }
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      font-family: var(--font);
+      background: var(--main-bg);
+      overflow: hidden;
+    }
+    #video-overlay {
+      position: fixed;
+      inset: 0;
+      background: #000;
+      z-index: 99;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+    #video-overlay video {
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      max-width: 100vw;
+      max-height: 100vh;
+    }
+    #video-overlay .skip-btn {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--primary);
+      color: #fff;
+      font-size: 20px;
+      padding: 12px 32px;
+      border-radius: 30px;
+      border: none;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      font-weight: bold;
+    }
+    #main-app {
+      position: fixed;
+      inset: 0;
+      overflow-x: hidden;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: var(--main-bg);
+      min-height: 100vh;
+      z-index: 1;
+    }
+    #balance-box {
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      background: #fff;
+      color: #2575fc;
+      border-radius: 8px;
+      padding: 8px 20px;
+      font-size: 18px;
+      font-weight: bold;
+      box-shadow: var(--shadow);
+      z-index: 10;
+    }
+    .section {
+      width: 98vw;
+      max-width: 430px;
+      background: var(--section-bg);
+      border-radius: var(--radius);
+      margin: 18px auto;
+      padding: 24px 4vw 18px 4vw;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .nav-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100vw;
+      background: var(--section-bg);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      height: 74px;
+      z-index: 10;
+      border-top-left-radius: 22px;
+      border-top-right-radius: 22px;
+      box-shadow: 0px -2px 12px rgba(0,0,0,0.09);
+    }
+    .nav-btn {
+      background: none;
+      border: none;
+      outline: none;
+      cursor: pointer;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 13px;
+      color: #222;
+      font-weight: bold;
+    }
+    .nav-btn img {
+      width: 38px;
+      height: 38px;
+      margin-bottom: 3px;
+    }
+    .coin-area {
+      margin: 20px 0 0 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    #coin-img {
+      width: 130px;
+      height: 130px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: var(--shadow);
+      margin-bottom: 6px;
+      cursor: pointer;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      touch-action: manipulation;
+      user-select: none;
+    }
+    #coin-anim {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 110px;
+      height: 110px;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 2;
+    }
+    .plus-anim {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      font-size: 32px;
+      color: #ff8c00;
+      font-weight: bold;
+      transform: translate(-50%, -50%);
+      animation: plusAnim 0.7s linear forwards;
+      z-index: 10;
+    }
+    @keyframes plusAnim {
+      0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+      100% { opacity: 0; transform: translate(-50%, -110%) scale(1.7);}
+    }
+    .energy-bar {
+      width: 85%;
+      background: #eee;
+      border-radius: 16px;
+      height: 23px;
+      margin: 14px 0 2px 0;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0px 2px 8px rgba(0,0,0,0.07);
+    }
+    .energy-fill {
+      background: linear-gradient(90deg, #1de9b6 0%, #00bcd4 100%);
+      height: 100%;
+      border-radius: 16px;
+      transition: width 0.3s;
+    }
+    .energy-text {
+      position: absolute;
+      top: 2px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 13px;
+      color: #333;
+      font-weight: 500;
+    }
+    /* Booster Panel */
+    .booster-popup {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.45);
+      z-index: 101;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .booster-content {
+      width: 96vw;
+      max-width: 390px;
+      padding: 18px 4vw;
+      background: var(--section-bg);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      align-items: stretch;
+      position: relative;
+    }
+    .booster-section {
+      padding: 10px;
+      border-radius: 15px;
+      box-shadow: 0px 4px 12px rgba(0,0,0,0.07);
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+      background-size: cover;
+      background-position: center;
+      min-height: 64px;
+    }
+    .booster-section .booster-title {
+      flex: 1;
+      color: #fff;
+      font-weight: 700;
+      font-size: 16px;
+      margin-left: 12px;
+      text-shadow: 0 2px 7px rgba(0,0,0,0.15);
+    }
+    .booster-section .booster-price {
+      color: #fff;
+      font-weight: 600;
+      font-size: 15px;
+      margin-right: 12px;
+      background: rgba(0,0,0,0.16);
+      padding: 5px 15px;
+      border-radius: 12px;
+      box-shadow: 0px 2px 7px rgba(0,0,0,0.13);
+    }
+    .booster-section .booster-buy {
+      background: #fff;
+      color: #2575fc;
+      font-weight: bold;
+      border: none;
+      border-radius: 11px;
+      padding: 7px 16px;
+      font-size: 15px;
+      cursor: pointer;
+      box-shadow: 0px 2px 7px rgba(0,0,0,0.13);
+    }
+    .close-popup-btn {
+      position: absolute;
+      right: 12px;
+      top: 18px;
+      background: #2575fc;
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 34px;
+      height: 34px;
+      font-size: 22px;
+      cursor: pointer;
+      font-weight: bold;
+      box-shadow: var(--shadow);
+    }
+    /* Earn Panel */
+    .earn-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 100%;
+      align-items: center;
+    }
+    .earn-task {
+      padding: 13px 18px;
+      background: #fff;
+      border-radius: 11px;
+      box-shadow: 0px 1px 8px rgba(0,0,0,0.09);
+      margin: 7px 0;
+      width: 97%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 15px;
+    }
+    .earn-task .earn-btn {
+      background: #2575fc;
+      color: #fff;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      padding: 7px 14px;
+      cursor: pointer;
+      box-shadow: 0px 2px 7px rgba(0,0,0,0.13);
+      font-size: 15px;
+    }
+    .earn-stats {
+      display: flex;
+      gap: 15px;
+      font-size: 13px;
+      color: #2575fc;
+      font-weight: bold;
+      margin-bottom: 9px;
+    }
+    /* Task Section */
+    .task-panel {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+    }
+    .task-box {
+      background: #fff;
+      border-radius: 13px;
+      box-shadow: 0px 2px 9px rgba(0,0,0,0.09);
+      padding: 15px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 7px;
+    }
+    .task-photo {
+      width: 55px;
+      height: 55px;
+      border-radius: 13px;
+      object-fit: cover;
+      margin-right: 12px;
+    }
+    .task-info {
+      flex: 1;
+      margin-right: 18px;
+    }
+    .task-name {
+      font-size: 16px;
+      font-weight: bold;
+      color: #2575fc;
+      margin-bottom: 5px;
+    }
+    .task-amount {
+      font-size: 14px;
+      color: #ff8c00;
+      font-weight: 600;
+    }
+    .task-btn {
+      background: #ff8c00;
+      color: #fff;
+      font-weight: bold;
+      border: none;
+      border-radius: 9px;
+      padding: 8px 17px;
+      font-size: 15px;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+    }
+    .task-btn.completed {
+      background: #d7d7d7;
+      color: #555;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    /* Profile Section */
+    .profile-panel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 13px;
+      width: 100%;
+    }
+    .profile-avatar {
+      width: 84px;
+      height: 84px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-bottom: 7px;
+      box-shadow: var(--shadow);
+    }
+    .profile-userid-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+    .profile-userid {
+      font-size: 17px;
+      font-weight: bold;
+      color: #2575fc;
+      background: #f2f2f2;
+      padding: 6px 16px;
+      border-radius: 11px;
+      box-shadow: 0px 2px 8px rgba(0,0,0,0.07);
+    }
+    .copy-btn {
+      background: none;
+      border: none;
+      padding: 0;
+      margin: 0;
+      cursor: pointer;
+    }
+    .copy-btn img {
+      width: 22px;
+      height: 22px;
+    }
+    .ton-form {
+      display: flex;
+      gap: 9px;
+      align-items: center;
+      margin-top: 7px;
+      margin-bottom: 5px;
+    }
+    .ton-input {
+      font-size: 15px;
+      padding: 7px 16px;
+      border-radius: 8px;
+      border: 1px solid #b9dffb;
+      outline: none;
+      background: #f2f7fd;
+      color: #2575fc;
+      font-weight: 500;
+    }
+    .save-btn {
+      background: #2575fc;
+      color: #fff;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      padding: 7px 14px;
+      font-size: 15px;
+      cursor: pointer;
+      box-shadow: 0px 2px 7px rgba(0,0,0,0.13);
+    }
+    /* Referral Section */
+    .referral-panel {
+      margin-top: 10px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 7px;
+    }
+    .referral-link-box {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: #f2f2f2;
+      padding: 8px 13px;
+      border-radius: 11px;
+      font-size: 15px;
+      color: #2575fc;
+    }
+    .referral-stats {
+      font-size: 14px;
+      color: #ff8c00;
+      font-weight: 600;
+      margin-bottom: 3px;
+    }
+    /* Ranking */
+    .ranking-panel {
+      width: 100%;
+      max-height: 340px;
+      overflow-y: auto;
+      margin-top: 6px;
+      background: #f9f9f9;
+      padding: 10px 0;
+      border-radius: 11px;
+      box-shadow: var(--shadow);
+    }
+    .ranking-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 16px;
+      border-bottom: 1px solid #eee;
+      font-size: 15px;
+      font-weight: 500;
+    }
+    .ranking-row.top {
+      background: #ffe5b3;
+      font-weight: bold;
+      color: #ff8c00;
+    }
+    /* Redeem */
+    .redeem-panel {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+    .redeem-box {
+      background: #fff;
+      padding: 15px 20px;
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      width: 90%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 7px;
+    }
+    .redeem-input {
+      font-size: 17px;
+      padding: 7px 19px;
+      border-radius: 8px;
+      border: 1px solid #b9dffb;
+      outline: none;
+      background: #f2f7fd;
+      color: #2575fc;
+      font-weight: 500;
+      text-align: center;
+      letter-spacing: 7px;
+      width: 120px;
+      margin-bottom: 8px;
+    }
+    .redeem-btn {
+      background: #ff8c00;
+      color: #fff;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 18px;
+      font-size: 16px;
+      cursor: pointer;
+      box-shadow: 0px 2px 7px rgba(0,0,0,0.13);
+    }
+    /* Dynamic Island Notification */
+    #dynamic-island {
+      position: fixed;
+      top: 17px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #222;
+      color: #fff;
+      border-radius: 16px;
+      box-shadow: 0px 3px 13px rgba(0,0,0,0.18);
+      font-size: 17px;
+      font-weight: bold;
+      padding: 11px 34px;
+      z-index: 400;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+      animation: dynamicShow 2.1s linear;
+    }
+    @keyframes dynamicShow {
+      0% {opacity: 0;}
+      10% {opacity: 1;}
+      85% {opacity: 1;}
+      100% {opacity: 0;}
+    }
+  </style>
+</head>
+<body>
+  <!-- Fullscreen Video Overlay -->
+  <div id="video-overlay">
+    <video id="intro-video" src="https://github.com/s42144/Shark-Bounty/raw/8b67f2028cd3d33d6545243ea43a57958c428edf/29f4182c-fb84-4f6e-830f-f560ae571afe.mp4" autoplay muted playsinline></video>
+    <button class="skip-btn" onclick="hideVideo()">Skip</button>
+  </div>
+  <!-- Main App Container -->
+  <div id="main-app" style="display:none;">
+    <!-- Balance Box -->
+    <div id="balance-box">Balance: <span id="balance-count">0</span> SHB</div>
+    <!-- Sections will be injected here -->
+    <div id="main-sections"></div>
+    <!-- Navigation Bar -->
+    <div class="nav-bar">
+      <button class="nav-btn" id="nav-home-btn"><img src="https://github.com/s42144/Shark-Bounty/raw/dedf1f3379f4a52180a500e818e467dcd99f56c9/1057118.png"/><span>Home</span></button>
+      <button class="nav-btn" id="nav-booster-btn"><img src="https://github.com/s42144/Shark-Bounty/raw/afd79a5abbf33e4b89606ee8f02538a8d385b1d9/images%20(1).png"/><span>Booster</span></button>
+      <button class="nav-btn" id="nav-earn-btn"><img src="https://github.com/s42144/Shark-Bounty/raw/e39a21566184e34a27cd1d48c67c6bd04429acde/images%20(4).jpeg"/><span>Earn</span></button>
+      <button class="nav-btn" id="nav-tasks-btn"><img src="https://github.com/s42144/Shark-Bounty/raw/2ba42299505308ea4ff2a68f5db8341f3ddc0e92/16104409.png"/><span>Tasks</span></button>
+      <button class="nav-btn" id="nav-profile-btn"><img src="https://github.com/s42144/Shark-Bounty/raw/11c6e035a7f8f6445526ea07f34893fd3ceec419/18827926.png"/><span>Profile</span></button>
+      <button class="nav-btn" id="nav-ranking-btn"><img src="https://github.com/s42144/Shark-Bounty/raw/74b1e06fd560efe8e058569ffa7b4e363aa1c43d/13311710.png"/><span>Ranking</span></button>
+      <button class="nav-btn" id="nav-redeem-btn"><img src="https://github.com/s42144/Shark-Bounty/raw/87e28aa35db580efad4a8befa50df073a1c80e1f/3179668.png"/><span>Redeem</span></button>
+    </div>
+  </div>
+  <div id="dynamic-island"></div>
+
+  <!-- Booster Popup -->
+  <div id="booster-popup" style="display:none;"></div>
+
+  <script>
+    // Firebase Setup
+    const firebaseConfig = {
+      apiKey: "AIzaSyAHofuS76xf2oGPaJqEtopmcxdoJzjkDL4",
+      authDomain: "zmex-investments.firebaseapp.com",
+      databaseURL: "https://zmex-investments-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "zmex-investments",
+      storageBucket: "zmex-investments.appspot.com",
+      messagingSenderId: "971623941364",
+      appId: "1:971623941364:web:6c65604fc45c3f64e74aa1",
+      measurementId: "G-KQ1LYP77JF"
+    };
+    firebase.initializeApp(firebaseConfig);
+    firebase.analytics();
+
+    // ====== User Data Management ======
+    let userId = localStorage.getItem('shb_userid');
+    if (!userId) {
+      userId = Math.floor(Math.random()*90000)+10000+'';
+      localStorage.setItem('shb_userid', userId);
+    }
+    let userRef = firebase.database().ref('users/'+userId);
+
+    function defaultUserData() {
+      return {
+        balance: 0,
+        energy: 1200,
+        maxEnergy: 1200,
+        booster: {
+          energy: 0,
+          multiTap: 0,
+          income: false
+        },
+        tonWallet: "",
+        referrals: [],
+        tasksCompleted: [],
+        multiTap: 1,
+        referralCount: 0,
+        referCount: 0,
+        adStats: {daily:0,monthly:0,lifetime:0,today:0},
+        lastAdDate: "",
+        lastEnergy: Date.now()
+      }
+    }
+
+    let userData = defaultUserData();
+    userRef.once('value').then(snap=>{
+      if (snap.exists()) userData = Object.assign(defaultUserData(), snap.val());
+      updateBalance();
+      updateEnergyBar();
+    });
+
+    // Save User Data
+    function saveUserData() {
+      userRef.set(userData);
+    }
+
+    // ====== UI Rendering ======
+    let currentSection = 'home';
+    function renderMainSections() {
+      const main = document.getElementById('main-sections');
+      main.innerHTML = '';
+      if (currentSection==='home') main.appendChild(renderHomeSection());
+      if (currentSection==='booster') main.appendChild(renderBoosterSection());
+      if (currentSection==='earn') main.appendChild(renderEarnSection());
+      if (currentSection==='tasks') main.appendChild(renderTasksSection());
+      if (currentSection==='profile') main.appendChild(renderProfileSection());
+      if (currentSection==='ranking') main.appendChild(renderRankingSection());
+      if (currentSection==='redeem') main.appendChild(renderRedeemSection());
+    }
+    // Navigation
+    document.getElementById('nav-home-btn').onclick = ()=>{currentSection='home';renderMainSections();}
+    document.getElementById('nav-booster-btn').onclick = ()=>{currentSection='booster';renderMainSections();}
+    document.getElementById('nav-earn-btn').onclick = ()=>{currentSection='earn';renderMainSections();}
+    document.getElementById('nav-tasks-btn').onclick = ()=>{currentSection='tasks';renderMainSections();}
+    document.getElementById('nav-profile-btn').onclick = ()=>{currentSection='profile';renderMainSections();}
+    document.getElementById('nav-ranking-btn').onclick = ()=>{currentSection='ranking';renderMainSections();}
+    document.getElementById('nav-redeem-btn').onclick = ()=>{currentSection='redeem';renderMainSections();}
+
+    // ====== Home Section ======
+    function renderHomeSection() {
+      const sec = document.createElement('div');
+      sec.className = 'section';
+      // Coin Area
+      const coinArea = document.createElement('div');
+      coinArea.className = 'coin-area';
+      // Coin Button
+      const coinBtn = document.createElement('div');
+      coinBtn.id = 'coin-img';
+      coinBtn.innerHTML = `
+        <img src="https://github.com/s42144/Shark-Bounty/raw/aeb441877b43b7401af99870ead870597d62f885/17510103.gif" style="width:100%;height:100%;"/>
+        <div id="coin-anim"></div>
+      `;
+      // Multi finger tap
+      let activeFingers = userData.multiTap || 1;
+      let tapCount = 0, tapTimer;
+      function tapCoin() {
+        if (userData.energy<=0) {
+          showIsland("Not enough energy!");
+          return;
+        }
+        userData.balance += 1 * activeFingers;
+        userData.energy -= 1 * activeFingers;
+        updateBalance();
+        updateEnergyBar();
+        saveUserData();
+        // Animation
+        for(let i=0;i<activeFingers;i++){
+          showPlusAnim();
+        }
+      }
+      coinBtn.ontouchstart = e => {
+        let fingerCount = Math.min(e.touches.length, activeFingers);
+        tapCount += fingerCount;
+        tapCoin();
+        if (tapTimer) clearTimeout(tapTimer);
+        tapTimer = setTimeout(()=>{tapCount=0},300);
+      };
+      coinBtn.onclick = tapCoin;
+      coinArea.appendChild(coinBtn);
+      // Energy Bar
+      const energyBar = document.createElement('div');
+      energyBar.className = 'energy-bar';
+      energyBar.innerHTML = `<div class="energy-fill" id="energy-fill"></div>
+      <div class="energy-text" id="energy-text"></div>`;
+      coinArea.appendChild(energyBar);
+      sec.appendChild(coinArea);
+      return sec;
+    }
+    function showPlusAnim() {
+      const coin = document.getElementById('coin-img');
+      if (!coin) return;
+      const plus = document.createElement('div');
+      plus.className = 'plus-anim';
+      plus.innerText = '+1';
+      coin.appendChild(plus);
+      setTimeout(()=>{plus.remove()},700);
+    }
+    // Energy Bar Updating
+    function updateEnergyBar() {
+      let fill = document.getElementById('energy-fill');
+      let txt = document.getElementById('energy-text');
+      if (!fill || !txt) return;
+      let percent = Math.max(0,Math.min(100,Math.round(100*userData.energy/(userData.maxEnergy||1200))));
+      fill.style.width = percent+"%";
+      txt.innerText = `Energy: ${userData.energy}/${userData.maxEnergy||1200}`;
+    }
+    // Energy Recovery Logic
+    setInterval(()=>{
+      if (userData.energy < (userData.maxEnergy||1200)) {
+        userData.energy += 1;
+        updateEnergyBar();
+        saveUserData();
+      }
+    },2000);
+
+    // ====== Booster Section ======
+    function renderBoosterSection() {
+      const sec = document.createElement('div');
+      sec.className = 'section';
+      sec.innerHTML = `<h3 style="margin-bottom:8px;">Boosters</h3>`;
+      // Boosters Panel
+      const boosters = [
+        {
+          name:"Increase Energy",
+          price:10000,
+          desc:"Increase max energy by 500",
+          img:"https://github.com/s42144/Shark-Bounty/raw/79fd7356e653ad0460b3d96e51be077d49c2255e/images%20(2).png",
+          buy:()=>{
+            if (userData.balance<10000){showIsland("Not enough SHB!");return;}
+            userData.balance-=10000;
+            userData.maxEnergy+=500;
+            updateBalance(); updateEnergyBar(); saveUserData();
+            showIsland("Energy increased!");
+            renderMainSections();
+          }
+        },
+        {
+          name:"Multi Finger Tapping",
+          price:15000,
+          desc:"Allows 2 or 4 finger tapping",
+          img:"https://github.com/s42144/Shark-Bounty/raw/f3ddf6b3fe4ecd6276ce8ff07b54c35ed8cab5ea/images%20(3).png",
+          buy:()=>{
+            let mt = userData.booster.multiTap||0;
+            if (mt>=2){showIsland("Maxed out!");return;}
+            if (userData.balance<15000){showIsland("Not enough SHB!");return;}
+            userData.balance-=15000;
+            mt++;
+            userData.booster.multiTap = mt;
+            userData.multiTap = [1,2,4][mt];
+            updateBalance(); saveUserData();
+            showIsland(mt===1?"2-finger tap enabled!":"4-finger tap enabled!");
+            renderMainSections();
+          }
+        },
+        {
+          name:"Income Booster",
+          price:100000,
+          desc:"Earn 1 SHB every 10s (offline too)",
+          img:"https://github.com/s42144/Shark-Bounty/raw/67f79ce003358d837c24fccb6df407f1ff52175e/images%20(4).png",
+          buy:()=>{
+            if (userData.booster.income){showIsland("Already bought!");return;}
+            if (userData.balance<100000){showIsland("Not enough SHB!");return;}
+            userData.balance-=100000;
+            userData.booster.income=true;
+            updateBalance(); saveUserData();
+            showIsland("Income Booster activated!");
+            renderMainSections();
+          }
+        }
+      ];
+      boosters.forEach((b,i)=>{
+        const bs = document.createElement('div');
+        bs.className = 'booster-section';
+        bs.style.background = `url(${b.img})`;
+        bs.innerHTML = `
+          <div class="booster-title">${b.name}</div>
+          <div class="booster-price">${b.price} SHB</div>
+          <button class="booster-buy">Buy</button>
+        `;
+        bs.querySelector('.booster-buy').onclick = b.buy;
+        sec.appendChild(bs);
+      });
+      return sec;
+    }
+    // Passive Income Booster
+    setInterval(()=>{
+      if (userData.booster.income) {
+        userData.balance+=1;
+        updateBalance(); saveUserData();
+      }
+    },10000);
+
+    // ====== Earn Section ======
+    function renderEarnSection() {
+      const sec = document.createElement('div');
+      sec.className = 'section';
+      sec.innerHTML = `<h3 style="margin-bottom:5px;">Earn by Watching Ads</h3>`;
+      // Ad Stats Box
+      const stats = document.createElement('div');
+      stats.className = 'earn-stats';
+      stats.innerHTML = `
+        <span>Today: ${userData.adStats.today||0}</span>
+        <span>Daily: ${userData.adStats.daily||0}</span>
+        <span>Monthly: ${userData.adStats.monthly||0}</span>
+        <span>Lifetime: ${userData.adStats.lifetime||0}</span>
+      `;
+      sec.appendChild(stats);
+      // Show Ad Button
+      const adTask = document.createElement('div');
+      adTask.className = 'earn-task';
+      adTask.innerHTML = `
+        <span>SHOW ADS (Earn 500 SHB)</span>
+        <button class="earn-btn">Show Ad</button>
+      `;
+      adTask.querySelector('.earn-btn').onclick = showAdEarn;
+      sec.appendChild(adTask);
+      return sec;
+    }
+    function showAdEarn() {
+      if (typeof show_9970324 === 'function') {
+        show_9970324().then(()=>{
+          userData.balance += 500;
+          userData.adStats.today=(userData.adStats.today||0)+1;
+          userData.adStats.daily=(userData.adStats.daily||0)+1;
+          userData.adStats.monthly=(userData.adStats.monthly||0)+1;
+          userData.adStats.lifetime=(userData.adStats.lifetime||0)+1;
+          updateBalance(); saveUserData();
+          showIsland("+500 SHB for Ad!");
+          renderMainSections();
+        }).catch(err=>{
+          showIsland("Ad failed! Try again.");
+        });
+      } else {
+        showIsland("Ad not available, please wait...");
+      }
+    }
+
+    // ====== Tasks Section ======
+    let tasksList = [];
+    firebase.database().ref('tasks').on('value',snap=>{
+      tasksList = [];
+      snap.forEach(child=>{
+        let t = child.val();
+        t.id = child.key;
+        tasksList.push(t);
+      });
+      if (currentSection==='tasks') renderMainSections();
+    });
+    function renderTasksSection() {
+      const sec = document.createElement('div');
+      sec.className = 'section';
+      sec.innerHTML = `<h3 style="margin-bottom:5px;">Tasks</h3>`;
+      const panel = document.createElement('div');
+      panel.className = 'task-panel';
+      tasksList.forEach(task=>{
+        const box = document.createElement('div');
+        box.className = 'task-box';
+        box.innerHTML = `
+          <img class="task-photo" src="${task.photo}" />
+          <div class="task-info">
+            <div class="task-name">${task.name}</div>
+            <div class="task-amount">${task.amount} SHB</div>
+          </div>
+          <button class="task-btn ${userData.tasksCompleted&&userData.tasksCompleted.includes(task.id)?'completed':''}">${userData.tasksCompleted&&userData.tasksCompleted.includes(task.id)?'Completed':'Start'}</button>
+        `;
+        box.querySelector('.task-btn').onclick = ()=>{
+          if (userData.tasksCompleted&&userData.tasksCompleted.includes(task.id)) {
+            window.open(task.link,'_blank');
+            return;
+          }
+          window.open(task.link,'_blank');
+          userData.balance += parseInt(task.amount);
+          if (!userData.tasksCompleted) userData.tasksCompleted = [];
+          userData.tasksCompleted.push(task.id);
+          updateBalance(); saveUserData();
+          showIsland(`+${task.amount} SHB for Task!`);
+          renderMainSections();
+        };
+        panel.appendChild(box);
+      });
+      sec.appendChild(panel);
+      return sec;
+    }
+
+    // ====== Profile Section ======
+    function renderProfileSection() {
+      const sec = document.createElement('div');
+      sec.className = 'section';
+      sec.innerHTML = `<h3 style="margin-bottom:7px;">Profile</h3>`;
+      // Avatar
+      const avatar = document.createElement('img');
+      avatar.src = "https://github.com/s42144/Shark-Bounty/raw/11c6e035a7f8f6445526ea07f34893fd3ceec419/18827926.png";
+      avatar.className = 'profile-avatar';
+      sec.appendChild(avatar);
+      // Userid
+      const uidBox = document.createElement('div');
+      uidBox.className = 'profile-userid-box';
+      uidBox.innerHTML = `<span class="profile-userid">${userId}</span>
+        <button class="copy-btn" onclick="copyToClipboard('${userId}')"><img src="https://github.com/s42144/Shark-Bounty/raw/177e7fb2815726b7d9710a58dccafff013e0a531/1622069.png"/></button>
+      `;
+      sec.appendChild(uidBox);
+      // TON wallet form
+      const tonForm = document.createElement('div');
+      tonForm.className = 'ton-form';
+      tonForm.innerHTML = `
+        <input class="ton-input" id="ton-wallet" placeholder="TON Wallet Address" value="${userData.tonWallet||''}" />
+        <button class="save-btn">Save</button>
+      `;
+      tonForm.querySelector('.save-btn').onclick = ()=>{
+        userData.tonWallet = tonForm.querySelector('#ton-wallet').value;
+        saveUserData();
+        showIsland("TON Wallet Saved!");
+      };
+      sec.appendChild(tonForm);
+      // Referral Section
+      const refBtn = document.createElement('button');
+      refBtn.className = 'save-btn';
+      refBtn.innerText = "Referrals";
+      refBtn.onclick = ()=>{
+        showReferralPanel();
+      };
+      sec.appendChild(refBtn);
+      return sec;
+    }
+    function showReferralPanel() {
+      const sec = document.querySelector('.section');
+      if (!sec) return;
+      sec.innerHTML = `<h3 style="margin-bottom:7px;">Referrals</h3>`;
+      // Referral Link
+      const refLinkBox = document.createElement('div');
+      refLinkBox.className = 'referral-link-box';
+      const refLink = `https://t.me/SharkBountybot?start=r_users${userId}`;
+      refLinkBox.innerHTML = `<span>${refLink}</span>
+        <button class="copy-btn" onclick="copyToClipboard('${refLink}')"><img src="https://github.com/s42144/Shark-Bounty/raw/177e7fb2815726b7d9710a58dccafff013e0a531/1622069.png"/></button>
+      `;
+      sec.appendChild(refLinkBox);
+      // Referral Stats
+      const refStats = document.createElement('div');
+      refStats.className = 'referral-stats';
+      refStats.innerHTML = `<span>Total Referred: ${userData.referralCount||0}</span> | <span>Earned: ${userData.referCount||0} SHB</span>`;
+      sec.appendChild(refStats);
+      // Back Button
+      const backBtn = document.createElement('button');
+      backBtn.className = 'save-btn';
+      backBtn.innerText = "Back";
+      backBtn.onclick = ()=>{renderMainSections();}
+      sec.appendChild(backBtn);
+    }
+
+    // ====== Ranking Section ======
+    let rankingList = [];
+    firebase.database().ref('users').orderByChild('balance').limitToLast(200).on('value',snap=>{
+      rankingList = [];
+      snap.forEach(child=>{
+        rankingList.push({uid:child.key, balance:child.val().balance||0});
+      });
+      rankingList.sort((a,b)=>b.balance-a.balance);
+      if (currentSection==='ranking') renderMainSections();
+    });
+    function renderRankingSection() {
+      const sec = document.createElement('div');
+      sec.className = 'section';
+      sec.innerHTML = `<h3 style="margin-bottom:7px;">Ranking</h3>`;
+      const panel = document.createElement('div');
+      panel.className = 'ranking-panel';
+      rankingList.forEach((row,idx)=>{
+        const r = document.createElement('div');
+        r.className = 'ranking-row'+(idx<3?' top':'');
+        r.innerHTML = `<span>#${idx+1} User ${row.uid}</span><span>${row.balance} SHB</span>`;
+        panel.appendChild(r);
+      });
+      sec.appendChild(panel);
+      return sec;
+    }
+
+    // ====== Redeem Section ======
+    function renderRedeemSection() {
+      const sec = document.createElement('div');
+      sec.className = 'section';
+      sec.innerHTML = `<h3 style="margin-bottom:7px;">Redeem</h3>`;
+      const box = document.createElement('div');
+      box.className = 'redeem-box';
+      box.innerHTML = `
+        <input class="redeem-input" id="redeem-input" maxlength="4" placeholder="Enter Code"/>
+        <button class="redeem-btn">Redeem</button>
+      `;
+      box.querySelector('.redeem-btn').onclick = ()=>{
+        const code = box.querySelector('#redeem-input').value;
+        firebase.database().ref('reedemCodes/'+code).once('value').then(snap=>{
+          if (snap.exists()) {
+            userData.balance+=500;
+            updateBalance(); saveUserData();
+            showIsland("Redeemed! +500 SHB");
+            firebase.database().ref('reedemCodes/'+code).remove();
+          } else {
+            showIsland("Invalid code!");
+          }
+        });
+      };
+      sec.appendChild(box);
+      return sec;
+    }
+
+    // ====== Utility Functions ======
+    function updateBalance() {
+      document.getElementById('balance-count').innerText = userData.balance;
+    }
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text);
+      showIsland("Copied!");
+    }
+    function showIsland(msg) {
+      let isl = document.getElementById('dynamic-island');
+      isl.innerText = msg;
+      isl.style.opacity = 1;
+      isl.style.animation = 'dynamicShow 2.1s linear';
+      setTimeout(()=>{isl.style.opacity=0;},2000);
+    }
+    function hideVideo() {
+      document.getElementById('video-overlay').style.display='none';
+      document.getElementById('main-app').style.display='';
+      renderMainSections();
+    }
+    document.getElementById('intro-video').addEventListener('ended', hideVideo);
+
+    // ====== Initial Show ======
+    setTimeout(()=>{hideVideo();},12000); // fallback skip
+
+    // Handle Passive Income Recovery (offline)
+    window.addEventListener('load',()=>{
+      if (userData.booster.income && localStorage.getItem('lastIncome')) {
+        let lastTime = parseInt(localStorage.getItem('lastIncome'));
+        let now = Date.now();
+        let diff = Math.floor((now-lastTime)/10000);
+        if (diff>0) {
+          userData.balance += diff;
+          updateBalance(); saveUserData();
+        }
+      }
+      localStorage.setItem('lastIncome',Date.now());
+    });
+    setInterval(()=>{localStorage.setItem('lastIncome',Date.now());},9000);
+
+    // ====== End of Script ======
+  </script>
+</body>
+</html>
