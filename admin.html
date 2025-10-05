@@ -6,258 +6,1763 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
   <link rel="icon" href="https://github.com/s42144/Shark-Bounty/blob/dedf1f3379f4a52180a500e818e467dcd99f56c9/1057118.png?raw=true">
   <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body { margin:0;padding:0; background:linear-gradient(135deg,#6a11cb,#2575fc); font-family:Arial,sans-serif;}
-    .admin-container {
-      max-width: 430px; margin: 20px auto; background:#fff;
-      border-radius:16px; box-shadow:0 6px 24px rgba(0,0,0,0.12); padding:20px;
+    :root {
+      --primary: #27cdfc;
+      --secondary: #ff61a6;
+      --gradient: linear-gradient(120deg, #241132 0%, #ff459e 100%);
+      --card-bg: rgba(255,255,255,0.95);
+      --panel-bg: rgba(28,40,61,0.95);
+      --accent: #27cdfc;
+      --accent2: #ff61a6;
+      --btn-gradient: linear-gradient(95deg, #27cdfc 0%, #ff61a6 100%);
+      --shadow: 0 4px 32px rgba(0,0,0,0.15);
+      --border-radius: 16px;
     }
-    h2 { color:#2575fc; text-align:center; margin-bottom:16px;}
-    .form-section { padding:14px 0; border-bottom:1px solid #eee; margin-bottom:16px; }
-    .form-group { display:flex; flex-direction:column; gap:7px; margin-bottom:13px; }
-    label { font-size:15px; color:#2575fc; font-weight:bold;}
-    input, textarea { padding:7px; font-size:15px; border-radius:8px; border:1px solid #ccc;}
-    button { background:#2575fc; color:#fff; font-weight:bold; border:none; border-radius:8px; padding:7px 18px; font-size:15px; cursor:pointer; margin-top:8px;}
-    .tasks-table { width:100%; border-collapse:collapse; margin-top:9px; }
-    .tasks-table th, .tasks-table td { padding:7px; border-bottom:1px solid #eee; text-align:left;}
-    .tasks-table th { background:#f0f7ff; color:#2575fc;}
-    .action-btn { background:#6a11cb; color:#fff; border:none; border-radius:7px; padding:4px 8px; font-size:13px; margin:0 3px; cursor:pointer;}
-    .action-btn.delete{background:#ff4500;}
-    .action-btn.edit{background:#ff8c00;}
-    .action-btn.up,.action-btn.down{background:#2575fc;}
-    .stats-section { margin:16px 0;}
-    .stats-box { background:#e0eeff; border-radius:10px; padding:10px 14px; color:#2575fc; font-weight:bold; margin-bottom:8px;}
-    .search-section { margin:10px 0;}
-    .user-info { background:#f7f7f7; border-radius:8px; padding:8px 14px; margin-top:8px; }
-    .redeem-section { margin:16px 0;}
-    .redeem-table { width:100%; border-collapse:collapse;}
-    .redeem-table th, .redeem-table td { padding:5px 8px; border-bottom:1px solid #eee;}
-    .redeem-table th { background:#f0f7ff; color:#2575fc;}
-    .notif { position:fixed;top:22px;left:50%;transform:translateX(-50%);
-      background:#fff;color:#2575fc;border-radius:18px;font-weight:bold;padding:18px 48px;box-shadow:0 4px 24px rgba(0,0,0,0.09);z-index:999999;font-size:20px;opacity:0;pointer-events:none;transition:opacity 0.35s;}
-    .notif.show { opacity:1;pointer-events:auto;}
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+      background: var(--gradient);
+      background-attachment: fixed;
+      min-height: 100vh;
+      color: #333;
+      overflow-x: hidden;
+    }
+    
+    .admin-wrapper {
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .admin-header {
+      background: var(--card-bg);
+      border-radius: var(--border-radius);
+      padding: 20px 30px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+    
+    .admin-logo-section {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    
+    .admin-logo {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      border: 3px solid var(--accent2);
+    }
+    
+    .admin-title {
+      font-size: 1.5rem;
+      font-weight: 900;
+      background: var(--btn-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    .admin-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    
+    .logout-btn {
+      background: var(--btn-gradient);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 20px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    
+    .logout-btn:hover {
+      transform: translateY(-2px);
+    }
+    
+    /* Dashboard Grid */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    
+    .stat-card {
+      background: var(--card-bg);
+      border-radius: var(--border-radius);
+      padding: 24px;
+      box-shadow: var(--shadow);
+      border-left: 5px solid var(--accent);
+      transition: transform 0.2s;
+    }
+    
+    .stat-card:hover {
+      transform: translateY(-4px);
+    }
+    
+    .stat-card:nth-child(2) {
+      border-left-color: var(--accent2);
+    }
+    
+    .stat-card:nth-child(3) {
+      border-left-color: #ffd23e;
+    }
+    
+    .stat-card:nth-child(4) {
+      border-left-color: #34d399;
+    }
+    
+    .stat-label {
+      font-size: 0.9rem;
+      color: #666;
+      margin-bottom: 8px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 900;
+      color: #333;
+      margin-bottom: 5px;
+    }
+    
+    .stat-change {
+      font-size: 0.85rem;
+      color: #34d399;
+      font-weight: 600;
+    }
+    
+    /* Balance Control Modal */
+    .balance-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+    }
+    
+    .balance-modal.show {
+      display: flex;
+    }
+    
+    .balance-modal-content {
+      background: var(--card-bg);
+      border-radius: var(--border-radius);
+      padding: 30px;
+      max-width: 400px;
+      width: 90%;
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+    
+    .balance-modal-title {
+      font-size: 1.5rem;
+      font-weight: 900;
+      margin-bottom: 20px;
+      background: var(--btn-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    .balance-input-group {
+      margin: 20px 0;
+    }
+    
+    .balance-input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 1.1rem;
+      text-align: center;
+      margin-bottom: 15px;
+    }
+    
+    .balance-buttons {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 20px;
+    }
+    
+    .balance-btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 1rem;
+    }
+    
+    .balance-btn.increase {
+      background: #34d399;
+      color: #fff;
+    }
+    
+    .balance-btn.decrease {
+      background: #ef4444;
+      color: #fff;
+    }
+    
+    .balance-btn.cancel {
+      background: #6c757d;
+      color: #fff;
+    }
+    
+    .balance-btn:hover {
+      transform: translateY(-2px);
+    }
+    
+    /* Tabs Navigation */
+    .tabs-nav {
+      background: var(--card-bg);
+      border-radius: var(--border-radius);
+      padding: 10px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow);
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      flex-wrap: wrap;
+    }
+    
+    .tab-btn {
+      background: transparent;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s;
+      color: #666;
+      white-space: nowrap;
+    }
+    
+    .tab-btn.active {
+      background: var(--btn-gradient);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(255,97,166,0.3);
+    }
+    
+    .tab-btn:hover:not(.active) {
+      background: #f0f0f0;
+    }
+    
+    /* Tab Content */
+    .tab-content {
+      display: none;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    /* Cards */
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--border-radius);
+      padding: 24px;
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+    }
+    
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #f0f0f0;
+    }
+    
+    .card-title {
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: #333;
+    }
+    
+    /* Forms */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .form-label {
+      font-weight: 700;
+      color: #333;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .form-input, .form-textarea, .form-select {
+      padding: 12px 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 1rem;
+      transition: all 0.3s;
+      background: #f8f9fa;
+    }
+    
+    .form-input:focus, .form-textarea:focus, .form-select:focus {
+      outline: none;
+      border-color: var(--accent);
+      background: #fff;
+      box-shadow: 0 0 0 4px rgba(39,205,252,0.1);
+    }
+    
+    .form-textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+    
+    /* Buttons */
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 1rem;
+    }
+    
+    .btn-primary {
+      background: var(--btn-gradient);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(255,97,166,0.3);
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(255,97,166,0.4);
+    }
+    
+    .btn-secondary {
+      background: #6c757d;
+      color: #fff;
+    }
+    
+    .btn-danger {
+      background: #ef4444;
+      color: #fff;
+    }
+    
+    .btn-success {
+      background: #34d399;
+      color: #fff;
+    }
+    
+    .btn-small {
+      padding: 6px 12px;
+      font-size: 0.85rem;
+    }
+    
+    /* Tables */
+    .table-container {
+      overflow-x: auto;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+    }
+    
+    .data-table thead {
+      background: linear-gradient(135deg, #27cdfc 0%, #ff61a6 100%);
+      color: #fff;
+    }
+    
+    .data-table th {
+      padding: 14px 12px;
+      text-align: left;
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 0.85rem;
+      letter-spacing: 0.5px;
+    }
+    
+    .data-table td {
+      padding: 12px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .data-table tbody tr:hover {
+      background: #f8f9fa;
+    }
+    
+    .data-table img {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      object-fit: cover;
+    }
+    
+    /* Action Buttons in Table */
+    .action-btns {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    
+    /* Balance Control Section */
+    .balance-control-section {
+      background: var(--card-bg);
+      border-radius: var(--border-radius);
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow);
+      border-left: 5px solid var(--accent);
+    }
+    
+    .balance-control-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    .balance-control-title {
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: #333;
+    }
+    
+    .balance-control-instructions {
+      color: #666;
+      margin-bottom: 20px;
+      font-size: 0.9rem;
+    }
+    
+    /* Search Bar */
+    .search-bar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    
+    .search-input {
+      flex: 1;
+      min-width: 200px;
+      padding: 12px 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 1rem;
+    }
+    
+    /* User Info Card */
+    .user-info-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      border-radius: var(--border-radius);
+      padding: 20px;
+      margin-top: 15px;
+    }
+    
+    .user-info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      margin-top: 15px;
+    }
+    
+    .user-info-item {
+      background: rgba(255,255,255,0.15);
+      padding: 12px;
+      border-radius: 10px;
+      backdrop-filter: blur(10px);
+    }
+    
+    .user-info-label {
+      font-size: 0.8rem;
+      opacity: 0.9;
+      margin-bottom: 5px;
+    }
+    
+    .user-info-value {
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+    
+    /* Profile Sections Management */
+    .profile-section-preview {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+    
+    .profile-section-item {
+      background: #f8f9fa;
+      border-radius: 12px;
+      padding: 15px;
+      text-align: center;
+      border: 2px solid #e0e0e0;
+      transition: all 0.3s;
+    }
+    
+    .profile-section-item:hover {
+      border-color: var(--accent);
+      transform: translateY(-4px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .profile-section-item img {
+      width: 100%;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+    
+    .profile-section-name {
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 8px;
+    }
+    
+    .profile-section-link {
+      font-size: 0.85rem;
+      color: #666;
+      word-break: break-all;
+      margin-bottom: 10px;
+    }
+    
+    /* Notifications */
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #fff;
+      border-radius: 12px;
+      padding: 16px 24px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transform: translateX(400px);
+      transition: transform 0.3s;
+      max-width: 350px;
+    }
+    
+    .notification.show {
+      transform: translateX(0);
+    }
+    
+    .notification.success {
+      border-left: 4px solid #34d399;
+    }
+    
+    .notification.error {
+      border-left: 4px solid #ef4444;
+    }
+    
+    .notification.info {
+      border-left: 4px solid #3b82f6;
+    }
+    
+    .notification-icon {
+      font-size: 1.5rem;
+    }
+    
+    .notification-content {
+      flex: 1;
+    }
+    
+    .notification-title {
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    
+    .notification-message {
+      font-size: 0.9rem;
+      color: #666;
+    }
+    
+    /* Loading Spinner */
+    .loading-spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 0.8s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #999;
+    }
+    
+    .empty-state-icon {
+      font-size: 4rem;
+      margin-bottom: 20px;
+      opacity: 0.5;
+    }
+    
+    .empty-state-text {
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+      .admin-header {
+        flex-direction: column;
+        text-align: center;
+      }
+      
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .tabs-nav {
+        flex-direction: column;
+      }
+      
+      .tab-btn {
+        width: 100%;
+      }
+      
+      .notification {
+        right: 10px;
+        left: 10px;
+        max-width: none;
+      }
+      
+      .balance-buttons {
+        flex-direction: column;
+      }
+    }
+    
+    /* Animations */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .fade-in {
+      animation: fadeIn 0.5s ease-out;
+    }
+    
+    /* Badge */
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    
+    .badge-success {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    
+    .badge-danger {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+    
+    .badge-warning {
+      background: #fef3c7;
+      color: #92400e;
+    }
+    
+    .badge-info {
+      background: #dbeafe;
+      color: #1e40af;
+    }
   </style>
 </head>
 <body>
-  <div class="admin-container">
-    <h2>Shark Bounty Admin Panel</h2>
-    <div class="form-section">
-      <form id="task-form">
-        <div class="form-group">
-          <label>Task Name</label>
-          <input type="text" id="task-name" required>
+  <!-- Admin Dashboard -->
+  <div class="admin-wrapper" id="adminDashboard">
+    <!-- Header -->
+    <div class="admin-header fade-in">
+      <div class="admin-logo-section">
+        <img src="https://github.com/s42144/Shark-Bounty/blob/dedf1f3379f4a52180a500e818e467dcd99f56c9/1057118.png?raw=true" alt="Logo" class="admin-logo">
+        <div>
+          <h1 class="admin-title">Shark Bounty</h1>
+          <p style="color: #666; font-size: 0.9rem; margin-top: 4px;">Admin Control Panel</p>
         </div>
-        <div class="form-group">
-          <label>Task Photo URL</label>
-          <input type="text" id="task-photo" required>
+      </div>
+    </div>
+
+    <!-- Dashboard Stats -->
+    <div class="dashboard-grid fade-in">
+      <div class="stat-card">
+        <div class="stat-label">Total Users</div>
+        <div class="stat-value" id="totalUsers">0</div>
+        <div class="stat-change" id="usersChange">+0 today</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Balance</div>
+        <div class="stat-value" id="totalBalance">0 SHB</div>
+        <div class="stat-change" id="balanceChange">+0 today</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Ads Shown</div>
+        <div class="stat-value" id="totalAds">0</div>
+        <div class="stat-change" id="adsChange">+0 today</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Active Tasks</div>
+        <div class="stat-value" id="totalTasks">0</div>
+        <div class="stat-change" id="tasksChange">Active</div>
+      </div>
+    </div>
+
+    <!-- Balance Control Section -->
+    <div class="balance-control-section fade-in">
+      <div class="balance-control-header">
+        <h2 class="balance-control-title">\ud83d\udcb0 Balance Control</h2>
+        <span class="badge badge-info">Quick Balance Management</span>
+      </div>
+      <p class="balance-control-instructions">
+        Search for a user and adjust their SHB balance instantly. Enter positive number to increase, negative to decrease.
+      </p>
+      <div class="search-bar">
+        <input type="text" class="search-input" id="balanceUserId" placeholder="Enter User ID...">
+        <input type="number" class="search-input" id="balanceAmount" placeholder="Amount (+/-)" style="max-width: 150px;">
+        <button class="btn btn-primary" id="searchBalanceBtn">Find User</button>
+      </div>
+      <div id="balanceUserInfo"></div>
+    </div>
+
+    <!-- Tabs Navigation -->
+    <div class="tabs-nav fade-in">
+      <button class="tab-btn active" data-tab="overview">\ud83d\udcca Overview</button>
+      <button class="tab-btn" data-tab="tasks">\ud83d\udccb Tasks</button>
+      <button class="tab-btn" data-tab="users">\ud83d\udc65 Users</button>
+      <button class="tab-btn" data-tab="profile-sections">\ud83c\udfaf Profile Sections</button>
+      <button class="tab-btn" data-tab="redeem">\ud83c\udf81 Redeem Codes</button>
+      <button class="tab-btn" data-tab="analytics">\ud83d\udcc8 Analytics</button>
+    </div>
+
+    <!-- Overview Tab -->
+    <div class="tab-content active" id="overview">
+      <div class="card fade-in">
+        <div class="card-header">
+          <h2 class="card-title">\ud83d\udcca System Overview</h2>
         </div>
-        <div class="form-group">
-          <label>Task Link</label>
-          <input type="url" id="task-link" required>
+        <div class="chart-container">
+          <canvas id="overviewChart"></canvas>
         </div>
-        <div class="form-group">
-          <label>Amount (SHB)</label>
-          <input type="number" id="task-amount" required min="1">
+      </div>
+      
+      <div class="card fade-in">
+        <div class="card-header">
+          <h2 class="card-title">\ud83d\udd25 Recent Activity</h2>
         </div>
-        <button type="submit">Add Task</button>
-      </form>
+        <div id="recentActivity">
+          <div class="empty-state">
+            <div class="empty-state-icon">\ud83d\udcca</div>
+            <div class="empty-state-text">Loading activity data...</div>
+          </div>
+        </div>
+      </div>
     </div>
-    <div>
-      <h3 style="color:#2575fc;">Tasks Management</h3>
-      <table class="tasks-table" id="tasks-table">
-        <thead>
-          <tr>
-            <th>Name</th><th>Photo</th><th>Link</th><th>SHB</th><th>Actions</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+
+    <!-- Tasks Tab -->
+    <div class="tab-content" id="tasks">
+      <div class="card fade-in">
+        <div class="card-header">
+          <h2 class="card-title">\u2795 Add New Task</h2>
+        </div>
+        <form id="taskForm">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Task Name</label>
+              <input type="text" class="form-input" id="taskName" placeholder="Enter task name" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Reward (SHB)</label>
+              <input type="number" class="form-input" id="taskAmount" placeholder="1000" min="1" required>
+            </div>
+          </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Photo URL</label>
+              <input type="url" class="form-input" id="taskPhoto" placeholder="https://..." required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Task Link</label>
+              <input type="url" class="form-input" id="taskLink" placeholder="https://..." required>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary">
+            <span id="taskBtnText">Add Task</span>
+          </button>
+        </form>
+      </div>
+
+      <div class="card fade-in">
+        <div class="card-header">
+          <h2 class="card-title">\ud83d\udccb All Tasks</h2>
+          <span class="badge badge-info" id="taskCount">0 Tasks</span>
+        </div>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Photo</th>
+                <th>Name</th>
+                <th>Reward</th>
+                <th>Link</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="tasksTableBody">
+              <tr>
+                <td colspan="5" style="text-align: center; padding: 40px;">
+                  <div class="loading-spinner" style="margin: 0 auto;"></div>
+                  <p style="margin-top: 10px; color: #999;">Loading tasks...</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
-    <div class="stats-section">
-      <div class="stats-box" id="total-users">Total Users: 0</div>
-      <div class="stats-box" id="total-balance">Total SHB Balance: 0</div>
-      <div class="stats-box" id="ads-shown">Total Ads Shown: 0</div>
+
+    <!-- Users Tab -->
+    <div class="tab-content" id="users">
+      <div class="card fade-in">
+        <div class="card-header">
+          <h2 class="card-title">\ud83d\udd0d Search User</h2>
+        </div>
+        <div class="search-bar">
+          <input type="text" class="search-input" id="searchUserId" placeholder="Enter User ID...">
+          <button class="btn btn-primary" id="searchUserBtn">Search</button>
+        </div>
+        <div id="userInfoContainer"></div>
+      </div>
+
+      <div class="card fade-in">
+        <div class="card-header">
+          <h2 class="card-title">\ud83d\udc65 All Users</h2>
+          <span class="badge badge-info" id="userCount">0 Users</span>
+        </div>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>User ID</th>
+                <th>Balance</th>
+                <th>Energy</th>
+                <th>Referrals</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="usersTableBody">
+              <tr>
+                <td colspan="5" style="text-align: center; padding: 40px;">
+                  <div class="loading-spinner" style="margin: 0 auto;"></div>
+                  <p style="margin-top: 10px; color: #999;">Loading users...</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
-    <div class="search-section">
-      <label style="color:#2575fc;">Search User by ID:</label>
-      <input type="text" id="search-userid" style="padding:5px;font-size:15px;border-radius:7px;margin-right:9px;">
-      <button type="button" id="search-user-btn">Search</button>
-      <div class="user-info" id="user-info"></div>
+
+    <!-- Profile Sections Tab -->
+    <div class="tab-content" id="profile-sections">
+      <div class="card fade-in">
+        <div class="card-header">
+          <h2 class="card-title">\u2795 Add Profile Section</h2>
+        </div>
+        <form id="profileSectionForm">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Section Name</label>
+              <input type="text" class="form-input" id="sectionName" placeholder="e.g., RoadMap" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Image URL</label>
+              <input type="url" class="form-input" id="sectionImage" placeholder="https://..." required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Link URL</label>
+            <input type="url" class="form-input" id="sectionLink" placeholder="https://..." required>
+          </div>
+          <button type="submit" class="btn btn-primary">
+            <span id="sectionBtnText">Add Section</span>
+          </button>
+        </form>
+      </div>
+
+      <div class="card fade-in">
+        <div class="card-header">
+          <h2 class="card-title">\ud83c\udfaf Profile Sections</h2>
+          <span class="badge badge-info" id="sectionCount">0 Sections</span>
+        </div>
+        <div class="profile-section-preview" id="profileSectionsContainer">
+          <div class="empty-state">
+            <div class="empty-state-icon">\ud83c\udfaf</div>
+            <div class="empty-state-text">No sections yet. Add your first section!</div>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="redeem-section">
-      <h3 style="color:#2575fc;margin-bottom:8px;">Redeem Codes</h3>
-      <form id="redeem-form">
-        <input type="text" id="redeem-code" maxlength="4" placeholder="4 digit code" required style="margin-right:7px;">
-        <button type="submit">Generate Code</button>
-      </form>
-      <table class="redeem-table" id="redeem-table">
-        <thead>
-          <tr><th>Code</th><th>Action</th></tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+
+    <!-- Redeem Codes Tab -->
+    <div class="tab-content" id="redeem">
+      <div class="card fade-in">
+        <div class="card-header">
+          <h2 class="card-title">\u2795 Generate Redeem Code</h2>
+        </div>
+        <form id="redeemForm">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">4-Digit Code</label>
+              <input type="text" class="form-input" id="redeemCode" placeholder="1234" maxlength="4" pattern="[0-9]{4}" required>
+            </div>
+            <div class="form-group" style="display: flex; align-items: flex-end;">
+              <button type="submit" class="btn btn-primary" style="width: 100%;">Generate Code</button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="card fade-in">
+        <div class="card-header">
+          <h2 class="card-title">\ud83c\udf81 Active Redeem Codes</h2>
+          <span class="badge badge-success" id="redeemCount">0 Codes</span>
+        </div>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="redeemTableBody">
+              <tr>
+                <td colspan="3" style="text-align: center; padding: 40px;">
+                  <div class="empty-state">
+                    <div class="empty-state-icon">\ud83c\udf81</div>
+                    <div class="empty-state-text">No redeem codes yet</div>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Analytics Tab -->
+    <div class="tab-content" id="analytics">
+      <div class="card fade-in">
+        <div class="card-header">
+          <h2 class="card-title">\ud83d\udcc8 User Growth</h2>
+        </div>
+        <div class="chart-container">
+          <canvas id="userGrowthChart"></canvas>
+        </div>
+      </div>
+
+      <div class="card fade-in">
+        <div class="card-header">
+          <h2 class="card-title">\ud83d\udcb0 Balance Distribution</h2>
+        </div>
+        <div class="chart-container">
+          <canvas id="balanceChart"></canvas>
+        </div>
+      </div>
     </div>
   </div>
-  <div class="notif" id="notif"></div>
-  <!-- Firebase SDK + Admin Logic -->
+
+  <!-- Balance Control Modal -->
+  <div class="balance-modal" id="balanceModal">
+    <div class="balance-modal-content">
+      <h2 class="balance-modal-title">\ud83d\udcb0 Adjust Balance</h2>
+      <div class="balance-input-group">
+        <p id="balanceUserName" style="font-weight: 600; margin-bottom: 10px;"></p>
+        <p id="balanceUserId" style="color: #666; margin-bottom: 15px;"></p>
+        <p id="currentBalance" style="font-size: 1.2rem; margin-bottom: 20px;"></p>
+        <input type="number" class="balance-input" id="balanceAdjustment" placeholder="Enter amount (+/-)" step="1">
+        <p style="font-size: 0.85rem; color: #666; margin-top: 10px;">
+          Enter positive number to increase, negative to decrease
+        </p>
+      </div>
+      <div class="balance-buttons">
+        <button class="balance-btn increase" onclick="adjustBalance(true)">Increase</button>
+        <button class="balance-btn decrease" onclick="adjustBalance(false)">Decrease</button>
+        <button class="balance-btn cancel" onclick="closeBalanceModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Container -->
+  <div id="notificationContainer"></div>
+
   <script>
-    // Firebase config
+    // Firebase Configuration
     const firebaseConfig = {
       apiKey: "AIzaSyAHofuS76xf2oGPaJqEtopmcxdoJzjkDL4",
       authDomain: "zmex-investments.firebaseapp.com",
       databaseURL: "https://zmex-investments-default-rtdb.asia-southeast1.firebasedatabase.app",
       projectId: "zmex-investments",
-      storageBucket: "zmex-investments.firebasestorage.app",
+      storageBucket: "zmex-investments.appspot.com",
       messagingSenderId: "971623941364",
       appId: "1:971623941364:web:6c65604fc45c3f64e74aa1",
       measurementId: "G-KQ1LYP77JF"
     };
+    
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    function showNotif(msg) {
-      const notif = document.getElementById('notif');
-      notif.textContent = msg;
-      notif.classList.add('show');
-      setTimeout(()=>notif.classList.remove('show'),1700);
+    // Global Variables
+    let editingTaskId = null;
+    let editingSectionId = null;
+    let currentBalanceUserId = null;
+    let currentBalanceUser = null;
+
+    // Notification System
+    function showNotification(title, message, type = 'success') {
+      const container = document.getElementById('notificationContainer');
+      const notification = document.createElement('div');
+      notification.className = `notification ${type}`;
+      
+      const icons = {
+        success: '\u2705',
+        error: '\u274c',
+        info: '\u2139\ufe0f'
+      };
+      
+      notification.innerHTML = `
+        <div class="notification-icon">${icons[type]}</div>
+        <div class="notification-content">
+          <div class="notification-title">${title}</div>
+          <div class="notification-message">${message}</div>
+        </div>
+      `;
+      
+      container.appendChild(notification);
+      
+      setTimeout(() => notification.classList.add('show'), 100);
+      
+      setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => notification.remove(), 300);
+      }, 3000);
     }
 
-    // Task Add/Edit/Delete/Move
-    let editingTaskId = null;
-    document.getElementById('task-form').onsubmit = function(e){
-      e.preventDefault();
-      const name = document.getElementById('task-name').value.trim();
-      const photo = document.getElementById('task-photo').value.trim();
-      const link = document.getElementById('task-link').value.trim();
-      const amount = parseInt(document.getElementById('task-amount').value.trim());
-      if (!name || !photo || !link || !amount) return showNotif('Fill all fields!');
-      if (editingTaskId) {
-        db.ref('tasks/'+editingTaskId).set({name,photo,link,amount});
-        editingTaskId = null;
-        showNotif('Task updated!');
-      } else {
-        const id = Date.now().toString();
-        db.ref('tasks/'+id).set({name,photo,link,amount});
-        showNotif('Task added!');
-      }
-      this.reset();
-    };
+    // Initialize Dashboard
+    function initializeDashboard() {
+      loadStats();
+      loadTasks();
+      loadUsers();
+      loadProfileSections();
+      loadRedeemCodes();
+      initializeCharts();
+      
+      setInterval(loadStats, 5000);
+    }
 
-    function loadTasksTable(){
-      db.ref('tasks').on('value',snap=>{
-        const tasks = snap.val()||{};
-        const tbody = document.getElementById('tasks-table').querySelector('tbody');
-        tbody.innerHTML='';
-        const keys = Object.keys(tasks);
-        keys.forEach((tid,i)=>{
-          const t = tasks[tid];
-          let tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td>${t.name}</td>
-            <td><img src="${t.photo}" style="width:36px;height:36px;border-radius:7px;"></td>
-            <td><a href="${t.link}" target="_blank">Visit</a></td>
-            <td>${t.amount}</td>
+    // Load Statistics
+    async function loadStats() {
+      try {
+        const usersSnap = await db.ref('users').once('value');
+        const tasksSnap = await db.ref('tasks').once('value');
+        
+        let totalUsers = 0;
+        let totalBalance = 0;
+        let totalAds = 0;
+        
+        usersSnap.forEach(userSnap => {
+          totalUsers++;
+          const user = userSnap.val();
+          totalBalance += (user.balance || 0);
+          if (user.adStats) {
+            totalAds += (user.adStats.lifetime || 0);
+          }
+        });
+        
+        const totalTasks = tasksSnap.numChildren();
+        
+        document.getElementById('totalUsers').textContent = totalUsers.toLocaleString();
+        document.getElementById('totalBalance').textContent = totalBalance.toLocaleString() + ' SHB';
+        document.getElementById('totalAds').textContent = totalAds.toLocaleString();
+        document.getElementById('totalTasks').textContent = totalTasks;
+        
+        document.getElementById('taskCount').textContent = `${totalTasks} Tasks`;
+        document.getElementById('userCount').textContent = `${totalUsers} Users`;
+      } catch (error) {
+        console.error('Error loading stats:', error);
+      }
+    }
+
+    // Balance Control Functions
+    document.getElementById('searchBalanceBtn').addEventListener('click', async () => {
+      const userId = document.getElementById('balanceUserId').value.trim();
+      
+      if (!userId) {
+        showNotification('Error', 'Please enter a user ID', 'error');
+        return;
+      }
+      
+      try {
+        const snapshot = await db.ref('users/' + userId).once('value');
+        
+        if (!snapshot.exists()) {
+          showNotification('Error', 'User not found', 'error');
+          document.getElementById('balanceUserInfo').innerHTML = '';
+          return;
+        }
+        
+        const user = snapshot.val();
+        currentBalanceUserId = userId;
+        currentBalanceUser = user;
+        
+        document.getElementById('balanceUserInfo').innerHTML = `
+          <div class="user-info-card">
+            <h3 style="margin-bottom: 15px;">User Found</h3>
+            <div class="user-info-grid">
+              <div class="user-info-item">
+                <div class="user-info-label">User ID</div>
+                <div class="user-info-value">${userId}</div>
+              </div>
+              <div class="user-info-item">
+                <div class="user-info-label">Current Balance</div>
+                <div class="user-info-value">${(user.balance || 0).toLocaleString()} SHB</div>
+              </div>
+              <div class="user-info-item">
+                <div class="user-info-label">Energy</div>
+                <div class="user-info-value">${user.energy || 0} / ${user.maxEnergy || 1200}</div>
+              </div>
+              <div class="user-info-item">
+                <div class="user-info-label">Multi Tap</div>
+                <div class="user-info-value">${user.multiTap || 1}</div>
+              </div>
+            </div>
+            <div style="margin-top: 15px;">
+              <button class="btn btn-primary" onclick="openBalanceModal('${userId}', '${user.balance || 0}')">
+                Adjust Balance
+              </button>
+            </div>
+          </div>
+        `;
+      } catch (error) {
+        showNotification('Error', error.message, 'error');
+      }
+    });
+
+    function openBalanceModal(userId, currentBalance) {
+      currentBalanceUserId = userId;
+      document.getElementById('balanceUserName').textContent = 'User ID: ' + userId;
+      document.getElementById('balanceUserId').textContent = 'Current Balance: ' + parseInt(currentBalance).toLocaleString() + ' SHB';
+      document.getElementById('currentBalance').textContent = 'Current: ' + parseInt(currentBalance).toLocaleString() + ' SHB';
+      document.getElementById('balanceAdjustment').value = '';
+      document.getElementById('balanceModal').classList.add('show');
+    }
+
+    function closeBalanceModal() {
+      document.getElementById('balanceModal').classList.remove('show');
+      currentBalanceUserId = null;
+      currentBalanceUser = null;
+    }
+
+    async function adjustBalance(isIncrease) {
+      const adjustment = parseInt(document.getElementById('balanceAdjustment').value);
+      
+      if (isNaN(adjustment) || adjustment === 0) {
+        showNotification('Error', 'Please enter a valid amount', 'error');
+        return;
+      }
+      
+      if (!currentBalanceUserId) {
+        showNotification('Error', 'No user selected', 'error');
+        return;
+      }
+      
+      try {
+        const currentBalance = currentBalanceUser.balance || 0;
+        let newBalance = currentBalance;
+        
+        if (isIncrease) {
+          newBalance = currentBalance + Math.abs(adjustment);
+        } else {
+          newBalance = currentBalance - Math.abs(adjustment);
+          if (newBalance < 0) newBalance = 0;
+        }
+        
+        await db.ref('users/' + currentBalanceUserId).update({ balance: newBalance });
+        
+        const action = isIncrease ? 'increased' : 'decreased';
+        showNotification('Success', `Balance ${action} by ${Math.abs(adjustment)} SHB!`, 'success');
+        
+        // Update the balance display
+        document.getElementById('balanceUserId').textContent = 'Current Balance: ' + newBalance.toLocaleString() + ' SHB';
+        document.getElementById('currentBalance').textContent = 'Current: ' + newBalance.toLocaleString() + ' SHB';
+        
+        // Clear the input
+        document.getElementById('balanceAdjustment').value = '';
+        
+        // Refresh stats
+        loadStats();
+        
+        // Close modal after a short delay
+        setTimeout(() => {
+          closeBalanceModal();
+          // Refresh the balance control section
+          document.getElementById('searchBalanceBtn').click();
+        }, 1500);
+        
+      } catch (error) {
+        showNotification('Error', error.message, 'error');
+      }
+    }
+
+    // Tab Navigation
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+      });
+    });
+
+    // Task Management
+    document.getElementById('taskForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const name = document.getElementById('taskName').value.trim();
+      const photo = document.getElementById('taskPhoto').value.trim();
+      const link = document.getElementById('taskLink').value.trim();
+      const amount = parseInt(document.getElementById('taskAmount').value);
+      
+      const btnText = document.getElementById('taskBtnText');
+      btnText.innerHTML = '<div class="loading-spinner"></div>';
+      
+      try {
+        if (editingTaskId) {
+          await db.ref('tasks/' + editingTaskId).update({ name, photo, link, amount });
+          showNotification('Success', 'Task updated successfully!', 'success');
+          editingTaskId = null;
+          btnText.textContent = 'Add Task';
+        } else {
+          const taskId = Date.now().toString();
+          await db.ref('tasks/' + taskId).set({ name, photo, link, amount });
+          showNotification('Success', 'Task added successfully!', 'success');
+          btnText.textContent = 'Add Task';
+        }
+        
+        document.getElementById('taskForm').reset();
+        loadTasks();
+      } catch (error) {
+        showNotification('Error', error.message, 'error');
+        btnText.textContent = editingTaskId ? 'Update Task' : 'Add Task';
+      }
+    });
+
+    async function loadTasks() {
+      try {
+        const snapshot = await db.ref('tasks').once('value');
+        const tasks = snapshot.val() || {};
+        const tbody = document.getElementById('tasksTableBody');
+        
+        if (Object.keys(tasks).length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="5" style="text-align: center; padding: 40px;">
+                <div class="empty-state">
+                  <div class="empty-state-icon">\ud83d\udccb</div>
+                  <div class="empty-state-text">No tasks yet. Add your first task!</div>
+                </div>
+              </td>
+            </tr>
+          `;
+          return;
+        }
+        
+        tbody.innerHTML = '';
+        
+        Object.entries(tasks).forEach(([taskId, task]) => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td><img src="${task.photo}" alt="${task.name}"></td>
+            <td><strong>${task.name}</strong></td>
+            <td><span class="badge badge-success">${task.amount} SHB</span></td>
+            <td><a href="${task.link}" target="_blank" style="color: var(--accent);">View Link</a></td>
             <td>
-              <button class="action-btn edit">Edit</button>
-              <button class="action-btn delete">Delete</button>
-              <button class="action-btn up">↑</button>
-              <button class="action-btn down">↓</button>
+              <div class="action-btns">
+                <button class="btn btn-small btn-primary" onclick="editTask('${taskId}')">Edit</button>
+                <button class="btn btn-small btn-danger" onclick="deleteTask('${taskId}')">Delete</button>
+              </div>
             </td>
           `;
-          tr.querySelector('.edit').onclick = function(){
-            editingTaskId = tid;
-            document.getElementById('task-name').value = t.name;
-            document.getElementById('task-photo').value = t.photo;
-            document.getElementById('task-link').value = t.link;
-            document.getElementById('task-amount').value = t.amount;
-          };
-          tr.querySelector('.delete').onclick = function(){
-            db.ref('tasks/'+tid).remove();
-            showNotif('Task deleted!');
-          };
-          tr.querySelector('.up').onclick = function(){
-            if (i==0) return;
-            const prevId = keys[i-1];
-            const temp = tasks[prevId];
-            db.ref('tasks/'+prevId).set(t);
-            db.ref('tasks/'+tid).set(temp);
-          };
-          tr.querySelector('.down').onclick = function(){
-            if (i==keys.length-1) return;
-            const nextId = keys[i+1];
-            const temp = tasks[nextId];
-            db.ref('tasks/'+nextId).set(t);
-            db.ref('tasks/'+tid).set(temp);
-          };
-          tbody.appendChild(tr);
+          tbody.appendChild(row);
         });
-      });
+      } catch (error) {
+        console.error('Error loading tasks:', error);
+      }
     }
-    loadTasksTable();
 
-    // Stats
-    function loadStats(){
-      db.ref('users').once('value',snap=>{
-        let totalUsers = 0, totalBalance = 0, adsShown = 0;
-        snap.forEach(u=>{
-          totalUsers++;
-          const ud = u.val();
-          totalBalance += (ud.balance||0);
-          if (ud.adsStats) adsShown += (ud.adsStats.total||0);
-        });
-        document.getElementById('total-users').textContent = 'Total Users: '+totalUsers;
-        document.getElementById('total-balance').textContent = 'Total SHB Balance: '+totalBalance;
-        document.getElementById('ads-shown').textContent = 'Total Ads Shown: '+adsShown;
-      });
-    }
-    setInterval(loadStats,2000);
-    loadStats();
+    window.editTask = async (taskId) => {
+      try {
+        const snapshot = await db.ref('tasks/' + taskId).once('value');
+        const task = snapshot.val();
+        
+        document.getElementById('taskName').value = task.name;
+        document.getElementById('taskPhoto').value = task.photo;
+        document.getElementById('taskLink').value = task.link;
+        document.getElementById('taskAmount').value = task.amount;
+        
+        editingTaskId = taskId;
+        document.getElementById('taskBtnText').textContent = 'Update Task';
+        
+        document.querySelector('[data-tab="tasks"]').click();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } catch (error) {
+        showNotification('Error', error.message, 'error');
+      }
+    };
 
-    // Search user
-    document.getElementById('search-user-btn').onclick = function(){
-      const uid = document.getElementById('search-userid').value.trim();
-      if (!uid) return showNotif('Enter user ID!');
-      db.ref('users/'+uid).once('value',snap=>{
-        if (!snap.exists()) return showNotif('User not found!');
-        const u = snap.val();
-        document.getElementById('user-info').innerHTML = `
-          <div>ID: ${u.id}</div>
-          <div>Balance: ${u.balance||0} SHB</div>
-          <div>Wallet: ${u.wallet||'-'}</div>
-          <div>Energy: ${u.energy||0}/${u.energyMax||0}</div>
-          <div>Ads Seen: ${u.adsStats?.total||0}</div>
+    window.deleteTask = async (taskId) => {
+      if (!confirm('Are you sure you want to delete this task?')) return;
+      
+      try {
+        await db.ref('tasks/' + taskId).remove();
+        showNotification('Success', 'Task deleted successfully!', 'success');
+        loadTasks();
+      } catch (error) {
+        showNotification('Error', error.message, 'error');
+      }
+    };
+
+    // User Management
+    document.getElementById('searchUserBtn').addEventListener('click', async () => {
+      const userId = document.getElementById('searchUserId').value.trim();
+      
+      if (!userId) {
+        showNotification('Error', 'Please enter a user ID', 'error');
+        return;
+      }
+      
+      try {
+        const snapshot = await db.ref('users/' + userId).once('value');
+        
+        if (!snapshot.exists()) {
+          showNotification('Error', 'User not found', 'error');
+          document.getElementById('userInfoContainer').innerHTML = '';
+          return;
+        }
+        
+        const user = snapshot.val();
+        
+        document.getElementById('userInfoContainer').innerHTML = `
+          <div class="user-info-card">
+            <h3 style="margin-bottom: 15px;">User Details</h3>
+            <div class="user-info-grid">
+              <div class="user-info-item">
+                <div class="user-info-label">User ID</div>
+                <div class="user-info-value">${userId}</div>
+              </div>
+              <div class="user-info-item">
+                <div class="user-info-label">Balance</div>
+                <div class="user-info-value">${(user.balance || 0).toLocaleString()} SHB</div>
+              </div>
+              <div class="user-info-item">
+                <div class="user-info-label">Energy</div>
+                <div class="user-info-value">${user.energy || 0} / ${user.maxEnergy || 1200}</div>
+              </div>
+              <div class="user-info-item">
+                <div class="user-info-label">Multi Tap</div>
+                <div class="user-info-value">${user.multiTap || 1}</div>
+              </div>
+              <div class="user-info-item">
+                <div class="user-info-label">Referrals</div>
+                <div class="user-info-value">${user.referrals || 0}</div>
+              </div>
+              <div class="user-info-item">
+                <div class="user-info-label">TON Wallet</div>
+                <div class="user-info-value" style="font-size: 0.8rem; word-break: break-all;">${user.ton || 'Not set'}</div>
+              </div>
+            </div>
+            <div style="margin-top: 15px;">
+              <button class="btn btn-primary" onclick="openBalanceModal('${userId}', '${user.balance || 0}')">
+                Adjust Balance
+              </button>
+            </div>
+          </div>
         `;
-      });
+      } catch (error) {
+        showNotification('Error', error.message, 'error');
+      }
+    });
+
+    async function loadUsers() {
+      try {
+        const snapshot = await db.ref('users').limitToFirst(50).once('value');
+        const users = snapshot.val() || {};
+        const tbody = document.getElementById('usersTableBody');
+        
+        if (Object.keys(users).length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="5" style="text-align: center; padding: 40px;">
+                <div class="empty-state">
+                  <div class="empty-state-icon">\ud83d\udc65</div>
+                  <div class="empty-state-text">No users yet</div>
+                </div>
+              </td>
+            </tr>
+          `;
+          return;
+        }
+        
+        tbody.innerHTML = '';
+        
+        Object.entries(users).forEach(([userId, user]) => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td><strong>${userId}</strong></td>
+            <td><span class="badge badge-success">${(user.balance || 0).toLocaleString()} SHB</span></td>
+            <td>${user.energy || 0} / ${user.maxEnergy || 1200}</td>
+            <td>${user.referrals || 0}</td>
+            <td>
+              <button class="btn btn-small btn-primary" onclick="viewUser('${userId}')">View</button>
+              <button class="btn btn-small btn-success" onclick="openBalanceModal('${userId}', '${user.balance || 0}')">Balance</button>
+            </td>
+          `;
+          tbody.appendChild(row);
+        });
+      } catch (error) {
+        console.error('Error loading users:', error);
+      }
+    }
+
+    window.viewUser = (userId) => {
+      document.getElementById('searchUserId').value = userId;
+      document.querySelector('[data-tab="users"]').click();
+      document.getElementById('searchUserBtn').click();
     };
 
-    // Redeem codes
-    document.getElementById('redeem-form').onsubmit = function(e){
+    // Profile Sections Management
+    document.getElementById('profileSectionForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const code = document.getElementById('redeem-code').value.trim();
-      if (!code || code.length!==4) return showNotif('Enter 4 digit code!');
-      db.ref('redeem_codes/'+code).set(true);
-      showNotif('Code generated!');
-      this.reset();
-    };
-    function loadRedeemTable(){
-      db.ref('redeem_codes').on('value',snap=>{
-        const codes = snap.val()||{};
-        const tbody = document.getElementById('redeem-table').querySelector('tbody');
-        tbody.innerHTML='';
-        Object.keys(codes).forEach(code=>{
-          let tr = document.createElement('tr');
-          tr.innerHTML = `<td>${code}</td><td><button class="action-btn delete">Delete</button></td>`;
-          tr.querySelector('.delete').onclick = function(){
-            db.ref('redeem_codes/'+code).remove();
-            showNotif('Code deleted!');
-          };
-          tbody.appendChild(tr);
+      
+      const name = document.getElementById('sectionName').value.trim();
+      const image = document.getElementById('sectionImage').value.trim();
+      const link = document.getElementById('sectionLink').value.trim();
+      
+      const btnText = document.getElementById('sectionBtnText');
+      btnText.innerHTML = '<div class="loading-spinner"></div>';
+      
+      try {
+        if (editingSectionId) {
+          await db.ref('profileSections/' + editingSectionId).update({ name, image, link });
+          showNotification('Success', 'Section updated successfully!', 'success');
+          editingSectionId = null;
+          btnText.textContent = 'Add Section';
+        } else {
+          const sectionId = name.toLowerCase().replace(/\s+/g, '_');
+          await db.ref('profileSections/' + sectionId).set({ name, image, link });
+          showNotification('Success', 'Section added successfully!', 'success');
+          btnText.textContent = 'Add Section';
+        }
+        
+        document.getElementById('profileSectionForm').reset();
+        loadProfileSections();
+      } catch (error) {
+        showNotification('Error', error.message, 'error');
+        btnText.textContent = editingSectionId ? 'Update Section' : 'Add Section';
+      }
+    });
+
+    async function loadProfileSections() {
+      try {
+        const snapshot = await db.ref('profileSections').once('value');
+        const sections = snapshot.val() || {};
+        const container = document.getElementById('profileSectionsContainer');
+        
+        const count = Object.keys(sections).length;
+        document.getElementById('sectionCount').textContent = `${count} Sections`;
+        
+        if (count === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon">\ud83c\udfaf</div>
+              <div class="empty-state-text">No sections yet. Add your first section!</div>
+            </div>
+          `;
+          return;
+        }
+        
+        container.innerHTML = '';
+        
+        Object.entries(sections).forEach(([sectionId, section]) => {
+          const item = document.createElement('div');
+          item.className = 'profile-section-item';
+          item.innerHTML = `
+            <img src="${section.image}" alt="${section.name}">
+            <div class="profile-section-name">${section.name}</div>
+            <div class="profile-section-link">${section.link}</div>
+            <div class="action-btns" style="margin-top: 10px;">
+              <button class="btn btn-small btn-primary" onclick="editSection('${sectionId}')">Edit</button>
+              <button class="btn btn-small btn-danger" onclick="deleteSection('${sectionId}')">Delete</button>
+            </div>
+          `;
+          container.appendChild(item);
         });
+      } catch (error) {
+        console.error('Error loading profile sections:', error);
+      }
+    }
+
+    window.editSection = async (sectionId) => {
+      try {
+        const snapshot = await db.ref('profileSections/' + sectionId).once('value');
+        const section = snapshot.val();
+        
+        document.getElementById('sectionName').value = section.name;
+        document.getElementById('sectionImage').value = section.image;
+        document.getElementById('sectionLink').value = section.link;
+        
+        editingSectionId = sectionId;
+        document.getElementById('sectionBtnText').textContent = 'Update Section';
+        
+        document.querySelector('[data-tab="profile-sections"]').click();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } catch (error) {
+        showNotification('Error', error.message, 'error');
+      }
+    };
+
+    window.deleteSection = async (sectionId) => {
+      if (!confirm('Are you sure you want to delete this section?')) return;
+      
+      try {
+        await db.ref('profileSections/' + sectionId).remove();
+        showNotification('Success', 'Section deleted successfully!', 'success');
+        loadProfileSections();
+      } catch (error) {
+        showNotification('Error', error.message, 'error');
+      }
+    };
+
+    // Redeem Codes Management
+    document.getElementById('redeemForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const code = document.getElementById('redeemCode').value.trim();
+      
+      if (code.length !== 4 || !/^\d+$/.test(code)) {
+        showNotification('Error', 'Code must be 4 digits', 'error');
+        return;
+      }
+      
+      try {
+        await db.ref('redeemCodes/' + code).set(true);
+        showNotification('Success', 'Redeem code generated!', 'success');
+        document.getElementById('redeemForm').reset();
+        loadRedeemCodes();
+      } catch (error) {
+        showNotification('Error', error.message, 'error');
+      }
+    });
+
+    async function loadRedeemCodes() {
+      try {
+        const snapshot = await db.ref('redeemCodes').once('value');
+        const codes = snapshot.val() || {};
+        const tbody = document.getElementById('redeemTableBody');
+        
+        const count = Object.keys(codes).length;
+        document.getElementById('redeemCount').textContent = `${count} Codes`;
+        
+        if (count === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="3" style="text-align: center; padding: 40px;">
+                <div class="empty-state">
+                  <div class="empty-state-icon">\ud83c\udf81</div>
+                  <div class="empty-state-text">No redeem codes yet</div>
+                </div>
+              </td>
+            </tr>
+          `;
+          return;
+        }
+        
+        tbody.innerHTML = '';
+        
+        Object.keys(codes).forEach(code => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td><strong style="font-size: 1.2rem; letter-spacing: 2px;">${code}</strong></td>
+            <td><span class="badge badge-success">Active</span></td>
+            <td>
+              <button class="btn btn-small btn-danger" onclick="deleteRedeemCode('${code}')">Delete</button>
+            </td>
+          `;
+          tbody.appendChild(row);
+        });
+      } catch (error) {
+        console.error('Error loading redeem codes:', error);
+      }
+    }
+
+    window.deleteRedeemCode = async (code) => {
+      if (!confirm('Are you sure you want to delete this code?')) return;
+      
+      try {
+        await db.ref('redeemCodes/' + code).remove();
+        showNotification('Success', 'Code deleted successfully!', 'success');
+        loadRedeemCodes();
+      } catch (error) {
+        showNotification('Error', error.message, 'error');
+      }
+    };
+
+    // Charts
+    function initializeCharts() {
+      // Overview Chart
+      const overviewCtx = document.getElementById('overviewChart').getContext('2d');
+      new Chart(overviewCtx, {
+        type: 'line',
+        data: {
+          labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+          datasets: [{
+            label: 'Users',
+            data: [12, 19, 15, 25, 22, 30, 35],
+            borderColor: '#27cdfc',
+            backgroundColor: 'rgba(39, 205, 252, 0.1)',
+            tension: 0.4
+          }, {
+            label: 'Tasks Completed',
+            data: [8, 15, 12, 20, 18, 25, 28],
+            borderColor: '#ff61a6',
+            backgroundColor: 'rgba(255, 97, 166, 0.1)',
+            tension: 0.4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'top',
+            }
+          }
+        }
+      });
+
+      // User Growth Chart
+      const userGrowthCtx = document.getElementById('userGrowthChart').getContext('2d');
+      new Chart(userGrowthCtx, {
+        type: 'bar',
+        data: {
+          labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+          datasets: [{
+            label: 'New Users',
+            data: [45, 67, 89, 112],
+            backgroundColor: 'rgba(39, 205, 252, 0.8)',
+            borderColor: '#27cdfc',
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            }
+          }
+        }
+      });
+
+      // Balance Chart
+      const balanceCtx = document.getElementById('balanceChart').getContext('2d');
+      new Chart(balanceCtx, {
+        type: 'doughnut',
+        data: {
+          labels: ['0-1000 SHB', '1000-5000 SHB', '5000-10000 SHB', '10000+ SHB'],
+          datasets: [{
+            data: [30, 40, 20, 10],
+            backgroundColor: [
+              'rgba(39, 205, 252, 0.8)',
+              'rgba(255, 97, 166, 0.8)',
+              'rgba(255, 210, 62, 0.8)',
+              'rgba(52, 211, 153, 0.8)'
+            ],
+            borderWidth: 2,
+            borderColor: '#fff'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom'
+            }
+          }
+        }
       });
     }
-    loadRedeemTable();
+
+    // Initialize on load
+    initializeDashboard();
   </script>
 </body>
 </html>
