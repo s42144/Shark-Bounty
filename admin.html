@@ -2,13 +2,16 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Shark Bounty Admin Panel</title>
+  <title>Shark Bounty - Professional Admin Panel</title>
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
   <link rel="icon" href="https://github.com/s42144/Shark-Bounty/blob/dedf1f3379f4a52180a500e818e467dcd99f56c9/1057118.png?raw=true">
+  
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
   <style>
     :root {
       --primary: #27cdfc;
@@ -21,6 +24,10 @@
       --btn-gradient: linear-gradient(95deg, #27cdfc 0%, #ff61a6 100%);
       --shadow: 0 4px 32px rgba(0,0,0,0.15);
       --border-radius: 16px;
+      --success: #34d399;
+      --danger: #ef4444;
+      --warning: #fbbf24;
+      --info: #3b82f6;
     }
     
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -36,9 +43,10 @@
     
     .admin-wrapper {
       min-height: 100vh;
-      padding: 20px;
+      padding: 15px;
     }
     
+    /* Header */
     .admin-header {
       background: var(--card-bg);
       border-radius: var(--border-radius);
@@ -63,6 +71,7 @@
       height: 50px;
       border-radius: 50%;
       border: 3px solid var(--accent2);
+      object-fit: cover;
     }
     
     .admin-title {
@@ -73,10 +82,40 @@
       -webkit-text-fill-color: transparent;
     }
     
+    .admin-subtitle {
+      color: #666;
+      font-size: 0.9rem;
+      margin-top: 4px;
+    }
+    
     .admin-actions {
       display: flex;
       gap: 10px;
       align-items: center;
+      flex-wrap: wrap;
+    }
+    
+    .online-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: rgba(52, 211, 153, 0.1);
+      border-radius: 20px;
+      border: 2px solid var(--success);
+    }
+    
+    .online-dot {
+      width: 10px;
+      height: 10px;
+      background: var(--success);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
     }
     
     .logout-btn {
@@ -97,38 +136,32 @@
     /* Dashboard Grid */
     .dashboard-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 20px;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 15px;
       margin-bottom: 20px;
     }
     
     .stat-card {
       background: var(--card-bg);
       border-radius: var(--border-radius);
-      padding: 24px;
+      padding: 20px;
       box-shadow: var(--shadow);
       border-left: 5px solid var(--accent);
       transition: transform 0.2s;
+      cursor: pointer;
     }
     
     .stat-card:hover {
       transform: translateY(-4px);
     }
     
-    .stat-card:nth-child(2) {
-      border-left-color: var(--accent2);
-    }
-    
-    .stat-card:nth-child(3) {
-      border-left-color: #ffd23e;
-    }
-    
-    .stat-card:nth-child(4) {
-      border-left-color: #34d399;
-    }
+    .stat-card:nth-child(2) { border-left-color: var(--accent2); }
+    .stat-card:nth-child(3) { border-left-color: var(--warning); }
+    .stat-card:nth-child(4) { border-left-color: var(--success); }
+    .stat-card:nth-child(5) { border-left-color: var(--info); }
     
     .stat-label {
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       color: #666;
       margin-bottom: 8px;
       font-weight: 600;
@@ -137,103 +170,22 @@
     }
     
     .stat-value {
-      font-size: 2rem;
+      font-size: 1.8rem;
       font-weight: 900;
       color: #333;
       margin-bottom: 5px;
     }
     
     .stat-change {
-      font-size: 0.85rem;
-      color: #34d399;
+      font-size: 0.8rem;
+      color: var(--success);
       font-weight: 600;
     }
     
-    /* Balance Control Modal */
-    .balance-modal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.7);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 10000;
-    }
-    
-    .balance-modal.show {
-      display: flex;
-    }
-    
-    .balance-modal-content {
-      background: var(--card-bg);
-      border-radius: var(--border-radius);
-      padding: 30px;
-      max-width: 400px;
-      width: 90%;
-      box-shadow: var(--shadow);
-      text-align: center;
-    }
-    
-    .balance-modal-title {
-      font-size: 1.5rem;
-      font-weight: 900;
-      margin-bottom: 20px;
-      background: var(--btn-gradient);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    
-    .balance-input-group {
-      margin: 20px 0;
-    }
-    
-    .balance-input {
-      width: 100%;
-      padding: 12px 16px;
-      border: 2px solid #e0e0e0;
-      border-radius: 10px;
-      font-size: 1.1rem;
-      text-align: center;
-      margin-bottom: 15px;
-    }
-    
-    .balance-buttons {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-      margin-top: 20px;
-    }
-    
-    .balance-btn {
-      padding: 12px 24px;
-      border: none;
-      border-radius: 10px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.2s;
-      font-size: 1rem;
-    }
-    
-    .balance-btn.increase {
-      background: #34d399;
-      color: #fff;
-    }
-    
-    .balance-btn.decrease {
-      background: #ef4444;
-      color: #fff;
-    }
-    
-    .balance-btn.cancel {
-      background: #6c757d;
-      color: #fff;
-    }
-    
-    .balance-btn:hover {
-      transform: translateY(-2px);
+    .stat-icon {
+      font-size: 2rem;
+      opacity: 0.2;
+      float: right;
     }
     
     /* Tabs Navigation */
@@ -244,7 +196,7 @@
       margin-bottom: 20px;
       box-shadow: var(--shadow);
       display: flex;
-      gap: 10px;
+      gap: 8px;
       overflow-x: auto;
       flex-wrap: wrap;
     }
@@ -252,13 +204,14 @@
     .tab-btn {
       background: transparent;
       border: none;
-      padding: 12px 24px;
+      padding: 12px 20px;
       border-radius: 10px;
       font-weight: 700;
       cursor: pointer;
       transition: all 0.3s;
       color: #666;
       white-space: nowrap;
+      font-size: 0.9rem;
     }
     
     .tab-btn.active {
@@ -296,10 +249,12 @@
       margin-bottom: 20px;
       padding-bottom: 15px;
       border-bottom: 2px solid #f0f0f0;
+      flex-wrap: wrap;
+      gap: 10px;
     }
     
     .card-title {
-      font-size: 1.3rem;
+      font-size: 1.2rem;
       font-weight: 800;
       color: #333;
     }
@@ -321,7 +276,7 @@
     .form-label {
       font-weight: 700;
       color: #333;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
@@ -345,6 +300,50 @@
     .form-textarea {
       resize: vertical;
       min-height: 100px;
+    }
+    
+    .file-upload-wrapper {
+      position: relative;
+      overflow: hidden;
+      display: inline-block;
+      width: 100%;
+    }
+    
+    .file-upload-btn {
+      background: var(--btn-gradient);
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 700;
+      display: inline-block;
+      width: 100%;
+      text-align: center;
+      transition: transform 0.2s;
+    }
+    
+    .file-upload-btn:hover {
+      transform: translateY(-2px);
+    }
+    
+    .file-upload-input {
+      position: absolute;
+      left: 0;
+      top: 0;
+      opacity: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+    }
+    
+    .image-preview {
+      width: 100%;
+      max-width: 200px;
+      height: 150px;
+      object-fit: cover;
+      border-radius: 10px;
+      margin-top: 10px;
+      border: 2px solid #e0e0e0;
     }
     
     /* Buttons */
@@ -375,18 +374,28 @@
     }
     
     .btn-danger {
-      background: #ef4444;
+      background: var(--danger);
       color: #fff;
     }
     
     .btn-success {
-      background: #34d399;
+      background: var(--success);
+      color: #fff;
+    }
+    
+    .btn-info {
+      background: var(--info);
       color: #fff;
     }
     
     .btn-small {
       padding: 6px 12px;
       font-size: 0.85rem;
+    }
+    
+    .btn-icon {
+      padding: 8px 12px;
+      font-size: 1.2rem;
     }
     
     /* Tables */
@@ -400,6 +409,7 @@
       width: 100%;
       border-collapse: collapse;
       background: #fff;
+      min-width: 800px;
     }
     
     .data-table thead {
@@ -412,13 +422,14 @@
       text-align: left;
       font-weight: 700;
       text-transform: uppercase;
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       letter-spacing: 0.5px;
     }
     
     .data-table td {
       padding: 12px;
       border-bottom: 1px solid #f0f0f0;
+      font-size: 0.9rem;
     }
     
     .data-table tbody tr:hover {
@@ -437,35 +448,6 @@
       display: flex;
       gap: 6px;
       flex-wrap: wrap;
-    }
-    
-    /* Balance Control Section */
-    .balance-control-section {
-      background: var(--card-bg);
-      border-radius: var(--border-radius);
-      padding: 24px;
-      margin-bottom: 20px;
-      box-shadow: var(--shadow);
-      border-left: 5px solid var(--accent);
-    }
-    
-    .balance-control-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-    
-    .balance-control-title {
-      font-size: 1.3rem;
-      font-weight: 800;
-      color: #333;
-    }
-    
-    .balance-control-instructions {
-      color: #666;
-      margin-bottom: 20px;
-      font-size: 0.9rem;
     }
     
     /* Search Bar */
@@ -509,58 +491,51 @@
     }
     
     .user-info-label {
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       opacity: 0.9;
       margin-bottom: 5px;
+      text-transform: uppercase;
     }
     
     .user-info-value {
-      font-size: 1.1rem;
+      font-size: 1rem;
       font-weight: 700;
+      word-break: break-word;
     }
     
-    /* Profile Sections Management */
-    .profile-section-preview {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 15px;
-      margin-top: 20px;
-    }
-    
-    .profile-section-item {
+    /* Wallet Section */
+    .wallet-item {
       background: #f8f9fa;
       border-radius: 12px;
       padding: 15px;
-      text-align: center;
+      margin-bottom: 15px;
       border: 2px solid #e0e0e0;
       transition: all 0.3s;
     }
     
-    .profile-section-item:hover {
+    .wallet-item:hover {
       border-color: var(--accent);
-      transform: translateY(-4px);
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
     
-    .profile-section-item img {
-      width: 100%;
-      height: 120px;
-      object-fit: cover;
-      border-radius: 8px;
+    .wallet-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       margin-bottom: 10px;
+      flex-wrap: wrap;
+      gap: 10px;
     }
     
-    .profile-section-name {
-      font-weight: 700;
+    .wallet-address {
+      font-family: 'Courier New', monospace;
+      font-size: 0.9rem;
       color: #333;
-      margin-bottom: 8px;
-    }
-    
-    .profile-section-link {
-      font-size: 0.85rem;
-      color: #666;
       word-break: break-all;
-      margin-bottom: 10px;
+      background: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      margin: 10px 0;
     }
     
     /* Notifications */
@@ -585,17 +560,10 @@
       transform: translateX(0);
     }
     
-    .notification.success {
-      border-left: 4px solid #34d399;
-    }
-    
-    .notification.error {
-      border-left: 4px solid #ef4444;
-    }
-    
-    .notification.info {
-      border-left: 4px solid #3b82f6;
-    }
+    .notification.success { border-left: 4px solid var(--success); }
+    .notification.error { border-left: 4px solid var(--danger); }
+    .notification.info { border-left: 4px solid var(--info); }
+    .notification.warning { border-left: 4px solid var(--warning); }
     
     .notification-icon {
       font-size: 1.5rem;
@@ -648,50 +616,6 @@
       font-weight: 600;
     }
     
-    /* Responsive */
-    @media (max-width: 768px) {
-      .admin-header {
-        flex-direction: column;
-        text-align: center;
-      }
-      
-      .dashboard-grid {
-        grid-template-columns: 1fr;
-      }
-      
-      .form-grid {
-        grid-template-columns: 1fr;
-      }
-      
-      .tabs-nav {
-        flex-direction: column;
-      }
-      
-      .tab-btn {
-        width: 100%;
-      }
-      
-      .notification {
-        right: 10px;
-        left: 10px;
-        max-width: none;
-      }
-      
-      .balance-buttons {
-        flex-direction: column;
-      }
-    }
-    
-    /* Animations */
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    
-    .fade-in {
-      animation: fadeIn 0.5s ease-out;
-    }
-    
     /* Badge */
     .badge {
       display: inline-block;
@@ -721,7 +645,172 @@
       background: #dbeafe;
       color: #1e40af;
     }
+    
+    /* Modal */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+      padding: 20px;
+    }
+    
+    .modal.show {
+      display: flex;
+    }
+    
+    .modal-content {
+      background: var(--card-bg);
+      border-radius: var(--border-radius);
+      padding: 30px;
+      max-width: 500px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: var(--shadow);
+    }
+    
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    .modal-title {
+      font-size: 1.5rem;
+      font-weight: 900;
+      background: var(--btn-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #666;
+    }
+    
+    /* Copy Button */
+    .copy-btn {
+      background: var(--info);
+      color: #fff;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    
+    .copy-btn:hover {
+      transform: scale(1.05);
+    }
+    
+    .copy-btn.copied {
+      background: var(--success);
+    }
+    
+    /* Animations */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .fade-in {
+      animation: fadeIn 0.5s ease-out;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+      .admin-header {
+        flex-direction: column;
+        text-align: center;
+        padding: 15px;
+      }
+      
+      .admin-logo-section {
+        flex-direction: column;
+      }
+      
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .tabs-nav {
+        flex-direction: column;
+      }
+      
+      .tab-btn {
+        width: 100%;
+      }
+      
+      .notification {
+        right: 10px;
+        left: 10px;
+        max-width: none;
+      }
+      
+      .stat-value {
+        font-size: 1.5rem;
+      }
+      
+      .card {
+        padding: 15px;
+      }
+      
+      .data-table {
+        font-size: 0.85rem;
+      }
+      
+      .data-table th,
+      .data-table td {
+        padding: 8px;
+      }
+      
+      .action-btns {
+        flex-direction: column;
+      }
+      
+      .btn-small {
+        width: 100%;
+      }
+    }
+    
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 10px;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: var(--accent);
+      border-radius: 10px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--accent2);
+    }
   </style>
+<script src="https://sites.super.myninja.ai/_assets/ninja-daytona-script.js"></script>
 </head>
 <body>
   <!-- Admin Dashboard -->
@@ -732,82 +821,133 @@
         <img src="https://github.com/s42144/Shark-Bounty/blob/dedf1f3379f4a52180a500e818e467dcd99f56c9/1057118.png?raw=true" alt="Logo" class="admin-logo">
         <div>
           <h1 class="admin-title">Shark Bounty</h1>
-          <p style="color: #666; font-size: 0.9rem; margin-top: 4px;">Admin Control Panel</p>
+          <p class="admin-subtitle">Professional Admin Control Panel</p>
         </div>
+      </div>
+      <div class="admin-actions">
+        <div class="online-indicator">
+          <div class="online-dot"></div>
+          <span id="onlineUsers">0 Online</span>
+        </div>
+        <button class="logout-btn" onclick="logout()">🚪 Logout</button>
       </div>
     </div>
 
     <!-- Dashboard Stats -->
     <div class="dashboard-grid fade-in">
-      <div class="stat-card">
+      <div class="stat-card" onclick="switchTab('users')">
+        <div class="stat-icon">👥</div>
         <div class="stat-label">Total Users</div>
         <div class="stat-value" id="totalUsers">0</div>
         <div class="stat-change" id="usersChange">+0 today</div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card" onclick="switchTab('users')">
+        <div class="stat-icon">💰</div>
         <div class="stat-label">Total Balance</div>
         <div class="stat-value" id="totalBalance">0 SHB</div>
-        <div class="stat-change" id="balanceChange">+0 today</div>
+        <div class="stat-change" id="balanceChange">Circulating</div>
       </div>
-      <div class="stat-card">
-        <div class="stat-label">Ads Shown</div>
-        <div class="stat-value" id="totalAds">0</div>
-        <div class="stat-change" id="adsChange">+0 today</div>
-      </div>
-      <div class="stat-card">
+      <div class="stat-card" onclick="switchTab('tasks')">
+        <div class="stat-icon">📋</div>
         <div class="stat-label">Active Tasks</div>
         <div class="stat-value" id="totalTasks">0</div>
-        <div class="stat-change" id="tasksChange">Active</div>
+        <div class="stat-change" id="tasksChange">Available</div>
       </div>
-    </div>
-
-    <!-- Balance Control Section -->
-    <div class="balance-control-section fade-in">
-      <div class="balance-control-header">
-        <h2 class="balance-control-title">\ud83d\udcb0 Balance Control</h2>
-        <span class="badge badge-info">Quick Balance Management</span>
+      <div class="stat-card" onclick="switchTab('wallets')">
+        <div class="stat-icon">🏦</div>
+        <div class="stat-label">Wallet Addresses</div>
+        <div class="stat-value" id="totalWallets">0</div>
+        <div class="stat-change">Connected</div>
       </div>
-      <p class="balance-control-instructions">
-        Search for a user and adjust their SHB balance instantly. Enter positive number to increase, negative to decrease.
-      </p>
-      <div class="search-bar">
-        <input type="text" class="search-input" id="balanceUserId" placeholder="Enter User ID...">
-        <input type="number" class="search-input" id="balanceAmount" placeholder="Amount (+/-)" style="max-width: 150px;">
-        <button class="btn btn-primary" id="searchBalanceBtn">Find User</button>
+      <div class="stat-card" onclick="switchTab('analytics')">
+        <div class="stat-icon">📊</div>
+        <div class="stat-label">Total Referrals</div>
+        <div class="stat-value" id="totalReferrals">0</div>
+        <div class="stat-change">Network</div>
       </div>
-      <div id="balanceUserInfo"></div>
     </div>
 
     <!-- Tabs Navigation -->
     <div class="tabs-nav fade-in">
-      <button class="tab-btn active" data-tab="overview">\ud83d\udcca Overview</button>
-      <button class="tab-btn" data-tab="tasks">\ud83d\udccb Tasks</button>
-      <button class="tab-btn" data-tab="users">\ud83d\udc65 Users</button>
-      <button class="tab-btn" data-tab="profile-sections">\ud83c\udfaf Profile Sections</button>
-      <button class="tab-btn" data-tab="redeem">\ud83c\udf81 Redeem Codes</button>
-      <button class="tab-btn" data-tab="analytics">\ud83d\udcc8 Analytics</button>
+      <button class="tab-btn active" data-tab="overview">📊 Overview</button>
+      <button class="tab-btn" data-tab="users">👥 Users</button>
+      <button class="tab-btn" data-tab="tasks">📋 Tasks</button>
+      <button class="tab-btn" data-tab="wallets">🏦 Wallets</button>
+      <button class="tab-btn" data-tab="profile-sections">🎯 Sections</button>
+      <button class="tab-btn" data-tab="home-ui">🎨 Home UI</button>
+      <button class="tab-btn" data-tab="redeem">🎁 Redeem</button>
+      <button class="tab-btn" data-tab="analytics">📈 Analytics</button>
+      <button class="tab-btn" data-tab="settings">⚙️ Settings</button>
     </div>
 
     <!-- Overview Tab -->
     <div class="tab-content active" id="overview">
       <div class="card fade-in">
         <div class="card-header">
-          <h2 class="card-title">\ud83d\udcca System Overview</h2>
+          <h2 class="card-title">📊 System Overview</h2>
+          <button class="btn btn-info btn-small" onclick="refreshStats()">🔄 Refresh</button>
         </div>
-        <div class="chart-container">
+        <div style="height: 300px;">
           <canvas id="overviewChart"></canvas>
         </div>
       </div>
       
       <div class="card fade-in">
         <div class="card-header">
-          <h2 class="card-title">\ud83d\udd25 Recent Activity</h2>
+          <h2 class="card-title">🔥 Recent Activity</h2>
         </div>
         <div id="recentActivity">
           <div class="empty-state">
-            <div class="empty-state-icon">\ud83d\udcca</div>
+            <div class="empty-state-icon">📊</div>
             <div class="empty-state-text">Loading activity data...</div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Users Tab -->
+    <div class="tab-content" id="users">
+      <div class="card fade-in">
+        <div class="card-header">
+          <h2 class="card-title">🔍 Search User</h2>
+        </div>
+        <div class="search-bar">
+          <input type="text" class="search-input" id="searchUserId" placeholder="Enter User ID or Telegram Username...">
+          <button class="btn btn-primary" onclick="searchUser()">🔍 Search</button>
+        </div>
+        <div id="userInfoContainer"></div>
+      </div>
+
+      <div class="card fade-in">
+        <div class="card-header">
+          <h2 class="card-title">👥 All Users</h2>
+          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <span class="badge badge-info" id="userCount">0 Users</span>
+            <button class="btn btn-success btn-small" onclick="exportUsers()">📥 Export CSV</button>
+            <button class="btn btn-info btn-small" onclick="loadUsers()">🔄 Refresh</button>
+          </div>
+        </div>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>User ID</th>
+                <th>Telegram</th>
+                <th>Balance</th>
+                <th>Country</th>
+                <th>Device</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="usersTableBody">
+              <tr>
+                <td colspan="6" style="text-align: center; padding: 40px;">
+                  <div class="loading-spinner" style="margin: 0 auto;"></div>
+                  <p style="margin-top: 10px; color: #999;">Loading users...</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -816,7 +956,7 @@
     <div class="tab-content" id="tasks">
       <div class="card fade-in">
         <div class="card-header">
-          <h2 class="card-title">\u2795 Add New Task</h2>
+          <h2 class="card-title">➕ Add New Task</h2>
         </div>
         <form id="taskForm">
           <div class="form-grid">
@@ -831,23 +971,30 @@
           </div>
           <div class="form-grid">
             <div class="form-group">
-              <label class="form-label">Photo URL</label>
-              <input type="url" class="form-input" id="taskPhoto" placeholder="https://..." required>
-            </div>
-            <div class="form-group">
               <label class="form-label">Task Link</label>
               <input type="url" class="form-input" id="taskLink" placeholder="https://..." required>
             </div>
           </div>
+          <div class="form-group">
+            <label class="form-label">Task Photo</label>
+            <div class="file-upload-wrapper">
+              <label class="file-upload-btn">
+                📷 Upload from Gallery
+                <input type="file" class="file-upload-input" id="taskPhotoFile" accept="image/*" onchange="handleTaskImageUpload(event)">
+              </label>
+            </div>
+            <input type="url" class="form-input" id="taskPhoto" placeholder="Or paste image URL..." style="margin-top: 10px;">
+            <img id="taskPhotoPreview" class="image-preview" style="display: none;">
+          </div>
           <button type="submit" class="btn btn-primary">
-            <span id="taskBtnText">Add Task</span>
+            <span id="taskBtnText">➕ Add Task</span>
           </button>
         </form>
       </div>
 
       <div class="card fade-in">
         <div class="card-header">
-          <h2 class="card-title">\ud83d\udccb All Tasks</h2>
+          <h2 class="card-title">📋 All Tasks</h2>
           <span class="badge badge-info" id="taskCount">0 Tasks</span>
         </div>
         <div class="table-container">
@@ -874,44 +1021,22 @@
       </div>
     </div>
 
-    <!-- Users Tab -->
-    <div class="tab-content" id="users">
+    <!-- Wallets Tab -->
+    <div class="tab-content" id="wallets">
       <div class="card fade-in">
         <div class="card-header">
-          <h2 class="card-title">\ud83d\udd0d Search User</h2>
+          <h2 class="card-title">🏦 Wallet Addresses</h2>
+          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button class="btn btn-success btn-small" onclick="copyAllWallets()">📋 Copy All</button>
+            <button class="btn btn-info btn-small" onclick="exportWallets()">📥 Export TXT</button>
+            <button class="btn btn-primary btn-small" onclick="loadWallets()">🔄 Refresh</button>
+          </div>
         </div>
-        <div class="search-bar">
-          <input type="text" class="search-input" id="searchUserId" placeholder="Enter User ID...">
-          <button class="btn btn-primary" id="searchUserBtn">Search</button>
-        </div>
-        <div id="userInfoContainer"></div>
-      </div>
-
-      <div class="card fade-in">
-        <div class="card-header">
-          <h2 class="card-title">\ud83d\udc65 All Users</h2>
-          <span class="badge badge-info" id="userCount">0 Users</span>
-        </div>
-        <div class="table-container">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>User ID</th>
-                <th>Balance</th>
-                <th>Energy</th>
-                <th>Referrals</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="usersTableBody">
-              <tr>
-                <td colspan="5" style="text-align: center; padding: 40px;">
-                  <div class="loading-spinner" style="margin: 0 auto;"></div>
-                  <p style="margin-top: 10px; color: #999;">Loading users...</p>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        <div id="walletsContainer">
+          <div class="empty-state">
+            <div class="empty-state-icon">🏦</div>
+            <div class="empty-state-text">Loading wallet addresses...</div>
+          </div>
         </div>
       </div>
     </div>
@@ -920,7 +1045,7 @@
     <div class="tab-content" id="profile-sections">
       <div class="card fade-in">
         <div class="card-header">
-          <h2 class="card-title">\u2795 Add Profile Section</h2>
+          <h2 class="card-title">➕ Add Profile Section</h2>
         </div>
         <form id="profileSectionForm">
           <div class="form-grid">
@@ -929,30 +1054,92 @@
               <input type="text" class="form-input" id="sectionName" placeholder="e.g., RoadMap" required>
             </div>
             <div class="form-group">
-              <label class="form-label">Image URL</label>
-              <input type="url" class="form-input" id="sectionImage" placeholder="https://..." required>
+              <label class="form-label">Link URL</label>
+              <input type="url" class="form-input" id="sectionLink" placeholder="https://..." required>
             </div>
           </div>
           <div class="form-group">
-            <label class="form-label">Link URL</label>
-            <input type="url" class="form-input" id="sectionLink" placeholder="https://..." required>
+            <label class="form-label">Section Image</label>
+            <div class="file-upload-wrapper">
+              <label class="file-upload-btn">
+                📷 Upload from Gallery
+                <input type="file" class="file-upload-input" id="sectionImageFile" accept="image/*" onchange="handleSectionImageUpload(event)">
+              </label>
+            </div>
+            <input type="url" class="form-input" id="sectionImage" placeholder="Or paste image URL..." style="margin-top: 10px;">
+            <img id="sectionImagePreview" class="image-preview" style="display: none;">
           </div>
           <button type="submit" class="btn btn-primary">
-            <span id="sectionBtnText">Add Section</span>
+            <span id="sectionBtnText">➕ Add Section</span>
           </button>
         </form>
       </div>
 
       <div class="card fade-in">
         <div class="card-header">
-          <h2 class="card-title">\ud83c\udfaf Profile Sections</h2>
+          <h2 class="card-title">🎯 Profile Sections</h2>
           <span class="badge badge-info" id="sectionCount">0 Sections</span>
         </div>
-        <div class="profile-section-preview" id="profileSectionsContainer">
+        <div class="profile-section-preview" id="profileSectionsContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px;">
           <div class="empty-state">
-            <div class="empty-state-icon">\ud83c\udfaf</div>
+            <div class="empty-state-icon">🎯</div>
             <div class="empty-state-text">No sections yet. Add your first section!</div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Home UI Tab -->
+    <div class="tab-content" id="home-ui">
+      <div class="card fade-in">
+        <div class="card-header">
+          <h2 class="card-title">🎨 Home UI Customization</h2>
+        </div>
+        <form id="homeUIForm">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Logo Image</label>
+              <div class="file-upload-wrapper">
+                <label class="file-upload-btn">
+                  📷 Upload Logo
+                  <input type="file" class="file-upload-input" id="logoFile" accept="image/*" onchange="handleLogoUpload(event)">
+                </label>
+              </div>
+              <input type="url" class="form-input" id="logoUrl" placeholder="Or paste logo URL..." style="margin-top: 10px;">
+              <img id="logoPreview" class="image-preview" style="display: none;">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Background Image</label>
+              <div class="file-upload-wrapper">
+                <label class="file-upload-btn">
+                  📷 Upload Background
+                  <input type="file" class="file-upload-input" id="bgFile" accept="image/*" onchange="handleBgUpload(event)">
+                </label>
+              </div>
+              <input type="url" class="form-input" id="bgUrl" placeholder="Or paste background URL..." style="margin-top: 10px;">
+              <img id="bgPreview" class="image-preview" style="display: none;">
+            </div>
+          </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Primary Color</label>
+              <input type="color" class="form-input" id="primaryColor" value="#27cdfc">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Secondary Color</label>
+              <input type="color" class="form-input" id="secondaryColor" value="#ff61a6">
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary">💾 Save UI Settings</button>
+        </form>
+      </div>
+
+      <div class="card fade-in">
+        <div class="card-header">
+          <h2 class="card-title">👁️ Current UI Preview</h2>
+        </div>
+        <div id="uiPreview" style="padding: 20px; background: #f8f9fa; border-radius: 10px; text-align: center;">
+          <p style="color: #666;">UI preview will appear here after saving settings</p>
         </div>
       </div>
     </div>
@@ -961,7 +1148,7 @@
     <div class="tab-content" id="redeem">
       <div class="card fade-in">
         <div class="card-header">
-          <h2 class="card-title">\u2795 Generate Redeem Code</h2>
+          <h2 class="card-title">➕ Generate Redeem Code</h2>
         </div>
         <form id="redeemForm">
           <div class="form-grid">
@@ -970,7 +1157,7 @@
               <input type="text" class="form-input" id="redeemCode" placeholder="1234" maxlength="4" pattern="[0-9]{4}" required>
             </div>
             <div class="form-group" style="display: flex; align-items: flex-end;">
-              <button type="submit" class="btn btn-primary" style="width: 100%;">Generate Code</button>
+              <button type="submit" class="btn btn-primary" style="width: 100%;">🎁 Generate Code</button>
             </div>
           </div>
         </form>
@@ -978,7 +1165,7 @@
 
       <div class="card fade-in">
         <div class="card-header">
-          <h2 class="card-title">\ud83c\udf81 Active Redeem Codes</h2>
+          <h2 class="card-title">🎁 Active Redeem Codes</h2>
           <span class="badge badge-success" id="redeemCount">0 Codes</span>
         </div>
         <div class="table-container">
@@ -994,7 +1181,7 @@
               <tr>
                 <td colspan="3" style="text-align: center; padding: 40px;">
                   <div class="empty-state">
-                    <div class="empty-state-icon">\ud83c\udf81</div>
+                    <div class="empty-state-icon">🎁</div>
                     <div class="empty-state-text">No redeem codes yet</div>
                   </div>
                 </td>
@@ -1009,42 +1196,82 @@
     <div class="tab-content" id="analytics">
       <div class="card fade-in">
         <div class="card-header">
-          <h2 class="card-title">\ud83d\udcc8 User Growth</h2>
+          <h2 class="card-title">📈 User Growth</h2>
         </div>
-        <div class="chart-container">
+        <div style="height: 300px;">
           <canvas id="userGrowthChart"></canvas>
         </div>
       </div>
 
       <div class="card fade-in">
         <div class="card-header">
-          <h2 class="card-title">\ud83d\udcb0 Balance Distribution</h2>
+          <h2 class="card-title">💰 Balance Distribution</h2>
         </div>
-        <div class="chart-container">
+        <div style="height: 300px;">
           <canvas id="balanceChart"></canvas>
+        </div>
+      </div>
+
+      <div class="card fade-in">
+        <div class="card-header">
+          <h2 class="card-title">🌍 Users by Country</h2>
+        </div>
+        <div id="countryStats">
+          <div class="empty-state">
+            <div class="empty-state-icon">🌍</div>
+            <div class="empty-state-text">Loading country statistics...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings Tab -->
+    <div class="tab-content" id="settings">
+      <div class="card fade-in">
+        <div class="card-header">
+          <h2 class="card-title">⚙️ Bot Settings</h2>
+        </div>
+        <form id="settingsForm">
+          <div class="form-group">
+            <label class="form-label">Telegram Bot Token</label>
+            <input type="text" class="form-input" id="botToken" value="8237387201:AAFI98932KS3M5uJDLaTbu27FCFOJ40wwxI" readonly>
+            <p style="font-size: 0.85rem; color: #666; margin-top: 5px;">Bot API is integrated and active</p>
+          </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Default Energy</label>
+              <input type="number" class="form-input" id="defaultEnergy" value="1200">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Default Multi Tap</label>
+              <input type="number" class="form-input" id="defaultMultiTap" value="1">
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary">💾 Save Settings</button>
+        </form>
+      </div>
+
+      <div class="card fade-in">
+        <div class="card-header">
+          <h2 class="card-title">🗄️ Database Management</h2>
+        </div>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+          <button class="btn btn-info" onclick="backupDatabase()">💾 Backup Database</button>
+          <button class="btn btn-warning" onclick="clearCache()">🗑️ Clear Cache</button>
+          <button class="btn btn-danger" onclick="confirmReset()">⚠️ Reset Database</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Balance Control Modal -->
-  <div class="balance-modal" id="balanceModal">
-    <div class="balance-modal-content">
-      <h2 class="balance-modal-title">\ud83d\udcb0 Adjust Balance</h2>
-      <div class="balance-input-group">
-        <p id="balanceUserName" style="font-weight: 600; margin-bottom: 10px;"></p>
-        <p id="balanceUserId" style="color: #666; margin-bottom: 15px;"></p>
-        <p id="currentBalance" style="font-size: 1.2rem; margin-bottom: 20px;"></p>
-        <input type="number" class="balance-input" id="balanceAdjustment" placeholder="Enter amount (+/-)" step="1">
-        <p style="font-size: 0.85rem; color: #666; margin-top: 10px;">
-          Enter positive number to increase, negative to decrease
-        </p>
+  <!-- User Detail Modal -->
+  <div class="modal" id="userModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">👤 User Details</h2>
+        <button class="modal-close" onclick="closeModal('userModal')">✕</button>
       </div>
-      <div class="balance-buttons">
-        <button class="balance-btn increase" onclick="adjustBalance(true)">Increase</button>
-        <button class="balance-btn decrease" onclick="adjustBalance(false)">Decrease</button>
-        <button class="balance-btn cancel" onclick="closeBalanceModal()">Cancel</button>
-      </div>
+      <div id="userModalContent"></div>
     </div>
   </div>
 
@@ -1066,12 +1293,17 @@
     
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
+    const storage = firebase.storage();
+
+    // Telegram Bot Configuration
+    const BOT_TOKEN = '8237387201:AAFI98932KS3M5uJDLaTbu27FCFOJ40wwxI';
+    const BOT_API = `https://api.telegram.org/bot${BOT_TOKEN}`;
 
     // Global Variables
     let editingTaskId = null;
     let editingSectionId = null;
-    let currentBalanceUserId = null;
-    let currentBalanceUser = null;
+    let allUsers = {};
+    let allWallets = {};
 
     // Notification System
     function showNotification(title, message, type = 'success') {
@@ -1080,9 +1312,10 @@
       notification.className = `notification ${type}`;
       
       const icons = {
-        success: '\u2705',
-        error: '\u274c',
-        info: '\u2139\ufe0f'
+        success: '✅',
+        error: '❌',
+        info: 'ℹ️',
+        warning: '⚠️'
       };
       
       notification.innerHTML = `
@@ -1094,25 +1327,25 @@
       `;
       
       container.appendChild(notification);
-      
       setTimeout(() => notification.classList.add('show'), 100);
-      
       setTimeout(() => {
         notification.classList.remove('show');
         setTimeout(() => notification.remove(), 300);
-      }, 3000);
+      }, 4000);
     }
 
     // Initialize Dashboard
-    function initializeDashboard() {
-      loadStats();
-      loadTasks();
-      loadUsers();
-      loadProfileSections();
-      loadRedeemCodes();
+    async function initializeDashboard() {
+      await loadStats();
+      await loadTasks();
+      await loadUsers();
+      await loadWallets();
+      await loadProfileSections();
+      await loadRedeemCodes();
       initializeCharts();
       
-      setInterval(loadStats, 5000);
+      // Refresh stats every 10 seconds
+      setInterval(loadStats, 10000);
     }
 
     // Load Statistics
@@ -1123,23 +1356,38 @@
         
         let totalUsers = 0;
         let totalBalance = 0;
-        let totalAds = 0;
+        let totalReferrals = 0;
+        let onlineUsers = 0;
         
         usersSnap.forEach(userSnap => {
           totalUsers++;
           const user = userSnap.val();
           totalBalance += (user.balance || 0);
-          if (user.adStats) {
-            totalAds += (user.adStats.lifetime || 0);
+          totalReferrals += (user.referrals || 0);
+          
+          // Check if user was active in last 5 minutes
+          if (user.lastActive && (Date.now() - user.lastActive) < 300000) {
+            onlineUsers++;
           }
         });
         
         const totalTasks = tasksSnap.numChildren();
         
+        // Count wallets
+        let walletCount = 0;
+        usersSnap.forEach(userSnap => {
+          const user = userSnap.val();
+          if (user.ton && user.ton !== 'Not set') {
+            walletCount++;
+          }
+        });
+        
         document.getElementById('totalUsers').textContent = totalUsers.toLocaleString();
         document.getElementById('totalBalance').textContent = totalBalance.toLocaleString() + ' SHB';
-        document.getElementById('totalAds').textContent = totalAds.toLocaleString();
         document.getElementById('totalTasks').textContent = totalTasks;
+        document.getElementById('totalWallets').textContent = walletCount;
+        document.getElementById('totalReferrals').textContent = totalReferrals.toLocaleString();
+        document.getElementById('onlineUsers').textContent = `${onlineUsers} Online`;
         
         document.getElementById('taskCount').textContent = `${totalTasks} Tasks`;
         document.getElementById('userCount').textContent = `${totalUsers} Users`;
@@ -1148,137 +1396,114 @@
       }
     }
 
-    // Balance Control Functions
-    document.getElementById('searchBalanceBtn').addEventListener('click', async () => {
-      const userId = document.getElementById('balanceUserId').value.trim();
-      
-      if (!userId) {
-        showNotification('Error', 'Please enter a user ID', 'error');
-        return;
-      }
-      
-      try {
-        const snapshot = await db.ref('users/' + userId).once('value');
-        
-        if (!snapshot.exists()) {
-          showNotification('Error', 'User not found', 'error');
-          document.getElementById('balanceUserInfo').innerHTML = '';
-          return;
-        }
-        
-        const user = snapshot.val();
-        currentBalanceUserId = userId;
-        currentBalanceUser = user;
-        
-        document.getElementById('balanceUserInfo').innerHTML = `
-          <div class="user-info-card">
-            <h3 style="margin-bottom: 15px;">User Found</h3>
-            <div class="user-info-grid">
-              <div class="user-info-item">
-                <div class="user-info-label">User ID</div>
-                <div class="user-info-value">${userId}</div>
-              </div>
-              <div class="user-info-item">
-                <div class="user-info-label">Current Balance</div>
-                <div class="user-info-value">${(user.balance || 0).toLocaleString()} SHB</div>
-              </div>
-              <div class="user-info-item">
-                <div class="user-info-label">Energy</div>
-                <div class="user-info-value">${user.energy || 0} / ${user.maxEnergy || 1200}</div>
-              </div>
-              <div class="user-info-item">
-                <div class="user-info-label">Multi Tap</div>
-                <div class="user-info-value">${user.multiTap || 1}</div>
-              </div>
-            </div>
-            <div style="margin-top: 15px;">
-              <button class="btn btn-primary" onclick="openBalanceModal('${userId}', '${user.balance || 0}')">
-                Adjust Balance
-              </button>
-            </div>
-          </div>
-        `;
-      } catch (error) {
-        showNotification('Error', error.message, 'error');
-      }
-    });
-
-    function openBalanceModal(userId, currentBalance) {
-      currentBalanceUserId = userId;
-      document.getElementById('balanceUserName').textContent = 'User ID: ' + userId;
-      document.getElementById('balanceUserId').textContent = 'Current Balance: ' + parseInt(currentBalance).toLocaleString() + ' SHB';
-      document.getElementById('currentBalance').textContent = 'Current: ' + parseInt(currentBalance).toLocaleString() + ' SHB';
-      document.getElementById('balanceAdjustment').value = '';
-      document.getElementById('balanceModal').classList.add('show');
-    }
-
-    function closeBalanceModal() {
-      document.getElementById('balanceModal').classList.remove('show');
-      currentBalanceUserId = null;
-      currentBalanceUser = null;
-    }
-
-    async function adjustBalance(isIncrease) {
-      const adjustment = parseInt(document.getElementById('balanceAdjustment').value);
-      
-      if (isNaN(adjustment) || adjustment === 0) {
-        showNotification('Error', 'Please enter a valid amount', 'error');
-        return;
-      }
-      
-      if (!currentBalanceUserId) {
-        showNotification('Error', 'No user selected', 'error');
-        return;
-      }
-      
-      try {
-        const currentBalance = currentBalanceUser.balance || 0;
-        let newBalance = currentBalance;
-        
-        if (isIncrease) {
-          newBalance = currentBalance + Math.abs(adjustment);
-        } else {
-          newBalance = currentBalance - Math.abs(adjustment);
-          if (newBalance < 0) newBalance = 0;
-        }
-        
-        await db.ref('users/' + currentBalanceUserId).update({ balance: newBalance });
-        
-        const action = isIncrease ? 'increased' : 'decreased';
-        showNotification('Success', `Balance ${action} by ${Math.abs(adjustment)} SHB!`, 'success');
-        
-        // Update the balance display
-        document.getElementById('balanceUserId').textContent = 'Current Balance: ' + newBalance.toLocaleString() + ' SHB';
-        document.getElementById('currentBalance').textContent = 'Current: ' + newBalance.toLocaleString() + ' SHB';
-        
-        // Clear the input
-        document.getElementById('balanceAdjustment').value = '';
-        
-        // Refresh stats
-        loadStats();
-        
-        // Close modal after a short delay
-        setTimeout(() => {
-          closeBalanceModal();
-          // Refresh the balance control section
-          document.getElementById('searchBalanceBtn').click();
-        }, 1500);
-        
-      } catch (error) {
-        showNotification('Error', error.message, 'error');
-      }
+    // Refresh Stats
+    function refreshStats() {
+      showNotification('Refreshing', 'Updating statistics...', 'info');
+      loadStats();
     }
 
     // Tab Navigation
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        
-        btn.classList.add('active');
-        document.getElementById(btn.dataset.tab).classList.add('active');
+        switchTab(btn.dataset.tab);
       });
     });
+
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      
+      const btn = document.querySelector(`[data-tab="${tabName}"]`);
+      if (btn) {
+        btn.classList.add('active');
+        document.getElementById(tabName).classList.add('active');
+      }
+    }
+
+    // Image Upload Handlers
+    async function handleTaskImageUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      try {
+        showNotification('Uploading', 'Uploading image...', 'info');
+        const storageRef = storage.ref(`tasks/${Date.now()}_${file.name}`);
+        const snapshot = await storageRef.put(file);
+        const url = await snapshot.ref.getDownloadURL();
+        
+        document.getElementById('taskPhoto').value = url;
+        document.getElementById('taskPhotoPreview').src = url;
+        document.getElementById('taskPhotoPreview').style.display = 'block';
+        
+        showNotification('Success', 'Image uploaded successfully!', 'success');
+      } catch (error) {
+        showNotification('Error', 'Failed to upload image', 'error');
+        console.error(error);
+      }
+    }
+
+    async function handleSectionImageUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      try {
+        showNotification('Uploading', 'Uploading image...', 'info');
+        const storageRef = storage.ref(`sections/${Date.now()}_${file.name}`);
+        const snapshot = await storageRef.put(file);
+        const url = await snapshot.ref.getDownloadURL();
+        
+        document.getElementById('sectionImage').value = url;
+        document.getElementById('sectionImagePreview').src = url;
+        document.getElementById('sectionImagePreview').style.display = 'block';
+        
+        showNotification('Success', 'Image uploaded successfully!', 'success');
+      } catch (error) {
+        showNotification('Error', 'Failed to upload image', 'error');
+        console.error(error);
+      }
+    }
+
+    async function handleLogoUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      try {
+        showNotification('Uploading', 'Uploading logo...', 'info');
+        const storageRef = storage.ref(`ui/logo_${Date.now()}_${file.name}`);
+        const snapshot = await storageRef.put(file);
+        const url = await snapshot.ref.getDownloadURL();
+        
+        document.getElementById('logoUrl').value = url;
+        document.getElementById('logoPreview').src = url;
+        document.getElementById('logoPreview').style.display = 'block';
+        
+        showNotification('Success', 'Logo uploaded successfully!', 'success');
+      } catch (error) {
+        showNotification('Error', 'Failed to upload logo', 'error');
+        console.error(error);
+      }
+    }
+
+    async function handleBgUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      try {
+        showNotification('Uploading', 'Uploading background...', 'info');
+        const storageRef = storage.ref(`ui/bg_${Date.now()}_${file.name}`);
+        const snapshot = await storageRef.put(file);
+        const url = await snapshot.ref.getDownloadURL();
+        
+        document.getElementById('bgUrl').value = url;
+        document.getElementById('bgPreview').src = url;
+        document.getElementById('bgPreview').style.display = 'block';
+        
+        showNotification('Success', 'Background uploaded successfully!', 'success');
+      } catch (error) {
+        showNotification('Error', 'Failed to upload background', 'error');
+        console.error(error);
+      }
+    }
 
     // Task Management
     document.getElementById('taskForm').addEventListener('submit', async (e) => {
@@ -1289,6 +1514,11 @@
       const link = document.getElementById('taskLink').value.trim();
       const amount = parseInt(document.getElementById('taskAmount').value);
       
+      if (!photo) {
+        showNotification('Error', 'Please upload an image or provide URL', 'error');
+        return;
+      }
+      
       const btnText = document.getElementById('taskBtnText');
       btnText.innerHTML = '<div class="loading-spinner"></div>';
       
@@ -1297,19 +1527,19 @@
           await db.ref('tasks/' + editingTaskId).update({ name, photo, link, amount });
           showNotification('Success', 'Task updated successfully!', 'success');
           editingTaskId = null;
-          btnText.textContent = 'Add Task';
+          btnText.textContent = '➕ Add Task';
         } else {
           const taskId = Date.now().toString();
           await db.ref('tasks/' + taskId).set({ name, photo, link, amount });
           showNotification('Success', 'Task added successfully!', 'success');
-          btnText.textContent = 'Add Task';
         }
         
         document.getElementById('taskForm').reset();
+        document.getElementById('taskPhotoPreview').style.display = 'none';
         loadTasks();
       } catch (error) {
         showNotification('Error', error.message, 'error');
-        btnText.textContent = editingTaskId ? 'Update Task' : 'Add Task';
+        btnText.textContent = editingTaskId ? '💾 Update Task' : '➕ Add Task';
       }
     });
 
@@ -1319,12 +1549,15 @@
         const tasks = snapshot.val() || {};
         const tbody = document.getElementById('tasksTableBody');
         
-        if (Object.keys(tasks).length === 0) {
+        const count = Object.keys(tasks).length;
+        document.getElementById('taskCount').textContent = `${count} Tasks`;
+        
+        if (count === 0) {
           tbody.innerHTML = `
             <tr>
               <td colspan="5" style="text-align: center; padding: 40px;">
                 <div class="empty-state">
-                  <div class="empty-state-icon">\ud83d\udccb</div>
+                  <div class="empty-state-icon">📋</div>
                   <div class="empty-state-text">No tasks yet. Add your first task!</div>
                 </div>
               </td>
@@ -1341,11 +1574,11 @@
             <td><img src="${task.photo}" alt="${task.name}"></td>
             <td><strong>${task.name}</strong></td>
             <td><span class="badge badge-success">${task.amount} SHB</span></td>
-            <td><a href="${task.link}" target="_blank" style="color: var(--accent);">View Link</a></td>
+            <td><a href="${task.link}" target="_blank" style="color: var(--accent);">🔗 View</a></td>
             <td>
               <div class="action-btns">
-                <button class="btn btn-small btn-primary" onclick="editTask('${taskId}')">Edit</button>
-                <button class="btn btn-small btn-danger" onclick="deleteTask('${taskId}')">Delete</button>
+                <button class="btn btn-small btn-primary" onclick="editTask('${taskId}')">✏️ Edit</button>
+                <button class="btn btn-small btn-danger" onclick="deleteTask('${taskId}')">🗑️ Delete</button>
               </div>
             </td>
           `;
@@ -1365,11 +1598,13 @@
         document.getElementById('taskPhoto').value = task.photo;
         document.getElementById('taskLink').value = task.link;
         document.getElementById('taskAmount').value = task.amount;
+        document.getElementById('taskPhotoPreview').src = task.photo;
+        document.getElementById('taskPhotoPreview').style.display = 'block';
         
         editingTaskId = taskId;
-        document.getElementById('taskBtnText').textContent = 'Update Task';
+        document.getElementById('taskBtnText').textContent = '💾 Update Task';
         
-        document.querySelector('[data-tab="tasks"]').click();
+        switchTab('tasks');
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } catch (error) {
         showNotification('Error', error.message, 'error');
@@ -1383,38 +1618,148 @@
         await db.ref('tasks/' + taskId).remove();
         showNotification('Success', 'Task deleted successfully!', 'success');
         loadTasks();
+        loadStats();
       } catch (error) {
         showNotification('Error', error.message, 'error');
       }
     };
 
     // User Management
-    document.getElementById('searchUserBtn').addEventListener('click', async () => {
-      const userId = document.getElementById('searchUserId').value.trim();
+    async function loadUsers() {
+      try {
+        const snapshot = await db.ref('users').once('value');
+        allUsers = snapshot.val() || {};
+        const tbody = document.getElementById('usersTableBody');
+        
+        const count = Object.keys(allUsers).length;
+        document.getElementById('userCount').textContent = `${count} Users`;
+        
+        if (count === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="6" style="text-align: center; padding: 40px;">
+                <div class="empty-state">
+                  <div class="empty-state-icon">👥</div>
+                  <div class="empty-state-text">No users yet</div>
+                </div>
+              </td>
+            </tr>
+          `;
+          return;
+        }
+        
+        tbody.innerHTML = '';
+        
+        // Show first 50 users
+        const userEntries = Object.entries(allUsers).slice(0, 50);
+        
+        for (const [userId, user] of userEntries) {
+          const row = document.createElement('tr');
+          
+          // Get Telegram info
+          let telegramInfo = userId;
+          if (user.telegramUsername) {
+            telegramInfo = `@${user.telegramUsername}`;
+          } else if (user.firstName) {
+            telegramInfo = user.firstName;
+          }
+          
+          row.innerHTML = `
+            <td><strong>${userId}</strong></td>
+            <td>${telegramInfo}</td>
+            <td><span class="badge badge-success">${(user.balance || 0).toLocaleString()} SHB</span></td>
+            <td>${user.country || '🌍 Unknown'}</td>
+            <td>${user.device || '📱 Unknown'}</td>
+            <td>
+              <div class="action-btns">
+                <button class="btn btn-small btn-primary" onclick="viewUserDetails('${userId}')">👁️ View</button>
+                <button class="btn btn-small btn-success" onclick="adjustBalance('${userId}')">💰 Balance</button>
+              </div>
+            </td>
+          `;
+          tbody.appendChild(row);
+        }
+        
+        if (count > 50) {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td colspan="6" style="text-align: center; padding: 20px; color: #666;">
+              Showing 50 of ${count} users. Use search to find specific users.
+            </td>
+          `;
+          tbody.appendChild(row);
+        }
+      } catch (error) {
+        console.error('Error loading users:', error);
+      }
+    }
+
+    async function searchUser() {
+      const searchTerm = document.getElementById('searchUserId').value.trim().toLowerCase();
       
-      if (!userId) {
-        showNotification('Error', 'Please enter a user ID', 'error');
+      if (!searchTerm) {
+        showNotification('Error', 'Please enter a user ID or username', 'error');
         return;
       }
       
       try {
-        const snapshot = await db.ref('users/' + userId).once('value');
+        // Search by ID first
+        let snapshot = await db.ref('users/' + searchTerm).once('value');
         
         if (!snapshot.exists()) {
-          showNotification('Error', 'User not found', 'error');
-          document.getElementById('userInfoContainer').innerHTML = '';
-          return;
+          // Search by username
+          const allUsersSnap = await db.ref('users').once('value');
+          let found = false;
+          
+          allUsersSnap.forEach(userSnap => {
+            const user = userSnap.val();
+            if (user.telegramUsername && user.telegramUsername.toLowerCase() === searchTerm.replace('@', '')) {
+              snapshot = userSnap;
+              found = true;
+            }
+          });
+          
+          if (!found) {
+            showNotification('Error', 'User not found', 'error');
+            document.getElementById('userInfoContainer').innerHTML = '';
+            return;
+          }
         }
         
+        const userId = snapshot.key;
         const user = snapshot.val();
+        
+        // Fetch Telegram data
+        let telegramData = null;
+        try {
+          const response = await fetch(`${BOT_API}/getChat?chat_id=${userId}`);
+          const data = await response.json();
+          if (data.ok) {
+            telegramData = data.result;
+          }
+        } catch (e) {
+          console.log('Could not fetch Telegram data');
+        }
         
         document.getElementById('userInfoContainer').innerHTML = `
           <div class="user-info-card">
-            <h3 style="margin-bottom: 15px;">User Details</h3>
+            <h3 style="margin-bottom: 15px;">👤 User Details</h3>
             <div class="user-info-grid">
               <div class="user-info-item">
                 <div class="user-info-label">User ID</div>
                 <div class="user-info-value">${userId}</div>
+              </div>
+              <div class="user-info-item">
+                <div class="user-info-label">Telegram Username</div>
+                <div class="user-info-value">${telegramData?.username ? '@' + telegramData.username : (user.telegramUsername ? '@' + user.telegramUsername : 'Not set')}</div>
+              </div>
+              <div class="user-info-item">
+                <div class="user-info-label">First Name</div>
+                <div class="user-info-value">${telegramData?.first_name || user.firstName || 'Not set'}</div>
+              </div>
+              <div class="user-info-item">
+                <div class="user-info-label">Last Name</div>
+                <div class="user-info-value">${telegramData?.last_name || user.lastName || 'Not set'}</div>
               </div>
               <div class="user-info-item">
                 <div class="user-info-label">Balance</div>
@@ -1433,68 +1778,188 @@
                 <div class="user-info-value">${user.referrals || 0}</div>
               </div>
               <div class="user-info-item">
+                <div class="user-info-label">Country</div>
+                <div class="user-info-value">${user.country || '🌍 Unknown'}</div>
+              </div>
+              <div class="user-info-item">
+                <div class="user-info-label">Mobile</div>
+                <div class="user-info-value">${user.mobile || 'Not set'}</div>
+              </div>
+              <div class="user-info-item">
+                <div class="user-info-label">IP Address</div>
+                <div class="user-info-value">${user.ipAddress || 'Unknown'}</div>
+              </div>
+              <div class="user-info-item">
+                <div class="user-info-label">Device</div>
+                <div class="user-info-value">${user.device || '📱 Unknown'}</div>
+              </div>
+              <div class="user-info-item">
                 <div class="user-info-label">TON Wallet</div>
-                <div class="user-info-value" style="font-size: 0.8rem; word-break: break-all;">${user.ton || 'Not set'}</div>
+                <div class="user-info-value" style="font-size: 0.75rem;">${user.ton || 'Not set'}</div>
+              </div>
+              <div class="user-info-item">
+                <div class="user-info-label">Last Active</div>
+                <div class="user-info-value">${user.lastActive ? new Date(user.lastActive).toLocaleString() : 'Never'}</div>
               </div>
             </div>
-            <div style="margin-top: 15px;">
-              <button class="btn btn-primary" onclick="openBalanceModal('${userId}', '${user.balance || 0}')">
-                Adjust Balance
-              </button>
+            <div style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
+              <button class="btn btn-primary" onclick="adjustBalance('${userId}')">💰 Adjust Balance</button>
+              <button class="btn btn-info" onclick="viewUserDetails('${userId}')">👁️ Full Details</button>
             </div>
           </div>
         `;
       } catch (error) {
         showNotification('Error', error.message, 'error');
       }
-    });
+    }
 
-    async function loadUsers() {
+    function viewUserDetails(userId) {
+      // Implementation for detailed user view
+      showNotification('Info', 'Opening user details...', 'info');
+      searchUser();
+    }
+
+    function adjustBalance(userId) {
+      const amount = prompt('Enter amount to add (use negative for deduction):');
+      if (amount === null) return;
+      
+      const numAmount = parseInt(amount);
+      if (isNaN(numAmount)) {
+        showNotification('Error', 'Invalid amount', 'error');
+        return;
+      }
+      
+      db.ref('users/' + userId + '/balance').transaction(currentBalance => {
+        return (currentBalance || 0) + numAmount;
+      }).then(() => {
+        showNotification('Success', `Balance adjusted by ${numAmount} SHB`, 'success');
+        loadUsers();
+        loadStats();
+      }).catch(error => {
+        showNotification('Error', error.message, 'error');
+      });
+    }
+
+    function exportUsers() {
+      const csv = ['User ID,Telegram,Balance,Country,Device,Mobile,IP,Wallet'];
+      
+      Object.entries(allUsers).forEach(([userId, user]) => {
+        const telegram = user.telegramUsername ? '@' + user.telegramUsername : (user.firstName || 'N/A');
+        const row = [
+          userId,
+          telegram,
+          user.balance || 0,
+          user.country || 'Unknown',
+          user.device || 'Unknown',
+          user.mobile || 'N/A',
+          user.ipAddress || 'Unknown',
+          user.ton || 'Not set'
+        ];
+        csv.push(row.join(','));
+      });
+      
+      const blob = new Blob([csv.join('\n')], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `users_${Date.now()}.csv`;
+      a.click();
+      
+      showNotification('Success', 'Users exported successfully!', 'success');
+    }
+
+    // Wallet Management
+    async function loadWallets() {
       try {
-        const snapshot = await db.ref('users').limitToFirst(50).once('value');
-        const users = snapshot.val() || {};
-        const tbody = document.getElementById('usersTableBody');
+        const snapshot = await db.ref('users').once('value');
+        allWallets = {};
+        const container = document.getElementById('walletsContainer');
         
-        if (Object.keys(users).length === 0) {
-          tbody.innerHTML = `
-            <tr>
-              <td colspan="5" style="text-align: center; padding: 40px;">
-                <div class="empty-state">
-                  <div class="empty-state-icon">\ud83d\udc65</div>
-                  <div class="empty-state-text">No users yet</div>
-                </div>
-              </td>
-            </tr>
+        snapshot.forEach(userSnap => {
+          const userId = userSnap.key;
+          const user = userSnap.val();
+          
+          if (user.ton && user.ton !== 'Not set') {
+            allWallets[userId] = {
+              wallet: user.ton,
+              balance: user.balance || 0,
+              username: user.telegramUsername || user.firstName || userId
+            };
+          }
+        });
+        
+        const count = Object.keys(allWallets).length;
+        
+        if (count === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon">🏦</div>
+              <div class="empty-state-text">No wallet addresses yet</div>
+            </div>
           `;
           return;
         }
         
-        tbody.innerHTML = '';
+        container.innerHTML = '';
         
-        Object.entries(users).forEach(([userId, user]) => {
-          const row = document.createElement('tr');
-          row.innerHTML = `
-            <td><strong>${userId}</strong></td>
-            <td><span class="badge badge-success">${(user.balance || 0).toLocaleString()} SHB</span></td>
-            <td>${user.energy || 0} / ${user.maxEnergy || 1200}</td>
-            <td>${user.referrals || 0}</td>
-            <td>
-              <button class="btn btn-small btn-primary" onclick="viewUser('${userId}')">View</button>
-              <button class="btn btn-small btn-success" onclick="openBalanceModal('${userId}', '${user.balance || 0}')">Balance</button>
-            </td>
+        Object.entries(allWallets).forEach(([userId, data]) => {
+          const item = document.createElement('div');
+          item.className = 'wallet-item';
+          item.innerHTML = `
+            <div class="wallet-header">
+              <div>
+                <strong>@${data.username}</strong>
+                <span class="badge badge-info" style="margin-left: 10px;">${data.balance.toLocaleString()} SHB</span>
+              </div>
+              <button class="copy-btn" onclick="copyWallet('${data.wallet}', this)">📋 Copy</button>
+            </div>
+            <div class="wallet-address">${data.wallet}</div>
+            <div style="font-size: 0.85rem; color: #666; margin-top: 5px;">
+              User ID: ${userId}
+            </div>
           `;
-          tbody.appendChild(row);
+          container.appendChild(item);
         });
       } catch (error) {
-        console.error('Error loading users:', error);
+        console.error('Error loading wallets:', error);
       }
     }
 
-    window.viewUser = (userId) => {
-      document.getElementById('searchUserId').value = userId;
-      document.querySelector('[data-tab="users"]').click();
-      document.getElementById('searchUserBtn').click();
-    };
+    function copyWallet(wallet, btn) {
+      navigator.clipboard.writeText(wallet).then(() => {
+        btn.textContent = '✅ Copied';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = '📋 Copy';
+          btn.classList.remove('copied');
+        }, 2000);
+      });
+    }
+
+    function copyAllWallets() {
+      const text = Object.entries(allWallets).map(([userId, data]) => {
+        return `@${data.username} (${userId}): ${data.wallet} - ${data.balance} SHB`;
+      }).join('\n');
+      
+      navigator.clipboard.writeText(text).then(() => {
+        showNotification('Success', 'All wallets copied to clipboard!', 'success');
+      });
+    }
+
+    function exportWallets() {
+      const text = Object.entries(allWallets).map(([userId, data]) => {
+        return `Username: @${data.username}\nUser ID: ${userId}\nWallet: ${data.wallet}\nBalance: ${data.balance} SHB\n${'='.repeat(50)}`;
+      }).join('\n\n');
+      
+      const blob = new Blob([text], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `wallets_${Date.now()}.txt`;
+      a.click();
+      
+      showNotification('Success', 'Wallets exported to TXT file!', 'success');
+    }
 
     // Profile Sections Management
     document.getElementById('profileSectionForm').addEventListener('submit', async (e) => {
@@ -1504,6 +1969,11 @@
       const image = document.getElementById('sectionImage').value.trim();
       const link = document.getElementById('sectionLink').value.trim();
       
+      if (!image) {
+        showNotification('Error', 'Please upload an image or provide URL', 'error');
+        return;
+      }
+      
       const btnText = document.getElementById('sectionBtnText');
       btnText.innerHTML = '<div class="loading-spinner"></div>';
       
@@ -1512,19 +1982,19 @@
           await db.ref('profileSections/' + editingSectionId).update({ name, image, link });
           showNotification('Success', 'Section updated successfully!', 'success');
           editingSectionId = null;
-          btnText.textContent = 'Add Section';
+          btnText.textContent = '➕ Add Section';
         } else {
           const sectionId = name.toLowerCase().replace(/\s+/g, '_');
           await db.ref('profileSections/' + sectionId).set({ name, image, link });
           showNotification('Success', 'Section added successfully!', 'success');
-          btnText.textContent = 'Add Section';
         }
         
         document.getElementById('profileSectionForm').reset();
+        document.getElementById('sectionImagePreview').style.display = 'none';
         loadProfileSections();
       } catch (error) {
         showNotification('Error', error.message, 'error');
-        btnText.textContent = editingSectionId ? 'Update Section' : 'Add Section';
+        btnText.textContent = editingSectionId ? '💾 Update Section' : '➕ Add Section';
       }
     });
 
@@ -1540,7 +2010,7 @@
         if (count === 0) {
           container.innerHTML = `
             <div class="empty-state">
-              <div class="empty-state-icon">\ud83c\udfaf</div>
+              <div class="empty-state-icon">🎯</div>
               <div class="empty-state-text">No sections yet. Add your first section!</div>
             </div>
           `;
@@ -1551,14 +2021,14 @@
         
         Object.entries(sections).forEach(([sectionId, section]) => {
           const item = document.createElement('div');
-          item.className = 'profile-section-item';
+          item.style.cssText = 'background: #f8f9fa; border-radius: 12px; padding: 15px; text-align: center; border: 2px solid #e0e0e0; transition: all 0.3s;';
           item.innerHTML = `
-            <img src="${section.image}" alt="${section.name}">
-            <div class="profile-section-name">${section.name}</div>
-            <div class="profile-section-link">${section.link}</div>
+            <img src="${section.image}" alt="${section.name}" style="width: 100%; height: 120px; object-fit: cover; border-radius: 8px; margin-bottom: 10px;">
+            <div style="font-weight: 700; color: #333; margin-bottom: 8px;">${section.name}</div>
+            <div style="font-size: 0.85rem; color: #666; word-break: break-all; margin-bottom: 10px;">${section.link}</div>
             <div class="action-btns" style="margin-top: 10px;">
-              <button class="btn btn-small btn-primary" onclick="editSection('${sectionId}')">Edit</button>
-              <button class="btn btn-small btn-danger" onclick="deleteSection('${sectionId}')">Delete</button>
+              <button class="btn btn-small btn-primary" onclick="editSection('${sectionId}')">✏️ Edit</button>
+              <button class="btn btn-small btn-danger" onclick="deleteSection('${sectionId}')">🗑️ Delete</button>
             </div>
           `;
           container.appendChild(item);
@@ -1576,11 +2046,13 @@
         document.getElementById('sectionName').value = section.name;
         document.getElementById('sectionImage').value = section.image;
         document.getElementById('sectionLink').value = section.link;
+        document.getElementById('sectionImagePreview').src = section.image;
+        document.getElementById('sectionImagePreview').style.display = 'block';
         
         editingSectionId = sectionId;
-        document.getElementById('sectionBtnText').textContent = 'Update Section';
+        document.getElementById('sectionBtnText').textContent = '💾 Update Section';
         
-        document.querySelector('[data-tab="profile-sections"]').click();
+        switchTab('profile-sections');
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } catch (error) {
         showNotification('Error', error.message, 'error');
@@ -1598,6 +2070,40 @@
         showNotification('Error', error.message, 'error');
       }
     };
+
+    // Home UI Management
+    document.getElementById('homeUIForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const logoUrl = document.getElementById('logoUrl').value.trim();
+      const bgUrl = document.getElementById('bgUrl').value.trim();
+      const primaryColor = document.getElementById('primaryColor').value;
+      const secondaryColor = document.getElementById('secondaryColor').value;
+      
+      try {
+        await db.ref('uiSettings').set({
+          logo: logoUrl,
+          background: bgUrl,
+          primaryColor,
+          secondaryColor,
+          updatedAt: Date.now()
+        });
+        
+        showNotification('Success', 'UI settings saved successfully!', 'success');
+        
+        // Update preview
+        document.getElementById('uiPreview').innerHTML = `
+          <div style="background: linear-gradient(135deg, ${primaryColor} 0%, ${secondaryColor} 100%); padding: 30px; border-radius: 15px; color: white;">
+            ${logoUrl ? `<img src="${logoUrl}" style="width: 80px; height: 80px; border-radius: 50%; margin-bottom: 15px;">` : ''}
+            <h3>UI Preview</h3>
+            <p>Primary Color: ${primaryColor}</p>
+            <p>Secondary Color: ${secondaryColor}</p>
+          </div>
+        `;
+      } catch (error) {
+        showNotification('Error', error.message, 'error');
+      }
+    });
 
     // Redeem Codes Management
     document.getElementById('redeemForm').addEventListener('submit', async (e) => {
@@ -1634,7 +2140,7 @@
             <tr>
               <td colspan="3" style="text-align: center; padding: 40px;">
                 <div class="empty-state">
-                  <div class="empty-state-icon">\ud83c\udf81</div>
+                  <div class="empty-state-icon">🎁</div>
                   <div class="empty-state-text">No redeem codes yet</div>
                 </div>
               </td>
@@ -1651,7 +2157,7 @@
             <td><strong style="font-size: 1.2rem; letter-spacing: 2px;">${code}</strong></td>
             <td><span class="badge badge-success">Active</span></td>
             <td>
-              <button class="btn btn-small btn-danger" onclick="deleteRedeemCode('${code}')">Delete</button>
+              <button class="btn btn-small btn-danger" onclick="deleteRedeemCode('${code}')">🗑️ Delete</button>
             </td>
           `;
           tbody.appendChild(row);
@@ -1672,6 +2178,58 @@
         showNotification('Error', error.message, 'error');
       }
     };
+
+    // Settings Management
+    document.getElementById('settingsForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const defaultEnergy = parseInt(document.getElementById('defaultEnergy').value);
+      const defaultMultiTap = parseInt(document.getElementById('defaultMultiTap').value);
+      
+      try {
+        await db.ref('settings').set({
+          defaultEnergy,
+          defaultMultiTap,
+          botToken: BOT_TOKEN,
+          updatedAt: Date.now()
+        });
+        
+        showNotification('Success', 'Settings saved successfully!', 'success');
+      } catch (error) {
+        showNotification('Error', error.message, 'error');
+      }
+    });
+
+    function backupDatabase() {
+      showNotification('Info', 'Creating backup...', 'info');
+      
+      db.ref().once('value').then(snapshot => {
+        const data = snapshot.val();
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `backup_${Date.now()}.json`;
+        a.click();
+        
+        showNotification('Success', 'Backup created successfully!', 'success');
+      });
+    }
+
+    function clearCache() {
+      if (!confirm('Are you sure you want to clear cache?')) return;
+      
+      localStorage.clear();
+      sessionStorage.clear();
+      showNotification('Success', 'Cache cleared successfully!', 'success');
+    }
+
+    function confirmReset() {
+      const confirmation = prompt('Type "RESET" to confirm database reset:');
+      if (confirmation === 'RESET') {
+        showNotification('Warning', 'This feature is disabled for safety', 'warning');
+      }
+    }
 
     // Charts
     function initializeCharts() {
@@ -1761,8 +2319,22 @@
       });
     }
 
+    // Modal Functions
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.remove('show');
+    }
+
+    // Logout
+    function logout() {
+      if (confirm('Are you sure you want to logout?')) {
+        window.location.href = 'login.html';
+      }
+    }
+
     // Initialize on load
-    initializeDashboard();
+    window.addEventListener('load', () => {
+      initializeDashboard();
+    });
   </script>
 </body>
 </html>
